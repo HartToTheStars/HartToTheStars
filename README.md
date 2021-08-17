@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @HartToTheStars
 - 👀 I’m interested in contributing to crypto projects via product management or project management. 
-- 🌱 I’m currently taking an Ethereum project from concept to beta with my friend @nickdelja
-- 💞️ I’m looking to collaborate on interesting crypto projects
-- 📫 How to reach me: @andrewhartman on Twitter
+- 🌱 I’m currently taking an Ethereum project from concept to beta with my friend @nickdelja.
+- 💞️ I’m looking to collaborate on interesting crypto projects.
+- 📫 How to reach me: @andrewhartman on Twitter.
