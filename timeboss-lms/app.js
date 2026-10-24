@@ -1,40 +1,14 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v1";
+  const KEY = "tb_lms_v2";
   const DAY = 864e5;
-
-  // ---------- store ----------
-  function freshState() {
-    const now = Date.now();
-    return {
-      sessionUserId: null,
-      companies: SEED.companies.slice(),
-      users: SEED.users.slice(),
-      posts: SEED.posts.map((p) => ({ ...p, ts: now + p.ts, comments: p.comments.map((c) => ({ ...c, ts: now + c.ts })) })),
-      progress: Object.fromEntries(Object.entries(SEED.progress).map(([u, ids]) => [u, Object.fromEntries(ids.map((id, i) => [id, now - (ids.length - i) * DAY]))])),
-      promptReplies: {}, // dateKey -> [{authorId, ts, body}]
-      rsvps: {}, // eventId -> [userId]
-      bookings: [], // {slotId, coachId, start, userId, topic}
-      toolRuns: [], // {id, userId, tool, ts, answers}
-      drafts: {}, // userId|tool -> {step, answers, startedAt}
-    };
-  }
-  let S;
-  try { S = JSON.parse(localStorage.getItem(KEY)) || freshState(); } catch { S = freshState(); }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
-
-  const me = () => S.users.find((u) => u.id === S.sessionUserId);
-  const user = (id) => S.users.find((u) => u.id === id) || { name: "Unknown", id };
-  const company = (id) => S.companies.find((c) => c.id === id);
-  const isCoach = (u = me()) => u && u.role === "coach";
-  const uid = () => Math.random().toString(36).slice(2, 10);
 
   // ---------- helpers ----------
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const initials = (n) => n.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
-  const dateKey = (d = new Date()) => d.toISOString().slice(0, 10);
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const dateKey = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
   const fmtDate = (t, o = { weekday: "short", month: "short", day: "numeric" }) => new Date(t).toLocaleDateString(undefined, o);
   const fmtTime = (t) => new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const ago = (t) => {
@@ -46,13 +20,160 @@
   };
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const paras = (txt) => esc(txt).split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const uidKey = (s) => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  // Seeded PRNG (mulberry32) so generated demo history is the same on every reset
+  const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) >>> 0; let t = seed; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+
+  // ---------- calendar math ----------
+  const at = (date, h, m = 0) => { const d = new Date(date); d.setHours(h, m, 0, 0); return d.getTime(); };
+  const startOfDay = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d; };
+  const isWorkday = (d) => d.getDay() > 0 && d.getDay() < 6;
+  const prevWorkday = (d) => { const x = new Date(d); do x.setDate(x.getDate() - 1); while (!isWorkday(x)); return x; };
+  const mondayOf = (t) => { const d = startOfDay(t); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; };
+  // A Weekly Planning Meeting run Fri to Sun plans the following week; Mon to Thu plans the current week
+  const plannedWeek = (t) => { const d = new Date(t), m = mondayOf(t); if (d.getDay() === 0 || d.getDay() >= 5) m.setDate(m.getDate() + 7); return dateKey(m); };
+
+  // ---------- tools (Time Boss "Checklist for Your Week") ----------
+  const TOOLS = {
+    weekly: {
+      title: "Weekly Planning Meeting",
+      short: "WPM",
+      mins: 45,
+      when: "Prior to the beginning of your work week",
+      prompt: window.TB_PROMPTS.weekly,
+      steps: [
+        { phase: "Reflect", title: "Reflect on your week", guide: "In consideration of your Highest Sustainable Pace, what should you keep doing, start doing, and/or stop doing?",
+          fields: [{ k: "keep", label: "Keep doing", type: "textarea", rows: 2 }, { k: "start", label: "Start doing", type: "textarea", rows: 2 }, { k: "stop", label: "Stop doing", type: "textarea", rows: 2 }] },
+        { phase: "Reflect", title: "Dump what needs to be done", guide: "Add any new One-time Tasks to your Backlog.",
+          fields: [{ k: "dump", label: "New One-time Tasks for your Backlog (one per line)", type: "textarea", rows: 7 }] },
+        { phase: "Decide", title: "Decide what to do", guide: "Prioritize all One-time Tasks that would be valuable to move forward next week.",
+          fields: [{ k: "priorities", label: "Prioritized One-time Tasks for next week, most important first", type: "textarea", rows: 6 }] },
+        { phase: "Decide", title: "Decide how to do it", guide: "Break down the One-time Tasks that have to move forward next week into manageable subtasks with a clear definition of \"Done\" (2 hours max).",
+          fields: [{ k: "subtasks", label: "Subtasks and their definition of Done", type: "textarea", rows: 6, ph: "Board deck: outline (Done = approved by CFO, 1.5h)" }] },
+        { phase: "Decide", title: "Decide when to do it", guide: "Block your calendar in this order.",
+          fields: [{ k: "personal", label: "Personal priorities are blocked", type: "check" }, { k: "recurring", label: "Recurring Tasks are blocked", type: "check" },
+                   { k: "whirlwind", label: "Whirlwind time is blocked", type: "check" }, { k: "onetime", label: "Prioritized One-time Tasks are blocked, in order of priority from your Backlog", type: "check" }] },
+        { phase: "Decide", title: "Decide what to do with what doesn't fit", guide: "Defer, delegate, digitize, downsize, or delete tasks that don't fit next week. Only \"do it\" to keep promises or commitments.",
+          fields: [{ k: "nofit", label: "What doesn't fit, and what you'll do with it", type: "textarea", rows: 5, ph: "Vendor review: delegate to Sam" }] },
+        { phase: "Commit", title: "Share your plan", guide: "Share your plan with someone to increase your commitment.", share: true,
+          fields: [{ k: "shareWith", label: "Who you're sharing it with", type: "text" }, { k: "shared", label: "I shared my plan", type: "check" }] },
+        { phase: "Commit", title: "Wholeheartedly commit to your plan", guide: "This is the plan. Commit to it.",
+          fields: [{ k: "committed", label: "I wholeheartedly commit to my plan", type: "check" }, { k: "note", label: "Anything to remember this week (optional)", type: "text" }] },
+      ],
+    },
+    daily: {
+      title: "Daily Review Meeting",
+      short: "DRM",
+      mins: 15,
+      when: "End of your workday · 15 minutes",
+      prompt: window.TB_PROMPTS.daily,
+      steps: [
+        { phase: "Reflect", title: "Reflect on your day", guide: "What worked? What didn't work? What needs course correction?",
+          fields: [{ k: "worked", label: "What worked", type: "textarea", rows: 2 }, { k: "didnt", label: "What didn't work", type: "textarea", rows: 2 }, { k: "correct", label: "What needs course correction", type: "textarea", rows: 2 }] },
+        { phase: "Decide", title: "Decide what to do with incomplete tasks", guide: "Each incomplete task goes to your Backlog or onto your Calendar.",
+          fields: [{ k: "toBacklog", label: "Moved to Backlog", type: "textarea", rows: 3 }, { k: "toCalendar", label: "Moved onto Calendar (with when)", type: "textarea", rows: 3 }] },
+        { phase: "Commit", title: "Review tomorrow's plan", guide: "Review tomorrow's plan, remind yourself of the value of each item, and make adjustments as needed.",
+          fields: [{ k: "tomorrow", label: "Tomorrow's priorities and why each matters", type: "textarea", rows: 4 }, { k: "adjust", label: "Adjustments", type: "text" }] },
+      ],
+      during: ["Work the priorities on your Calendar",
+               "Navigate Unknown Tasks: deflect them to your Parking Lot, or work them and \"time trade\" your scheduled task into your Whirlwind time",
+               "Work your Whirlwind time: complete items on your Parking Lot, then work your inboxes (email, messages, voicemail)"],
+    },
+  };
+
+  function runToMarkdown(tool, answers, ts) {
+    const t = TOOLS[tool];
+    let md = `# ${t.title}: ${fmtDate(ts, { weekday: "long", month: "long", day: "numeric" })}\n`;
+    t.steps.forEach((s) => {
+      const lines = s.fields.filter((f) => answers[f.k]).map((f) => f.type === "check" ? `- [x] ${f.label}` : `- **${f.label}:** ${String(answers[f.k]).replace(/\n/g, "\n  ")}`);
+      if (lines.length) md += `\n## ${s.phase}: ${s.title}\n${lines.join("\n")}\n`;
+    });
+    return md;
+  }
+
+  // ---------- store ----------
+  function freshState() {
+    const now = Date.now();
+    const users = SEED.users.map((u) => {
+      const c = SEED.companies.find((x) => x.id === u.companyId);
+      return { ...u, email: u.email || `${u.name.split(" ")[0].toLowerCase()}@${c ? c.domain : "timeboss.us"}` };
+    });
+    const members = users.filter((u) => u.role !== "coach");
+    const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };
+
+    // Generated meeting history: a Markov chain per user so streaks look like real habits
+    const toolRuns = [];
+    const answersFor = (tool, r) => Object.fromEntries(TOOLS[tool].steps.flatMap((s) => s.fields).map((f) => [f.k, f.type === "check" ? "Yes" : pick(r, SEED.sampleAnswers[tool][f.k] || [""])]));
+    members.forEach((u) => {
+      const r = rng(uidKey(u.id)), base = u.habit ?? 0.35 + r() * 0.6;
+      let prev = true;
+      for (let i = 60; i >= 1; i--) {
+        const d = startOfDay(now - i * DAY);
+        if (!isWorkday(d)) continue;
+        prev = r() < (prev ? Math.min(0.96, base + 0.05) : Math.max(0.15, base - 0.15));
+        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "daily", ts: at(d, 16, 30 + Math.floor(r() * 40)), answers: answersFor("daily", r) });
+      }
+      prev = true;
+      for (let w = 10; w >= 0; w--) {
+        const sun = mondayOf(now - w * 7 * DAY);
+        sun.setDate(sun.getDate() - 1);
+        prev = r() < (prev ? Math.min(0.94, base + 0.02) : Math.max(0.2, base - 0.2));
+        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "weekly", ts: at(sun, 17, Math.floor(r() * 50)), answers: answersFor("weekly", r) });
+      }
+    });
+
+    // Lesson progress: explicit where seeded, otherwise scaled to each user's habit strength
+    const lessonIds = SEED.courses.flatMap((c) => c.lessons.map((l) => l.id));
+    const progress = {};
+    members.forEach((u) => {
+      const r = rng(uidKey(u.id) + 1);
+      const ids = SEED.progress[u.id] || lessonIds.slice(0, Math.floor(lessonIds.length * (u.habit ?? 0.5) * (0.3 + r() * 0.6)));
+      progress[u.id] = Object.fromEntries(ids.map((id, i) => [id, now - (ids.length - i) * DAY]));
+    });
+
+    // Prompt replies for today and the three previous days
+    const promptReplies = {};
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(now - i * DAY);
+      promptReplies[dateKey(d)] = promptFor(d).replies.map((x, j) => ({ authorId: x.a, body: x.b, ts: i === 0 ? now - (j + 1) * 5400e3 : at(d, 9 + j * 2) }));
+    }
+
+    return {
+      sessionUserId: null,
+      companies: SEED.companies.slice(),
+      users,
+      posts: SEED.posts.map((p) => ({ id: p.id, authorId: p.authorId, body: p.body, ts: now - p.h * 3600e3, likes: likers(p.likes, uidKey(p.id), p.authorId),
+        comments: p.comments.map((c) => ({ authorId: c.a, body: c.b, ts: now - c.h * 3600e3 })) })),
+      progress,
+      promptReplies, // dateKey -> [{authorId, ts, body}]
+      rsvps: {}, // eventId -> [userId]
+      toolRuns, // {id, userId, tool, ts, answers}
+      drafts: {}, // userId|tool -> {step, answers, startedAt}
+    };
+  }
+  function promptFor(d = new Date()) {
+    const day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / DAY);
+    return SEED.dailyPrompts[day % SEED.dailyPrompts.length];
+  }
+  let S;
+  try { S = JSON.parse(localStorage.getItem(KEY)) || freshState(); } catch { S = freshState(); }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+
+  const me = () => S.users.find((u) => u.id === S.sessionUserId);
+  const user = (id) => S.users.find((u) => u.id === id) || { name: "Unknown", id };
+  const company = (id) => S.companies.find((c) => c.id === id);
+  const isCoach = (u = me()) => u && u.role === "coach";
+  const teamOf = (cid) => S.users.filter((u) => u.companyId === cid);
+  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
 
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
     el.classList.add("show");
     clearTimeout(toast.t);
-    toast.t = setTimeout(() => el.classList.remove("show"), 2200);
+    toast.t = setTimeout(() => el.classList.remove("show"), 2600);
   }
   async function copy(text, label = "Copied") {
     try { await navigator.clipboard.writeText(text); } catch {
@@ -62,7 +183,7 @@
     toast(label);
   }
 
-  // ---------- progress ----------
+  // ---------- progress + habit metrics ----------
   const allLessons = () => SEED.courses.flatMap((c) => c.lessons.map((l) => ({ ...l, courseId: c.id })));
   const done = (userId) => S.progress[userId] || {};
   function courseProgress(userId, course) {
@@ -75,26 +196,46 @@
     const n = ls.filter((l) => d[l.id]).length;
     return { n, total: ls.length, pct: Math.round((n / ls.length) * 100) };
   }
-  function streak(userId) {
-    const days = new Set();
-    Object.values(done(userId)).forEach((t) => days.add(dateKey(new Date(t))));
-    S.toolRuns.filter((r) => r.userId === userId).forEach((r) => days.add(dateKey(new Date(r.ts))));
-    Object.entries(S.promptReplies).forEach(([k, rs]) => rs.some((r) => r.authorId === userId) && days.add(k));
-    let n = 0, d = new Date();
-    if (!days.has(dateKey(d))) d = new Date(Date.now() - DAY);
-    while (days.has(dateKey(d))) { n++; d = new Date(d.getTime() - DAY); }
+  const runsOf = (userId, tool) => S.toolRuns.filter((r) => r.userId === userId && r.tool === tool);
+  const drmDays = (id) => new Set(runsOf(id, "daily").map((r) => dateKey(new Date(r.ts))));
+  const wpmWeeks = (id) => new Set(runsOf(id, "weekly").map((r) => plannedWeek(r.ts)));
+  // Consecutive workdays with a Daily Review Meeting. Today only counts once it's done.
+  function drmStreak(id) {
+    const days = drmDays(id);
+    let d = startOfDay(Date.now());
+    if (!isWorkday(d) || !days.has(dateKey(d))) d = prevWorkday(d);
+    let n = 0;
+    while (days.has(dateKey(d))) { n++; d = prevWorkday(d); }
     return n;
   }
+  // Consecutive planned weeks. Next week counts if it's already planned; this week gets grace until it ends.
+  function wpmStreak(id) {
+    const weeks = wpmWeeks(id), d = mondayOf(Date.now());
+    const next = new Date(d); next.setDate(next.getDate() + 7);
+    if (weeks.has(dateKey(next))) d.setTime(next.getTime());
+    else if (!weeks.has(dateKey(d))) d.setDate(d.getDate() - 7);
+    let n = 0;
+    while (weeks.has(dateKey(d))) { n++; d.setDate(d.getDate() - 7); }
+    return n;
+  }
+  // Past month completion: DRM over the last 30 days of workdays, WPM over the last 4 weeks
+  function monthStats(id) {
+    const days = drmDays(id), weeks = wpmWeeks(id);
+    let de = 0, dg = 0, we = 0, wg = 0;
+    for (let i = 1; i <= 30; i++) { const d = startOfDay(Date.now() - i * DAY); if (isWorkday(d)) { de++; if (days.has(dateKey(d))) dg++; } }
+    for (let i = 0; i < 4; i++) { const d = mondayOf(Date.now()); d.setDate(d.getDate() - 7 * i); we++; if (weeks.has(dateKey(d))) wg++; }
+    return { drm: Math.round((dg / de) * 100), wpm: Math.round((wg / we) * 100), all: Math.round(((dg + wg) / (de + we)) * 100) };
+  }
   const bar = (pct, cls = "") => `<div class="bar ${cls}"><span style="width:${pct}%"></span></div>`;
+  const avgOf = (list, f) => (list.length ? list.reduce((a, m) => a + f(m), 0) / list.length : 0);
 
   // ---------- schedule ----------
-  function at(date, h, m = 0) { const d = new Date(date); d.setHours(h, m, 0, 0); return d.getTime(); }
   function weeklyPlanningEvents() {
     const out = [], d = new Date();
-    d.setDate(d.getDate() + ((1 - d.getDay() + 7) % 7 || 7)); // next Monday
+    d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7 || 7)); // next Friday
     for (let i = 0; i < 4; i++) {
-      const start = at(d, 8, 0);
-      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Weekly Planning (live, group)", start, mins: 45, host: "u_coach2" });
+      const start = at(d, 14, 0);
+      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Weekly Planning Meeting (live, group)", desc: "Plan next week alongside other Time Bosses, with a coach on hand.", start, mins: 45, host: "u_coach2" });
       d.setDate(d.getDate() + 7);
     }
     return out;
@@ -111,80 +252,13 @@
     }
     return out;
   }
-  function officeHourSlots() {
-    const slots = [], d = new Date();
-    d.setHours(0, 0, 0, 0);
-    const windows = { u_andrew: [10, 11], u_coach2: [14, 16] };
-    for (let i = 0, added = 0; added < 6; i++) {
-      const day = new Date(d.getTime() + i * DAY);
-      if (day.getDay() === 0 || day.getDay() === 6) continue;
-      added++;
-      for (const [coachId, [h0, h1]] of Object.entries(windows)) {
-        for (let m = h0 * 60; m < h1 * 60; m += 15) {
-          const start = at(day, Math.floor(m / 60), m % 60);
-          if (start < Date.now() + 3600e3) continue;
-          const id = coachId + "|" + start;
-          // deterministic "already booked by someone else" so the grid looks real
-          const h = [...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
-          slots.push({ id, coachId, start, takenByOther: h % 4 === 0 });
-        }
-      }
-    }
-    return slots;
-  }
+  const allEvents = () => [...masterclassEvents(), ...weeklyPlanningEvents()];
   const rsvpd = (eid, u = me().id) => (S.rsvps[eid] || []).includes(u);
-  const myBookings = () => S.bookings.filter((b) => b.userId === me().id && b.start > Date.now() - 900e3).sort((a, b) => a.start - b.start);
-
-  // ---------- tools ----------
-  const TOOLS = {
-    weekly: {
-      title: "Weekly Planning Meeting",
-      mins: 45,
-      prompt: window.TB_PROMPTS.weekly,
-      steps: [
-        { title: "Review last week", mins: 7, guide: "Look back before you look forward. Be honest, not harsh.",
-          fields: [{ k: "wins", label: "Wins", type: "textarea" }, { k: "misses", label: "Misses and why", type: "textarea" },
-                   { k: "hours", label: "Focused hours delivered", type: "number" }, { k: "energy", label: "Average energy (1 to 5)", type: "range" }] },
-        { title: "Brain dump", mins: 5, guide: "Everything on your mind. Tasks, worries, ideas. Get it out of your head.",
-          fields: [{ k: "dump", label: "Brain dump", type: "textarea", rows: 8 }] },
-        { title: "Quarterly check", mins: 3, guide: "What are your 3 quarterly outcomes? Every Big 3 item should move one.",
-          fields: [{ k: "q", label: "Quarterly goals", type: "textarea" }] },
-        { title: "Choose your Big 3", mins: 8, guide: "If only these three things happened, the week was a win.",
-          fields: [{ k: "b1", label: "Big 1", type: "text" }, { k: "b2", label: "Big 2", type: "text" }, { k: "b3", label: "Big 3", type: "text" }] },
-        { title: "Pace check", mins: 5, guide: "Your Highest Sustainable Pace is the focused-hour number you can hold with energy at 3+. Plan to it, not above it.",
-          fields: [{ k: "hsp", label: "Your HSP (focused hours/week)", type: "number" }, { k: "planned", label: "Focused hours planned this week", type: "number" }] },
-        { title: "Diversion plan", mins: 7, guide: "Name the diversions most likely to hit this week. Pre-decide: Do, Defer, Delegate, or Decline.",
-          fields: [{ k: "div", label: "Likely diversions and your response", type: "textarea", ph: "Client fire drills → Defer to 4pm triage block" }] },
-        { title: "Calendar it", mins: 8, guide: "Block your Big 3 in your peak energy hours. Put email and meetings in the valleys.",
-          fields: [{ k: "blocks", label: "Blocks you created", type: "textarea" }] },
-        { title: "Commit", mins: 2, guide: "One sentence. What kind of week is this going to be?",
-          fields: [{ k: "commit", label: "My commitment", type: "text" }] },
-      ],
-    },
-    daily: {
-      title: "Daily Review",
-      mins: 10,
-      prompt: window.TB_PROMPTS.daily,
-      steps: [
-        { title: "Wins", mins: 2, guide: "What got done? Did you move a Big 3?", fields: [{ k: "wins", label: "Today's wins", type: "textarea" }] },
-        { title: "Diversions", mins: 3, guide: "What pulled you off plan? Which response did you use, which should you have? Flag repeats.",
-          fields: [{ k: "div", label: "Diversions", type: "textarea" }, { k: "repeat", label: "Root-cause candidate (seen 3+ times)?", type: "text" }] },
-        { title: "Energy", mins: 1, guide: "Rate it. If under 3, what drained you?", fields: [{ k: "energy", label: "Energy (1 to 5)", type: "range" }, { k: "drain", label: "What drained or fueled you", type: "text" }] },
-        { title: "Tomorrow", mins: 3, guide: "Top 3 for tomorrow, and the very first thing you'll do.",
-          fields: [{ k: "t1", label: "Top 1", type: "text" }, { k: "t2", label: "Top 2", type: "text" }, { k: "t3", label: "Top 3", type: "text" }, { k: "first", label: "First move tomorrow", type: "text" }] },
-        { title: "One improvement", mins: 1, guide: "One small change for tomorrow.", fields: [{ k: "improve", label: "Improvement", type: "text" }] },
-      ],
-    },
-  };
-
-  function runToMarkdown(tool, answers, ts) {
-    const t = TOOLS[tool];
-    let md = `# ${t.title}: ${fmtDate(ts, { weekday: "long", month: "long", day: "numeric" })}\n`;
-    t.steps.forEach((s) => {
-      const lines = s.fields.filter((f) => answers[f.k]).map((f) => `- **${f.label}:** ${String(answers[f.k]).replace(/\n/g, "\n  ")}`);
-      if (lines.length) md += `\n## ${s.title}\n${lines.join("\n")}\n`;
-    });
-    return md;
+  function icsFor(e) {
+    const f = (t) => new Date(t).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const x = (s) => String(s).replace(/[\\,;]/g, (c) => "\\" + c);
+    return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Time Boss//Community//EN", "BEGIN:VEVENT", `UID:${e.id}@timeboss.us`, `DTSTAMP:${f(Date.now())}`,
+      `DTSTART:${f(e.start)}`, `DTEND:${f(e.start + e.mins * 60e3)}`, `SUMMARY:${x(e.title)}`, `DESCRIPTION:${x(e.desc || "")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
   }
 
   // Line icons in the timeboss.us style (feather-like, teal stroke)
@@ -192,13 +266,14 @@
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
     community: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4 1.6 4.5 4"/>',
     company: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/>',
-    prompt: '<path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/>',
     learn: '<path d="M2 6.5 12 3l10 3.5-10 3.5z"/><path d="M6 8.5V14c0 1.7 2.7 3 6 3s6-1.3 6-3V8.5"/>',
     events: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
     office: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     weekly: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
     daily: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>',
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   };
   const icon = (k, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
   // White logo from www.timeboss.us/images/Time_Boss_Logo_White.png, for dark (navy) backgrounds
@@ -206,41 +281,53 @@
   // Use the real logo only once it has loaded; otherwise show the wordmark (no flicker on re-render)
   let logoOk = false;
   Object.assign(new Image(), { onload: () => { logoOk = true; render(); }, src: LOGO });
-  const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b><small>${sub}</small></div></div>`;
+  const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b>${sub ? `<small>${sub}</small>` : ""}</div></div>`;
+  const logo = (sub) => (logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss">${sub ? `<small class="brand-sub">${sub}</small>` : ""}` : wordmark(sub));
 
   // ---------- layout ----------
   function nav() {
     const u = me(), c = company(u.companyId), r = location.hash;
     const link = (href, label, ic) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""}">${icon(ic)}<span>${label}</span></a>`;
     return `
-      <div class="brand-wrap">${logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss"><small class="brand-sub">Community</small>` : wordmark("Community")}</div>
+      <div class="brand-wrap">${logo("Community")}</div>
       <nav>
         ${link("#/home", "Home", "home")}
         ${link("#/community", "Community", "community")}
         ${c ? link("#/company", esc(c.name), "company") : ""}
         ${isCoach() ? link("#/companies", "Companies", "company") : ""}
-        ${link("#/prompt", "Daily Prompt", "prompt")}
         <div class="navlabel">Learn</div>
         ${link("#/learn", "Courses", "learn")}
         <div class="navlabel">Live</div>
         ${link("#/events", "Events & RSVP", "events")}
         ${link("#/office-hours", "Office Hours", "office")}
-        <div class="navlabel">Tools</div>
+        <div class="navlabel">Meetings</div>
         ${link("#/tools/weekly", "Weekly Planning", "weekly")}
         ${link("#/tools/daily", "Daily Review", "daily")}
       </nav>
-      <a class="cohort-mini" href="#/cohort"><b>Master Your Week</b><span>Next cohort ${fmtDate(SEED.cohort.startsOn + "T12:00", { month: "short", day: "numeric" })} · ${SEED.cohort.seatsLeft} seats</span></a>
+      ${mywCta()}
       <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
         <button class="ghost sm" data-action="logout" title="Switch user">Switch</button></div>`;
   }
 
-  function cohortBanner() {
+  // The one Master Your Week call to action, used everywhere it appears
+  function mywCta() {
     const c = SEED.cohort;
-    return `<div class="cohort-banner">
-      <div><span class="eyebrow">Next cohort · starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
-      <h3>Join ${esc(c.name)}</h3><p>${c.bullets.map(esc).join(" · ")}</p></div>
-      <a class="btn accent" href="#/cohort">Save my seat</a></div>`;
+    return `<div class="myw"><span class="myw-when">Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
+      <h3>${esc(c.name)}</h3><p>${c.weeks} weeks, live with a Time Boss coach. ${c.seatsLeft} seats left.</p>
+      <a class="btn accent sm" href="#/cohort">Save my seat</a></div>`;
   }
+
+  const SOCIAL = {
+    Instagram: ["https://www.instagram.com/timebossus", '<path d="M12 2.2c3.2 0 3.6 0 4.9.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85 0 3.2 0 3.58-.07 4.85-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.65.07-4.9.07-3.2 0-3.58 0-4.85-.07-3.26-.15-4.77-1.7-4.92-4.92C2.2 15.58 2.2 15.2 2.2 12c0-3.2 0-3.58.07-4.85C2.42 3.92 3.93 2.38 7.15 2.27 8.42 2.21 8.8 2.2 12 2.2Zm0 4.86a4.94 4.94 0 1 0 0 9.88 4.94 4.94 0 0 0 0-9.88Zm0 8.14a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Zm5.14-9.49a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3Z"/>'],
+    LinkedIn: ["https://www.linkedin.com/company/time-boss/", '<path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.55V9h3.57v11.45ZM22.22 0H1.77C.8 0 0 .78 0 1.74v20.5C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.74V1.74C24 .78 23.2 0 22.22 0Z"/>'],
+  };
+  // Mirrors the www.timeboss.us footer
+  const footer = () => `<footer class="site-footer">
+      <div class="footer-logo">${logo()}</div>
+      <div class="footer-links"><a href="https://www.timeboss.us" target="_blank" rel="noopener">timeboss.us</a><a href="https://www.timeboss.us/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a><a href="https://www.timeboss.us/contact/" target="_blank" rel="noopener">Contact</a></div>
+      <div class="footer-copy">&copy; ${new Date().getFullYear()} Time Boss</div>
+      <div class="footer-social">${Object.entries(SOCIAL).map(([n, [href, path]]) => `<a href="${href}" aria-label="${n}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></a>`).join("")}</div>
+    </footer>`;
 
   // ---------- views ----------
   const V = {};
@@ -248,16 +335,17 @@
   V.login = () => `
     <div class="login">
       <div class="login-card">
-        <div class="login-top">${logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss"><small class="brand-sub">Community · prototype</small>` : wordmark("Community · prototype")}</div>
-        <p class="muted">Pick a demo user. Each company sees its own private space; everyone shares the common area.</p>
+        <div class="login-top">${logo("Community · prototype")}</div>
+        <p class="muted">Pick a demo user. Each company sees its own private team space; everyone shares the Community.</p>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
-          <div class="login-group"><h4>${cid ? esc(company(cid).name) : "Time Boss coaches"}</h4>
+          <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} · ${teamOf(cid).length}` : "Time Boss coaches"}</h4><div class="picks">
           ${S.users.filter((u) => u.companyId === cid).map((u) => `
             <button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.title)}${u.role !== "member" ? " · " + u.role : ""}</small></span></button>`).join("")}
-          </div>`).join("")}
+          </div></div>`).join("")}
         <details class="join"><summary>Join with a company code</summary>
           <form data-form="join" class="stack">
             <input name="name" placeholder="Your name" required>
+            <input name="email" type="email" placeholder="Work email" required>
             <input name="title" placeholder="Your title">
             <select name="companyId">${S.companies.map((c) => `<option value="${c.id}">${esc(c.name)} (code: ${c.id.toUpperCase()})</option>`).join("")}<option value="__new">+ New company</option></select>
             <input name="newCompany" placeholder="New company name (if creating)">
@@ -267,88 +355,110 @@
       </div>
     </div>`;
 
+  // Habit chain: one pip per workday (DRM) or planned week (WPM), oldest to newest
+  function chain(tool, id, len, { light = false, fresh = false } = {}) {
+    const out = [];
+    if (tool === "daily") {
+      const days = drmDays(id);
+      let d = startOfDay(Date.now());
+      if (!isWorkday(d)) d = prevWorkday(d);
+      for (let i = 0; i < len; i++) { out.unshift({ on: days.has(dateKey(d)), now: i === 0 && dateKey(d) === dateKey() }); d = prevWorkday(d); }
+    } else {
+      const weeks = wpmWeeks(id), d = mondayOf(Date.now());
+      const next = new Date(d); next.setDate(next.getDate() + 7);
+      if (weeks.has(dateKey(next))) d.setTime(next.getTime());
+      for (let i = 0; i < len; i++) { out.unshift({ on: weeks.has(dateKey(d)), now: i === 0 }); d.setDate(d.getDate() - 7); }
+    }
+    return `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${out.map((p, i) => `<span class="pip ${p.on ? "on" : p.now ? "now" : ""} ${fresh && i === out.length - 1 && p.on ? "new" : ""}"></span>`).join("")}</div>`;
+  }
+  function habitHalf(tool) {
+    const t = TOOLS[tool], id = me().id, draft = S.drafts[id + "|" + tool];
+    const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id);
+    const doneNow = tool === "daily" ? drmDays(id).has(dateKey()) : wpmWeeks(id).has(plannedWeek(Date.now()));
+    const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
+    return `<div class="habits-half">
+      <span class="habits-name">${t.title}</span>
+      <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
+      ${chain(tool, id, tool === "weekly" ? 8 : 10)}
+      <div class="habits-foot">
+        ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
+          : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
+          : tool === "daily" && !isWorkday(new Date()) ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Next one Monday, end of day</small>`
+          : `<a class="btn sm" href="#/tools/${tool}">Run now</a><small>${t.when}</small>`}
+      </div></div>`;
+  }
+  // What to do next, in plain words, based on the clock and what's done
+  function nextUp() {
+    const id = me().id, now = new Date(), wd = isWorkday(now);
+    if (!wpmWeeks(id).has(plannedWeek(now)) && (now.getDay() >= 5 || now.getDay() === 0)) return "Next up: plan next week with your Weekly Planning Meeting.";
+    if (wd && !drmDays(id).has(dateKey(now)) && now.getHours() >= 15) return "Next up: your Daily Review Meeting before you close the laptop.";
+    if (wd) return "Work the priorities on your Calendar. Deflect Unknown Tasks to your Parking Lot.";
+    return "Enjoy the weekend. Your habits will be here Monday.";
+  }
+
   V.home = () => {
-    const u = me(), op = overallProgress(u.id), prompt = todaysPrompt();
-    const replied = (S.promptReplies[dateKey()] || []).some((r) => r.authorId === u.id);
-    const upcoming = [...weeklyPlanningEvents(), ...masterclassEvents()].filter((e) => rsvpd(e.id)).sort((a, b) => a.start - b.start).slice(0, 3);
+    const u = me(), op = overallProgress(u.id), p = promptFor(), ms = monthStats(u.id);
+    const upcoming = allEvents().filter((e) => rsvpd(e.id)).sort((a, b) => a.start - b.start).slice(0, 3);
     const nextCourse = SEED.courses.find((c) => courseProgress(u.id, c).pct < 100);
     const nextLesson = nextCourse?.lessons.find((l) => !done(u.id)[l.id]);
-    const runs = S.toolRuns.filter((r) => r.userId === u.id);
-    const lastWeekly = runs.filter((r) => r.tool === "weekly").sort((a, b) => b.ts - a.ts)[0];
-    const lastDaily = runs.filter((r) => r.tool === "daily").sort((a, b) => b.ts - a.ts)[0];
-    const energies = runs.filter((r) => r.answers.energy).sort((a, b) => a.ts - b.ts).slice(-10).map((r) => +r.answers.energy);
     return `
       <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}</h1>
-      <p class="muted">${fmtDate(Date.now(), { weekday: "long", month: "long", day: "numeric" })}</p></div></header>
+      <p class="muted">${fmtDate(Date.now(), { weekday: "long", month: "long", day: "numeric" })}. ${nextUp()}</p></div></header>
 
-      <div class="grid stats">
+      <section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
+
+      <div class="grid two">
+        <div class="card stat"><span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning ${ms.wpm}% · Daily Review ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
-        <div class="card stat"><span class="muted">Streak</span><b>${streak(u.id)}</b><small>days in a row showing up</small></div>
-        <div class="card stat"><span class="muted">Weekly plans</span><b>${runs.filter((r) => r.tool === "weekly").length}</b><small>${lastWeekly ? "last " + ago(lastWeekly.ts) : "none yet"}</small></div>
-        <div class="card stat"><span class="muted">Daily reviews</span><b>${runs.filter((r) => r.tool === "daily").length}</b><small>${lastDaily ? "last " + ago(lastDaily.ts) : "none yet"}</small></div>
       </div>
 
       <div class="grid two">
         <div class="card prompt-card">
-          <span class="eyebrow">Daily prompt</span>
-          <h3>${esc(prompt)}</h3>
+          <span class="pinned-label">${icon("pin", "ic pin")} Today's prompt</span>
+          <h3>${esc(p.q)}</h3>
           <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
-          <a class="btn ${replied ? "ghost" : ""}" href="#/prompt">${replied ? "See replies" : "Reply"}</a>
+          <a class="btn accent sm" href="#/community">Answer in Community</a>
         </div>
         <div class="card">
-          <span class="eyebrow">Continue learning</span>
+          <span class="muted">Continue learning</span>
           ${nextLesson ? `<h3>${esc(nextLesson.title)}</h3><p class="muted">${esc(nextCourse.title)} · ${nextLesson.mins} min</p>
             ${bar(courseProgress(u.id, nextCourse).pct)}
-            <a class="btn" href="#/learn/${nextCourse.id}/${nextLesson.id}">Resume</a>` : `<h3>All courses complete 🎉</h3><p class="muted">Time to teach someone else.</p>`}
+            <a class="btn" href="#/learn/${nextCourse.id}/${nextLesson.id}">Resume</a>` : `<h3>All courses complete</h3><p class="muted">Time to teach someone else.</p>`}
         </div>
       </div>
 
       <div class="grid two">
         <div class="card">
-          <div class="row between"><span class="eyebrow">Your week</span></div>
-          <div class="quick">
-            <a href="#/tools/weekly" class="quick-tile">${icon("weekly")}<b>Run weekly planning</b><small>45 min · Big 3, pace, diversions</small></a>
-            <a href="#/tools/daily" class="quick-tile">${icon("daily")}<b>Run daily review</b><small>10 min · wins, diversions, tomorrow</small></a>
-            <a href="#/office-hours" class="quick-tile">${icon("office")}<b>Book office hours</b><small>15 min with a coach</small></a>
-          </div>
-          ${energies.length > 1 ? `<div class="spark"><span class="muted">Energy trend</span>${sparkline(energies)}</div>` : ""}
+          <h3>On your calendar</h3>
+          ${upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
+            : `<p class="muted">Nothing booked. RSVP for a live Weekly Planning Meeting or the next masterclass.</p>`}
+          <div class="row"><a class="btn ghost sm" href="#/events">See events</a><a class="btn ghost sm" href="#/office-hours">Book office hours</a></div>
         </div>
-        <div class="card">
-          <span class="eyebrow">On your calendar</span>
-          ${upcoming.length || myBookings().length ? `<ul class="list">
-            ${myBookings().slice(0, 2).map((b) => `<li><b>Office hours with ${esc(user(b.coachId).name)}</b><small>${fmtDate(b.start)} · ${fmtTime(b.start)}</small></li>`).join("")}
-            ${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}
-          </ul>` : `<p class="muted">Nothing booked. RSVP for weekly planning or the next masterclass.</p>`}
-          <a class="btn ghost" href="#/events">See events</a>
-        </div>
-      </div>
-      ${cohortBanner()}`;
+        ${mywCta()}
+      </div>`;
   };
 
-  function sparkline(vals) {
-    const w = 220, h = 44, max = 5, min = 1;
-    const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * w},${h - ((v - min) / (max - min)) * (h - 6) - 3}`).join(" ");
-    return `<svg viewBox="0 0 ${w} ${h}" class="sparksvg"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/></svg>`;
-  }
-
-  // feed (common + company)
-  function feed(scope, heading, sub) {
-    const posts = S.posts.filter((p) => p.scope === scope).sort((a, b) => b.ts - a.ts);
-    return `
-      <form class="card composer" data-form="post" data-scope="${scope}">
-        ${avatar(me())}<textarea name="body" rows="2" placeholder="${scope === "common" ? "Share a win, a question, or a diversion you beat..." : "Post to your team (only " + esc(company(scope)?.name) + " can see this)"}" required></textarea>
-        <button class="btn">Post</button>
-      </form>
-      ${posts.map(postCard).join("") || `<p class="muted center">No posts yet. Be first.</p>`}`;
+  // community: pinned daily prompt, then the feed
+  let freshReply = 0; // ts of the reply just posted, so it can animate in once
+  function pinnedPrompt() {
+    const p = promptFor(), replies = (S.promptReplies[dateKey()] || []).slice().sort((a, b) => b.ts - a.ts);
+    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${avatar(a, "sm")}<div><b>${esc(a.name)}</b> <small class="muted">${ago(r.ts)}</small><div>${esc(r.body)}</div></div></div>`; };
+    return `<section class="card prompt-card pinned">
+      <div class="row between"><span class="pinned-label">${icon("pin", "ic pin")} Today's prompt, pinned</span><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
+      <h3>${esc(p.q)}</h3>
+      <form data-form="reply" class="reply-form">${avatar(me(), "sm")}<input name="body" placeholder="Your answer..." required><button class="btn accent sm">Reply</button></form>
+      <div class="replies">${replies.slice(0, 3).map(reply).join("")}
+        ${replies.length > 3 ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(3).map(reply).join("")}</details>` : ""}</div>
+    </section>`;
   }
   function postCard(p) {
     const a = user(p.authorId), liked = p.likes.includes(me().id);
     return `<article class="card post">
-      <div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId && p.scope === "common" ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
+      <div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
       <div class="post-body">${paras(p.body)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
-        <span class="muted sm">${p.comments.length} comment${p.comments.length === 1 ? "" : "s"}</span>
+        <span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>
       </div>
       <div class="comments">
         ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${avatar(ca, "sm")}<div><b>${esc(ca.name)}</b> <small class="muted">${ago(c.ts)}</small><div>${esc(c.body)}</div></div></div>`; }).join("")}
@@ -356,65 +466,117 @@
       </div>
     </article>`;
   }
-
-  V.community = () => `
-    <header class="page-head"><div><h1>Community</h1><p class="muted">The common area. Everyone in Time Boss, every company.</p></div></header>
-    <div class="feed-wrap"><div>${feed("common")}</div>
-    <aside class="side">${sideTodayPrompt()}${cohortBannerSmall()}</aside></div>`;
-
-  function companySpace(cid) {
-    const c = company(cid), members = S.users.filter((u) => u.companyId === cid);
-    const canSeeTeam = isCoach() || me().role === "admin";
+  V.community = () => {
+    const posts = S.posts.slice().sort((a, b) => b.ts - a.ts);
+    const past = [1, 2, 3].map((i) => { const d = new Date(Date.now() - i * DAY); return { d, k: dateKey(d), q: promptFor(d).q }; });
     return `
-      <header class="page-head"><div><span class="eyebrow" style="color:${c.color}">🔒 Private company space</span><h1>${esc(c.name)}</h1>
-      <p class="muted">${members.length} members · ${c.seats} seats · Only ${esc(c.name)} members and Time Boss coaches can see this.</p></div></header>
-      <div class="feed-wrap"><div>${feed(cid)}</div>
-      <aside class="side">
-        <div class="card"><span class="eyebrow">Team progress</span>
-        ${canSeeTeam ? `<table class="team">${members.map((m) => { const p = overallProgress(m.id); return `<tr><td>${avatar(m, "sm")} ${esc(m.name)}</td><td class="w">${bar(p.pct, "thin")}</td><td>${p.pct}%</td></tr>`; }).join("")}</table>
-          <small class="muted">Visible to company admins and coaches.</small>`
-        : `<p class="muted">Your team is ${Math.round(members.reduce((a, m) => a + overallProgress(m.id).pct, 0) / members.length)}% through the program on average.</p>`}
-        </div>
-        ${canSeeTeam ? `<div class="card"><span class="eyebrow">Weekly rhythm adoption</span>
-          ${members.map((m) => { const n = S.toolRuns.filter((r) => r.userId === m.id && r.ts > Date.now() - 7 * DAY).length; return `<div class="row between sm"><span>${esc(m.name)}</span><span class="${n ? "" : "muted"}">${n} tool run${n === 1 ? "" : "s"} this week</span></div>`; }).join("")}
-        </div>` : ""}
+      <header class="page-head"><div><h1>Community</h1><p class="muted">Everyone in Time Boss, every company. Share wins, questions, and what's working.</p></div></header>
+      <div class="feed-wrap"><div>
+        ${pinnedPrompt()}
+        <form class="card composer" data-form="post">${avatar(me())}<textarea name="body" rows="2" placeholder="Share a win, a question, or a task you deflected to your Parking Lot..." required></textarea><button class="btn">Post</button></form>
+        ${posts.map(postCard).join("")}
+      </div>
+      <aside class="side">${mywCta()}
+        <div class="card"><h3>Previous prompts</h3>
+          <ul class="list">${past.map((p) => `<li><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></li>`).join("")}</ul></div>
       </aside></div>`;
-  }
-  V.company = () => (me().companyId ? companySpace(me().companyId) : V.companies());
-  V.companies = (cid) => {
-    if (!isCoach()) return `<div class="card">Coaches only.</div>`;
-    if (cid && company(cid)) return companySpace(cid);
-    return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across tenants.</p></div></header>
-      <div class="grid three">${S.companies.map((c) => {
-        const ms = S.users.filter((u) => u.companyId === c.id);
-        const avg = ms.length ? Math.round(ms.reduce((a, m) => a + overallProgress(m.id).pct, 0) / ms.length) : 0;
-        return `<a class="card company-tile" href="#/companies/${c.id}" style="border-top:4px solid ${c.color}"><h3>${esc(c.name)}</h3><p class="muted">${ms.length} members · ${S.posts.filter((p) => p.scope === c.id).length} posts</p>${bar(avg)}<small>${avg}% avg progress</small></a>`;
-      }).join("")}</div>`;
   };
 
-  // daily prompt
-  function todaysPrompt(d = new Date()) {
-    const day = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / DAY);
-    return SEED.dailyPrompts[day % SEED.dailyPrompts.length];
+  // team space (company): leaderboard for everyone, member detail for leaders and coaches
+  let lbSort = "drm";
+  const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
+  const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
+  function leaderboard(cid) {
+    const ms = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
+    const other = lbSort === "drm" ? "wpm" : "drm";
+    ms.sort((a, b) => b[lbSort] - a[lbSort] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
+    const link = canManage(cid);
+    return `<div class="card"><div class="card-head"><h3>Streak leaderboard</h3>
+        <div class="seg"><button class="${lbSort === "drm" ? "on" : ""}" data-action="lb-sort" data-id="drm">DRM</button><button class="${lbSort === "wpm" ? "on" : ""}" data-action="lb-sort" data-id="wpm">WPM</button></div></div>
+      <ol class="lb">${ms.map((x, i) => {
+        const inner = `<span class="rank">${i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}</span><span class="num ${lbSort === "wpm" ? "hi" : ""}">${x.wpm}<small>wk</small></span><span class="num ${lbSort === "drm" ? "hi" : ""}">${x.drm}<small>day</small></span>`;
+        return `<li class="${x.m.id === me().id ? "you" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<div>${inner}</div>`}</li>`;
+      }).join("")}</ol>
+      <small class="muted">WPM = consecutive weeks with a Weekly Planning Meeting. DRM = consecutive workdays with a Daily Review Meeting.</small></div>`;
   }
-  function sideTodayPrompt() {
-    return `<div class="card prompt-card"><span class="eyebrow">Today's prompt</span><h4>${esc(todaysPrompt())}</h4><a class="btn sm" href="#/prompt">Reply</a></div>`;
+  function vsTeam(u, team) {
+    const maxW = Math.max(1, ...team.map((m) => wpmStreak(m.id))), maxD = Math.max(1, ...team.map((m) => drmStreak(m.id)));
+    const rows = [
+      ["WPM streak", (id) => wpmStreak(id), maxW, " wks"],
+      ["DRM streak", (id) => drmStreak(id), maxD, " days"],
+      ["Past month completion", (id) => monthStats(id).all, 100, "%"],
+      ["Course progress", (id) => overallProgress(id).pct, 100, "%"],
+    ];
+    return `<div class="card"><h3>${u ? "You vs. the team average" : "Team averages"}</h3>
+      ${rows.map(([label, f, max, unit]) => {
+        const avg = avgOf(team, (m) => f(m.id)), you = u ? f(u.id) : null;
+        const show = (v) => (unit === "%" ? Math.round(v) : Math.round(v * 10) / 10) + unit;
+        return `<div class="vs"><div class="row between"><b>${label}</b><span>${u ? `<b>${show(you)}</b> <span class="muted">vs ${show(avg)}</span>` : `<b>${show(avg)}</b>`}</span></div>
+          <div class="bar vs-bar">${u ? `<span style="width:${Math.min(100, (you / max) * 100)}%"></span>` : `<span class="avg-fill" style="width:${Math.min(100, (avg / max) * 100)}%"></span>`}${u ? `<i style="left:${Math.min(100, (avg / max) * 100)}%" title="Team average"></i>` : ""}</div></div>`;
+      }).join("")}
+      ${u ? `<small class="muted"><i class="avg-key"></i> marks the team average across ${team.length} people.</small>` : ""}</div>`;
   }
-  function cohortBannerSmall() {
-    const c = SEED.cohort;
-    return `<div class="card cohort-side"><span class="eyebrow">Master Your Week</span><h4>Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</h4><p class="muted">${c.seatsLeft} seats left</p><a class="btn accent sm" href="#/cohort">Join the cohort</a></div>`;
+  function roster(cid) {
+    const team = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct })).sort((a, b) => b.ms.all - a.ms.all);
+    const avg = (f) => Math.round(avgOf(team, f));
+    return `<div class="card"><div class="card-head"><h3>Team members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
+      <div class="table-wrap"><table class="team">
+        <thead><tr><th>Member</th><th title="Weekly Planning Meeting streak">WPM</th><th title="Daily Review Meeting streak">DRM</th><th title="Past month Weekly Planning completion">Month WPM</th><th title="Past month Daily Review completion">Month DRM</th><th>Courses</th></tr></thead>
+        <tbody>${team.map((x) => `<tr><td><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
+          <td>${x.wpm} wk</td><td>${x.drm} day</td><td>${pctCell(x.ms.wpm)}</td><td>${pctCell(x.ms.drm)}</td><td>${x.op}%</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td>Team average</td><td>${(avgOf(team, (x) => x.wpm)).toFixed(1)} wk</td><td>${(avgOf(team, (x) => x.drm)).toFixed(1)} day</td><td>${avg((x) => x.ms.wpm)}%</td><td>${avg((x) => x.ms.drm)}%</td><td>${avg((x) => x.op)}%</td></tr></tfoot>
+      </table></div></div>`;
   }
-  V.prompt = () => {
-    const key = dateKey(), replies = (S.promptReplies[key] || []).slice().sort((a, b) => b.ts - a.ts);
-    const past = [1, 2, 3].map((i) => { const d = new Date(Date.now() - i * DAY); return { d, k: dateKey(d), q: todaysPrompt(d) }; });
+  const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
+  function teamView(cid) {
+    const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null;
     return `
-      <header class="page-head"><div><span class="eyebrow">Daily prompt · ${fmtDate(Date.now(), { weekday: "long", month: "long", day: "numeric" })}</span><h1>${esc(todaysPrompt())}</h1></div></header>
-      <div class="feed-wrap"><div>
-        <form class="card composer" data-form="reply">${avatar(me())}<textarea name="body" rows="3" placeholder="Your answer..." required></textarea><button class="btn">Reply</button></form>
-        ${replies.map((r) => { const a = user(r.authorId); return `<article class="card post"><div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b><small>${a.companyId ? esc(company(a.companyId).name) + " · " : ""}${ago(r.ts)}</small></div></div><div class="post-body">${paras(r.body)}</div></article>`; }).join("") || `<p class="muted center">No replies yet today. Go first, it's easier than it looks.</p>`}
+      <header class="page-head"><div><h1>${esc(c.name)}</h1>
+      <p class="muted">Your private team space. ${team.length} members. Only ${esc(c.name)} and Time Boss coaches can see it.</p></div></header>
+      <div class="team-grid">
+        <div>${vsTeam(u, team)}${canManage(cid) ? roster(cid) : ""}</div>
+        <aside>${leaderboard(cid)}</aside>
+      </div>`;
+  }
+  function memberView(id) {
+    const m = S.users.find((x) => x.id === id);
+    if (!m || !(canManage(m.companyId) || m.id === me().id)) return notFound();
+    const ms = monthStats(m.id), op = overallProgress(m.id), days = drmDays(m.id), weeks = wpmWeeks(m.id);
+    const runs = S.toolRuns.filter((r) => r.userId === m.id).sort((a, b) => b.ts - a.ts);
+    const cells = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = startOfDay(Date.now() - i * DAY), k = dateKey(d), planned = runs.some((r) => r.tool === "weekly" && dateKey(new Date(r.ts)) === k);
+      cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? " · DRM" : ""}${planned ? " · WPM" : ""}">${planned ? "W" : ""}</span>`);
+    }
+    return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
+      <header class="page-head member-head"><div class="row">${avatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)}</p></div></div></header>
+      <div class="grid stats">
+        <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
+        <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
+        <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>WPM ${ms.wpm}% · DRM ${ms.drm}%</small></div>
+        <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
-      <aside class="side"><div class="card"><span class="eyebrow">Previous prompts</span>
-        <ul class="list">${past.map((p) => `<li><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></li>`).join("")}</ul></div></aside></div>`;
+      <div class="card"><div class="card-head"><h3>Last 30 days</h3><small class="muted"><i class="day-cell on key"></i> DRM <i class="day-cell plan key">W</i> WPM <i class="day-cell miss key"></i> missed</small></div>
+        <div class="days">${cells.join("")}</div></div>
+      <div class="grid two">
+        <div class="card"><h3>Recent meetings</h3>
+          ${runs.slice(0, 10).map((r) => `<details class="run"><summary><b>${TOOLS[r.tool].short}</b> ${fmtDate(r.ts, { weekday: "short", month: "short", day: "numeric" })} <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(r.tool, r.answers, r.ts))}</pre></details>`).join("") || `<p class="muted">No meetings yet.</p>`}
+        </div>
+        <div class="card"><h3>Course progress</h3>
+          ${SEED.courses.map((c) => { const p = courseProgress(m.id, c); return `<div class="course-row"><div class="row between"><span>${esc(c.title)}</span><small class="muted">${p.n}/${p.total}</small></div>${bar(p.pct, "thin")}</div>`; }).join("")}
+        </div>
+      </div>`;
+  }
+  V.company = (mid) => (!me().companyId ? V.companies() : mid ? memberView(mid) : teamView(me().companyId));
+  V.companies = (cid, mid) => {
+    if (!isCoach()) return `<div class="card">Coaches only.</div>`;
+    if (mid) return memberView(mid);
+    if (cid && company(cid)) return teamView(cid);
+    return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across teams.</p></div></header>
+      <div class="grid three">${S.companies.map((c) => {
+        const ms = teamOf(c.id), avg = Math.round(avgOf(ms, (m) => monthStats(m.id).all));
+        return `<a class="card company-tile" href="#/companies/${c.id}" style="border-top:4px solid ${c.color}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "member", "members")}</p>${bar(avg)}<small>${avg}% past month WPM + DRM completion</small></a>`;
+      }).join("")}</div>`;
   };
 
   // learn
@@ -460,34 +622,43 @@
       const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
       const on = rsvpd(e.id);
       return `<div class="card event"><div class="date-chip"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></div>
-        <div class="grow"><h3>${esc(e.title)}</h3><p class="muted">${fmtDate(e.start, { weekday: "long" })} · ${fmtTime(e.start)} · ${e.mins} min · with ${esc(user(e.host).name)}</p>${e.desc ? `<p>${esc(e.desc)}</p>` : ""}<small class="muted">${n} going</small></div>
-        <button class="btn ${on ? "ghost" : ""}" data-action="rsvp" data-id="${e.id}">${on ? "✓ Going" : "RSVP"}</button></div>`;
+        <div class="event-body"><h3>${esc(e.title)}</h3><p class="muted">${fmtDate(e.start, { weekday: "long" })} · ${fmtTime(e.start)} · ${e.mins} min · with ${esc(user(e.host).name)}</p>${e.desc ? `<p>${esc(e.desc)}</p>` : ""}<small class="muted">${n} going</small></div>
+        <div class="event-actions"><button class="btn ${on ? "ghost" : ""}" data-action="rsvp" data-id="${e.id}">${on ? "✓ Going" : "RSVP"}</button>
+          ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to calendar</a>` : ""}</div></div>`;
     };
-    return `<header class="page-head"><div><h1>Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP to save your spot.</p></div></header>
+    return `<header class="page-head"><div><h1>Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
       <h2 class="section">Monthly masterclass</h2>${masterclassEvents().map(ev).join("")}
-      <h2 class="section">Weekly planning (live, group)</h2><p class="muted">Plan your week alongside other Time Bosses. Prefer solo? Use the <a href="#/tools/weekly">Weekly Planning tool</a>.</p>${weeklyPlanningEvents().map(ev).join("")}`;
+      <h2 class="section">Weekly Planning Meeting (live, group)</h2><p class="muted">Plan next week alongside other Time Bosses. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map(ev).join("")}`;
   };
 
-  // office hours
+  // office hours: Calendly inline embed, prefilled with the member's name and email
   V["office-hours"] = () => {
-    const slots = officeHourSlots(), mine = myBookings();
-    const byDay = {};
-    slots.forEach((s) => (byDay[dateKey(new Date(s.start))] ||= []).push(s));
-    return `<header class="page-head"><div><h1>Micro office hours</h1><p class="muted">15 minutes with a Time Boss coach. Bring one specific question.</p></div></header>
-      ${mine.length ? `<div class="card"><span class="eyebrow">Your bookings</span><ul class="list">${mine.map((b) => `<li class="row between"><span><b>${fmtDate(b.start)} · ${fmtTime(b.start)}</b> with ${esc(user(b.coachId).name)}<small>${esc(b.topic)}</small></span><button class="ghost sm danger" data-action="cancel-booking" data-id="${esc(b.slotId)}">Cancel</button></li>`).join("")}</ul></div>` : ""}
-      <div class="slots">${Object.entries(byDay).map(([k, ss]) => `
-        <div class="card day"><h4>${fmtDate(k + "T12:00")}</h4>
-        ${SEED.coaches.map((cid) => { const cs = ss.filter((s) => s.coachId === cid); return cs.length ? `<div class="coach-row"><small>${avatar(user(cid), "sm")} ${esc(user(cid).name)}</small><div class="slot-grid">${cs.map((s) => {
-          const mineB = S.bookings.find((b) => b.slotId === s.id), taken = s.takenByOther || mineB;
-          return `<button class="slot ${mineB?.userId === me().id ? "mine" : taken ? "taken" : ""}" ${taken ? "disabled" : ""} data-action="pick-slot" data-id="${esc(s.id)}">${fmtTime(s.start)}</button>`;
-        }).join("")}</div></div>` : ""; }).join("")}
-        </div>`).join("")}</div>`;
+    const u = me(), q = new URLSearchParams({ embed_type: "Inline", hide_gdpr_banner: "1", background_color: "fefcf8", text_color: "15253c", primary_color: "3c768d", name: u.name, email: u.email });
+    return `<header class="page-head"><div><h1>Micro office hours</h1><p class="muted">${SEED.officeHours.mins} minutes with a Time Boss coach. Bring one specific question.</p></div></header>
+      <div class="card calendly"><iframe src="${esc(SEED.officeHours.calendlyUrl)}?${esc(q.toString())}" title="Book micro office hours" loading="lazy"></iframe></div>
+      <p class="muted sm">Booking runs through Calendly, which sends your confirmation and calendar invite. <a href="${esc(SEED.officeHours.calendlyUrl)}" target="_blank" rel="noopener">Open in a new tab</a></p>`;
   };
 
   // tools
+  let justSaved = null; // {tool, before}: shows the completion moment once, right after a meeting is saved
+  const streakOf = (tool, id) => (tool === "weekly" ? wpmStreak(id) : drmStreak(id));
+  function celebrate(tool, before) {
+    const t = TOOLS[tool], id = me().id, n = streakOf(tool, id), grew = n > before;
+    const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
+    const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you."
+      : tool === "weekly" ? "Your week is planned. Share it with someone and protect the blocks." : "Incomplete tasks have a home. Tomorrow's plan is reviewed. You can close the laptop.";
+    return `<section class="celebrate" aria-live="polite">
+      <h1>${t.title} done</h1><p>${line}</p>
+      <span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span><span class="unit">${unit}</span>
+      ${chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew })}
+      <div class="row"><a class="btn accent" href="#/home">Back to home</a><a class="btn ghost" href="#/community">Share a win in Community</a></div>
+    </section>`;
+  }
   function toolView(tool) {
+    if (justSaved?.tool === tool) { const html = celebrate(tool, justSaved.before); justSaved = null; return html; }
     const t = TOOLS[tool], dk = me().id + "|" + tool, draft = S.drafts[dk];
-    const history = S.toolRuns.filter((r) => r.userId === me().id && r.tool === tool).sort((a, b) => b.ts - a.ts);
+    const history = runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
+    const streakN = tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <details><summary>Preview prompt</summary><pre>${esc(t.prompt)}</pre></details>
@@ -495,29 +666,31 @@
       <a class="btn ghost sm" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a><a class="btn ghost sm" href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT</a></div></div>`;
 
     if (!draft) {
-      return `<header class="page-head"><div><span class="eyebrow">Tool</span><h1>${t.title}</h1><p class="muted">${t.steps.length} steps · about ${t.mins} minutes</p></div></header>
+      let lastPhase = "";
+      return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.</p></div></header>
         <div class="feed-wrap"><div>
-          <div class="card"><ol class="steps-preview">${t.steps.map((s) => `<li><b>${esc(s.title)}</b><small>${s.mins} min · ${esc(s.guide)}</small></li>`).join("")}</ol>
-          <button class="btn big" data-action="start-tool" data-tool="${tool}">Start ${t.title.toLowerCase()}</button></div>
-          ${history.length ? `<h2 class="section">History</h2>${history.map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as markdown</button></details>`).join("")}` : ""}
+          <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
+          ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
+          <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
+          <button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button></div>
+          ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as markdown</button></details>`).join("")}` : ""}
         </div><aside class="side">${aiPanel}</aside></div>`;
     }
     const s = t.steps[draft.step], last = draft.step === t.steps.length - 1;
     const field = (f) => {
       const v = draft.answers[f.k] ?? "";
       if (f.type === "textarea") return `<label>${esc(f.label)}<textarea name="${f.k}" rows="${f.rows || 4}" placeholder="${esc(f.ph || "")}">${esc(v)}</textarea></label>`;
-      if (f.type === "range") return `<label>${esc(f.label)} <output>${v || 3}</output><input type="range" name="${f.k}" min="1" max="5" value="${v || 3}" oninput="this.previousElementSibling.value=this.value"></label>`;
+      if (f.type === "check") return `<label class="check-row"><input type="checkbox" name="${f.k}" value="Yes" ${v ? "checked" : ""}><span>${esc(f.label)}</span></label>`;
       return `<label>${esc(f.label)}<input type="${f.type}" name="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph || "")}"></label>`;
     };
-    const paceWarn = tool === "weekly" && s.fields.some((f) => f.k === "planned") && draft.answers.hsp && draft.answers.planned && +draft.answers.planned > +draft.answers.hsp
-      ? `<div class="warn">You've planned ${draft.answers.planned}h against an HSP of ${draft.answers.hsp}h. Cut something.</div>` : "";
-    return `<header class="page-head"><div><span class="eyebrow">${t.title} · step ${draft.step + 1} of ${t.steps.length}</span><h1>${esc(s.title)}</h1></div>
+    return `<header class="page-head"><div><span class="eyebrow">${t.title} · ${s.phase} · step ${draft.step + 1} of ${t.steps.length}</span><h1>${esc(s.title)}</h1></div>
         <div class="timer" id="timer" data-start="${draft.startedAt}" data-budget="${t.mins}">--:--</div></header>
-      <div class="stepper">${t.steps.map((x, i) => `<span class="${i < draft.step ? "done" : i === draft.step ? "cur" : ""}" title="${esc(x.title)}"></span>`).join("")}</div>
+      <div class="stepper">${t.steps.map((x, i) => `<span class="${i < draft.step ? "done" : i === draft.step ? "cur" : ""}" title="${esc(x.phase)}: ${esc(x.title)}"></span>`).join("")}</div>
       <div class="feed-wrap"><div>
         <form class="card tool-step" data-form="tool-step" data-tool="${tool}">
-          <p class="guide">${esc(s.guide)} <small class="muted">(~${s.mins} min)</small></p>
-          ${s.fields.map(field).join("")}${paceWarn}
+          <p class="guide">${esc(s.guide)}</p>
+          ${s.fields.map(field).join("")}
+          ${s.share ? `<button type="button" class="btn ghost sm share-btn" data-action="copy-draft" data-tool="${tool}">Copy my plan to share</button>` : ""}
           <div class="row between">
             <span>${draft.step > 0 ? `<button type="button" class="ghost" data-action="tool-back" data-tool="${tool}">← Back</button>` : ""}<button type="button" class="ghost danger" data-action="tool-abandon" data-tool="${tool}">Discard</button></span>
             <button class="btn">${last ? "Finish & save" : "Next →"}</button>
@@ -530,11 +703,11 @@
   V.cohort = () => {
     const c = SEED.cohort;
     return `<div class="cohort-hero">
-      <span class="eyebrow">Next cohort · ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}</span>
+      <span class="eyebrow">Next cohort · starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}</span>
       <h1>${esc(c.name)}</h1>
-      <p class="lead">A ${c.weeks}-week live cohort that installs the Time Boss operating rhythm for good. Weekly planning, daily review, diversion defenses, and a pace you can actually hold.</p>
+      <p class="lead">A ${c.weeks}-week live cohort that installs the Time Boss habits for good: the Weekly Planning Meeting, the Daily Review Meeting, and a pace you can actually hold.</p>
       <ul class="checks">${c.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}<li>Includes everything in this community</li></ul>
-      <div class="row"><a class="btn accent big" href="${esc(c.url)}" target="_blank" rel="noopener">Save my seat</a><span class="muted">${c.seatsLeft} seats left</span></div>
+      <div class="row"><a class="btn accent" href="${esc(c.url)}" target="_blank" rel="noopener">Save my seat</a><span class="muted">${c.seatsLeft} seats left</span></div>
     </div>`;
   };
 
@@ -543,13 +716,22 @@
   // ---------- router ----------
   function render() {
     const root = document.getElementById("app");
-    if (!me()) { root.className = "logged-out"; root.innerHTML = V.login(); return; }
+    if (!me()) { root.className = "logged-out"; root.innerHTML = V.login() + footer(); return; }
     let [, view, a, b] = location.hash.split("/");
     if (!view || !V[view]) { location.hash = "#/home"; return; }
     root.className = "";
-    root.innerHTML = `<aside class="sidebar">${nav()}</aside><main id="main">${V[view](a, b)}</main>
-      <button class="menu-btn" data-action="menu">☰</button>`;
+    root.innerHTML = `<div class="topbar"><a href="#/home" class="topbar-logo">${logo()}</a><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button></div>
+      <aside class="sidebar">${nav()}</aside><div class="content"><main id="main">${V[view](a, b)}</main>${footer()}</div>`;
     tickTimer();
+    countUp();
+  }
+  // Count the streak up from the previous number on the completion screen
+  function countUp() {
+    const el = document.querySelector(".celebrate .big[data-from]");
+    if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const to = el.textContent;
+    el.textContent = el.dataset.from;
+    setTimeout(() => { el.textContent = to; el.classList.add("bump"); }, 1000); // lands as the new pip drops into the chain
   }
   window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
 
@@ -560,7 +742,7 @@
     if (!el) return;
     const upd = () => {
       const s = Math.floor((Date.now() - +el.dataset.start) / 1000);
-      el.textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      el.textContent = `${pad2(Math.floor(s / 60))}:${pad2(s % 60)}`;
       el.classList.toggle("over", s / 60 > +el.dataset.budget);
     };
     upd(); timerInt = setInterval(upd, 1000);
@@ -569,8 +751,8 @@
   // ---------- actions ----------
   function readForm(form) { return Object.fromEntries(new FormData(form).entries()); }
   function saveStep(tool, form) {
-    const d = S.drafts[me().id + "|" + tool];
-    Object.assign(d.answers, readForm(form));
+    const d = S.drafts[me().id + "|" + tool], fd = new FormData(form);
+    TOOLS[tool].steps[d.step].fields.forEach((f) => { d.answers[f.k] = f.type === "check" ? (fd.has(f.k) ? "Yes" : "") : fd.get(f.k) ?? ""; });
   }
 
   document.addEventListener("click", (e) => {
@@ -579,10 +761,11 @@
     const { action, id, tool } = el.dataset;
     const A = {
       login: () => { S.sessionUserId = id; save(); location.hash = "#/home"; render(); },
-      logout: () => { S.sessionUserId = null; save(); render(); },
+      logout: () => { S.sessionUserId = null; document.body.classList.remove("menu-open"); save(); render(); },
       reset: () => { if (confirm("Reset all demo data?")) { S = freshState(); save(); render(); } },
       menu: () => document.body.classList.toggle("menu-open"),
       like: () => { const p = S.posts.find((x) => x.id === id), i = p.likes.indexOf(me().id); i < 0 ? p.likes.push(me().id) : p.likes.splice(i, 1); save(); render(); },
+      "lb-sort": () => { lbSort = id; render(); },
       "toggle-lesson": () => {
         const d = (S.progress[me().id] ||= {});
         if (d[id]) delete d[id]; else { d[id] = Date.now(); toast("Lesson complete ✓"); }
@@ -590,20 +773,14 @@
       },
       rsvp: () => {
         const l = (S.rsvps[id] ||= []), i = l.indexOf(me().id);
-        if (i < 0) { l.push(me().id); toast("You're in. Calendar invite would go out here."); } else l.splice(i, 1);
+        // Production: RSVP emails the member a calendar invite (.ics / Google Calendar API) and removes it on cancel
+        if (i < 0) { l.push(me().id); toast(`You're in. Calendar invite sent to ${me().email}`); } else { l.splice(i, 1); toast("RSVP cancelled. Calendar invite withdrawn."); }
         save(); render();
       },
-      "pick-slot": () => {
-        const [coachId, start] = id.split("|");
-        const topic = prompt(`Book 15 min with ${user(coachId).name}\n${fmtDate(+start)} at ${fmtTime(+start)}\n\nWhat do you want help with?`);
-        if (topic === null) return;
-        S.bookings.push({ slotId: id, coachId, start: +start, userId: me().id, topic: topic || "General question" });
-        save(); render(); toast("Booked. Zoom link would be emailed.");
-      },
-      "cancel-booking": () => { S.bookings = S.bookings.filter((b) => !(b.slotId === id && b.userId === me().id)); save(); render(); },
       "start-tool": () => { S.drafts[me().id + "|" + tool] = { step: 0, answers: {}, startedAt: Date.now() }; save(); render(); },
-      "tool-back": () => { const f = document.querySelector("[data-form=tool-step]"); saveStep(tool, f); S.drafts[me().id + "|" + tool].step--; save(); render(); },
+      "tool-back": () => { saveStep(tool, document.querySelector("[data-form=tool-step]")); S.drafts[me().id + "|" + tool].step--; save(); render(); },
       "tool-abandon": () => { if (confirm("Discard this session?")) { delete S.drafts[me().id + "|" + tool]; save(); render(); } },
+      "copy-draft": () => { saveStep(tool, document.querySelector("[data-form=tool-step]")); save(); copy(runToMarkdown(tool, S.drafts[me().id + "|" + tool].answers, Date.now()), "Plan copied. Send it to your person."); },
       "copy-prompt": () => copy(TOOLS[tool].prompt, "System prompt copied. Paste it into your AI."),
       "copy-run": () => { const r = S.toolRuns.find((x) => x.id === id); copy(runToMarkdown(r.tool, r.answers, r.ts)); },
     };
@@ -615,18 +792,18 @@
     if (!kind) return;
     e.preventDefault();
     const v = readForm(f);
-    if (kind === "post") S.posts.push({ id: uid(), scope: f.dataset.scope, authorId: me().id, ts: Date.now(), body: v.body.trim(), likes: [], comments: [] });
+    if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim(), likes: [], comments: [] });
     if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim() });
-    if (kind === "reply") (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: Date.now(), body: v.body.trim() });
+    if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim() }); }
     if (kind === "join") {
       let cid = v.companyId;
       if (cid === "__new") {
         if (!v.newCompany.trim()) return toast("Name the new company");
         cid = v.newCompany.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || uid();
-        if (!company(cid)) S.companies.push({ id: cid, name: v.newCompany.trim(), color: `hsl(${Math.random() * 360 | 0} 55% 45%)`, seats: 10 });
+        if (!company(cid)) S.companies.push({ id: cid, name: v.newCompany.trim(), color: `hsl(${Math.random() * 360 | 0} 40% 40%)`, seats: 10 });
       }
       const isFirst = !S.users.some((u) => u.companyId === cid);
-      const u = { id: "u_" + uid(), name: v.name.trim(), title: v.title.trim() || "Member", companyId: cid, role: isFirst ? "admin" : "member" };
+      const u = { id: "u_" + uid(), name: v.name.trim(), email: v.email.trim(), title: v.title.trim() || "Member", companyId: cid, role: isFirst ? "admin" : "member" };
       S.users.push(u); S.sessionUserId = u.id; location.hash = "#/home";
     }
     if (kind === "tool-step") {
@@ -634,15 +811,18 @@
       saveStep(tool, f);
       if (d.step < TOOLS[tool].steps.length - 1) d.step++;
       else {
+        justSaved = { tool, before: streakOf(tool, me().id) };
         S.toolRuns.push({ id: uid(), userId: me().id, tool, ts: Date.now(), answers: d.answers });
         delete S.drafts[dk];
-        toast(`${TOOLS[tool].title} saved ✓`);
       }
     }
     save(); render();
   });
 
-  document.addEventListener("click", (e) => { if (e.target.closest(".sidebar a")) document.body.classList.remove("menu-open"); });
+  // Close the mobile tray on navigation or a tap outside it
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".sidebar a") || (document.body.classList.contains("menu-open") && !e.target.closest(".sidebar, .menu-btn"))) document.body.classList.remove("menu-open");
+  });
 
   render();
 })();

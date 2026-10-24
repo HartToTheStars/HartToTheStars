@@ -3,23 +3,53 @@
 
 window.TB_SEED = {
   companies: [
-    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 25 },
-    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12 },
-    { id: "brightline", name: "Brightline Studio", color: "#d6811f", seats: 8 },
+    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com" },
+    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org" },
+    { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio" },
   ],
 
+  // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
-    { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach" },
-    { id: "u_coach2", name: "Jordan Reyes", title: "Time Boss Coach", companyId: null, role: "coach" },
-    { id: "u_maria", name: "Maria Chen", title: "VP Operations", companyId: "acme", role: "admin" },
-    { id: "u_dev", name: "Dev Patel", title: "Dispatch Manager", companyId: "acme", role: "member" },
-    { id: "u_sam", name: "Sam Okafor", title: "Account Lead", companyId: "acme", role: "member" },
-    { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin" },
-    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member" },
-    { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin" },
+    { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
+    { id: "u_coach2", name: "Jordan Reyes", title: "Time Boss Coach", companyId: null, role: "coach", email: "jordan@timeboss.us" },
+
+    { id: "u_maria", name: "Maria Chen", title: "VP Operations", companyId: "acme", role: "admin", habit: 0.93 },
+    { id: "u_victor", name: "Victor Hughes", title: "CEO", companyId: "acme", role: "admin", habit: 0.78 },
+    { id: "u_patrick", name: "Patrick Doyle", title: "CFO", companyId: "acme", role: "member", habit: 0.7 },
+    { id: "u_dev", name: "Dev Patel", title: "Dispatch Manager", companyId: "acme", role: "member", habit: 0.88 },
+    { id: "u_sam", name: "Sam Okafor", title: "Account Lead", companyId: "acme", role: "member", habit: 0.45 },
+    { id: "u_priya", name: "Priya Raman", title: "Director of Finance", companyId: "acme", role: "member", habit: 0.96 },
+    { id: "u_marcus", name: "Marcus Bell", title: "Fleet Manager", companyId: "acme", role: "member", habit: 0.62 },
+    { id: "u_hannah", name: "Hannah Brooks", title: "HR Business Partner", companyId: "acme", role: "member", habit: 0.84 },
+    { id: "u_luis", name: "Luis Ortega", title: "Warehouse Supervisor", companyId: "acme", role: "member", habit: 0.55 },
+    { id: "u_grace", name: "Grace Kim", title: "Customer Success Manager", companyId: "acme", role: "member", habit: 0.91 },
+    { id: "u_tyler", name: "Tyler Nguyen", title: "Logistics Analyst", companyId: "acme", role: "member", habit: 0.74 },
+    { id: "u_aisha", name: "Aisha Mohammed", title: "Procurement Lead", companyId: "acme", role: "member", habit: 0.86 },
+    { id: "u_ben", name: "Ben Carter", title: "Safety Coordinator", companyId: "acme", role: "member", habit: 0.38 },
+    { id: "u_chloe", name: "Chloe Martin", title: "Marketing Manager", companyId: "acme", role: "member", habit: 0.8 },
+    { id: "u_jamal", name: "Jamal Washington", title: "Regional Sales Director", companyId: "acme", role: "member", habit: 0.67 },
+    { id: "u_erin", name: "Erin Walsh", title: "Controller", companyId: "acme", role: "member", habit: 0.9 },
+    { id: "u_diego", name: "Diego Alvarez", title: "Routing Planner", companyId: "acme", role: "member", habit: 0.58 },
+    { id: "u_nina", name: "Nina Petrova", title: "IT Manager", companyId: "acme", role: "member", habit: 0.82 },
+    { id: "u_owen", name: "Owen Price", title: "Driver Lead", companyId: "acme", role: "member", habit: 0.3 },
+    { id: "u_rachel", name: "Rachel Adams", title: "Executive Assistant", companyId: "acme", role: "member", habit: 0.95 },
+    { id: "u_kenji", name: "Kenji Sato", title: "Data Engineer", companyId: "acme", role: "member", habit: 0.72 },
+    { id: "u_sofia", name: "Sofia Rossi", title: "Operations Coordinator", companyId: "acme", role: "member", habit: 0.87 },
+    { id: "u_caleb", name: "Caleb Johnson", title: "Account Executive", companyId: "acme", role: "member", habit: 0.5 },
+    { id: "u_leah", name: "Leah Goldberg", title: "Billing Specialist", companyId: "acme", role: "member", habit: 0.77 },
+    { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", habit: 0.64 },
+    { id: "u_mei", name: "Mei Lin", title: "Product Manager", companyId: "acme", role: "member", habit: 0.89 },
+    { id: "u_zoe", name: "Zoe Bennett", title: "Recruiter", companyId: "acme", role: "member", habit: 0.42 },
+
+    { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin", habit: 0.85 },
+    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", habit: 0.7 },
+    { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin", habit: 0.76 },
   ],
 
   coaches: ["u_andrew", "u_coach2"],
+
+  // Office hours booking (Calendly inline embed)
+  officeHours: { calendlyUrl: "https://calendly.com/d/d3mx-5nj-rrw/time-boss-micro-office-hours", mins: 15 },
 
   // Core program + mini courses. Lessons: { id, title, mins, body (html-ish paragraphs), action }
   courses: [
@@ -37,10 +67,10 @@ window.TB_SEED = {
           body: ["A Time Boss decides in advance. Reactive people decide in the moment, which means someone else decides for them.",
                  "Your calendar is a statement of priorities. If it's mostly other people's priorities, that's information."],
           action: "Audit tomorrow's calendar. Mark each block: mine, theirs, or nobody's." },
-        { id: "ws3", title: "Your weekly operating rhythm", mins: 12,
-          body: ["Two meetings run the whole system: a weekly planning meeting with yourself and a daily review.",
+        { id: "ws3", title: "Your weekly habits", mins: 12,
+          body: ["Two meetings run the whole system: a Weekly Planning Meeting with yourself and a Daily Review Meeting.",
                  "Weekly sets direction. Daily keeps you honest. Everything else is execution."],
-          action: "Block 45 minutes for weekly planning and 10 minutes for daily review on your calendar, recurring." },
+          action: "Block your Weekly Planning Meeting before your work week starts and a 15-minute Daily Review Meeting at the end of each workday, recurring." },
       ],
     },
     {
@@ -135,21 +165,62 @@ window.TB_SEED = {
       ] },
   ],
 
+  // One prompt per day, rotating. Seed replies make the pinned prompt look alive in the demo.
   dailyPrompts: [
-    "What's one diversion you said no to yesterday? How did it feel?",
-    "Where is your energy highest today, and what are you putting there?",
-    "What meeting this week could have been an email?",
-    "What's one thing you're doing that someone else should own?",
-    "What would make today a win if it were the only thing you finished?",
-    "Which recurring diversion are you most ready to solve at the root?",
-    "Are you above, at, or below your Highest Sustainable Pace this week? Why?",
-    "What did you learn from last week's plan vs. what actually happened?",
-    "What's the hardest thing on your list, and when are you doing it?",
-    "Name one boundary that protected your time this week.",
-    "What would you delegate if you trusted it would be done right?",
-    "Which of your quarterly goals got the least attention this week?",
-    "What's one AI prompt that saved you time recently? Share it.",
-    "What does a sustainable week look like for you, in one sentence?",
+    { q: "What's one task you deflected to your Parking Lot yesterday instead of letting it hijack your day?", replies: [
+      { a: "u_dev", b: "A driver asked for a route change at 9am. Parked it, handled it in Whirlwind at 2. Nothing caught fire." },
+      { a: "u_grace", b: "A 'quick' client report request. Parked it, and by Whirlwind time they'd found the answer themselves." },
+      { a: "u_kenji", b: "Dashboard bug that wasn't urgent. Old me would have lost the morning to it." } ] },
+    { q: "When is your energy highest today, and what One-time Task did you block there?", replies: [
+      { a: "u_priya", b: "8 to 10am. Budget variance analysis, phone in another room." },
+      { a: "u_mei", b: "Right after lunch, oddly. Blocked the roadmap draft 1 to 3." },
+      { a: "u_hannah", b: "Early. Writing the new onboarding plan before anyone else is online." } ] },
+    { q: "What meeting this week could have been an email?", replies: [
+      { a: "u_jamal", b: "Monday pipeline review. Everyone read numbers off a slide we all already had." },
+      { a: "u_rachel", b: "Half of Victor's 1:1s are status updates. Proposing a shared doc instead." },
+      { a: "u_tyler", b: "The weekly metrics sync. Converting it to a Loom this week." } ] },
+    { q: "What's one thing you're doing that someone else should own?", replies: [
+      { a: "u_maria", b: "Approving every PTO request in ops. Moving that to team leads this month." },
+      { a: "u_luis", b: "Counting inventory myself on Fridays. Training Sofia's team to run it." },
+      { a: "u_patrick", b: "Formatting the board pack. Erin's team does it better anyway." } ] },
+    { q: "If you only finished one thing today, what would make it a win?", replies: [
+      { a: "u_aisha", b: "Signing the new packaging vendor. Everything else can wait." },
+      { a: "u_chloe", b: "Shipping the Q4 campaign brief to the agency." },
+      { a: "u_nina", b: "Getting the laptop refresh order placed before pricing changes." } ] },
+    { q: "Which of the 5 D's (defer, delegate, digitize, downsize, delete) did you use most last week?", replies: [
+      { a: "u_erin", b: "Digitize. Automated the vendor statement reconciliation and got two hours back." },
+      { a: "u_victor", b: "Delete. Dropped two recurring meetings and nobody noticed." },
+      { a: "u_sofia", b: "Downsize. Weekly ops report is now one page instead of six." } ] },
+    { q: "Are you above, at, or below your Highest Sustainable Pace this week? Why?", replies: [
+      { a: "u_marcus", b: "Above. Peak season plus two drivers out. Cutting back on the side projects next week." },
+      { a: "u_leah", b: "At. First time in a while. Whirlwind blocks are doing the heavy lifting." },
+      { a: "u_dev", b: "Slightly above, but I can see it now instead of finding out on Friday." } ] },
+    { q: "What did last week's plan get right, and what did it get wrong?", replies: [
+      { a: "u_grace", b: "Right: blocking renewals early in the week. Wrong: zero buffer for escalations." },
+      { a: "u_andre", b: "Planned 30 hours of One-time Tasks. Did 14. Whirlwind needs more room." } ] },
+    { q: "What's the hardest thing on your list this week, and when is it blocked?", replies: [
+      { a: "u_zoe", b: "Offer conversation with a candidate we're about to lose. Tuesday 9am." },
+      { a: "u_priya", b: "The 2027 budget model. Wednesday and Thursday mornings, door closed." },
+      { a: "u_caleb", b: "Cold outreach to the three logos I keep avoiding. Monday 10 to 11." } ] },
+    { q: "How much Whirlwind time did you block this week, and was it enough?", replies: [
+      { a: "u_sam", b: "None. Which explains a lot. Adding an hour a day starting Monday." },
+      { a: "u_rachel", b: "90 minutes a day and it's finally enough. Inbox is under control." },
+      { a: "u_owen", b: "Driver calls ARE my Whirlwind. Trying to batch them into two windows." } ] },
+    { q: "What would you delegate if you trusted it would be done right?", replies: [
+      { a: "u_victor", b: "Customer escalations. Grace's team is ready, I'm the bottleneck." },
+      { a: "u_kenji", b: "Pipeline monitoring. Writing the runbook so someone else can own it." } ] },
+    { q: "Who did you share your weekly plan with, and did it change anything?", replies: [
+      { a: "u_mei", b: "Shared with my manager. She caught a conflict I'd missed before Monday even started." },
+      { a: "u_tyler", b: "Shared it with Diego. We're now planning our route analysis blocks together." },
+      { a: "u_hannah", b: "My partner. Turns out saying it out loud makes me less likely to skip the gym block." } ] },
+    { q: "What's one recurring task you finally put on your calendar?", replies: [
+      { a: "u_erin", b: "Month-end close prep. It used to ambush me every 28th." },
+      { a: "u_ben", b: "Weekly safety walk. It kept getting bumped because it lived in my head." },
+      { a: "u_aisha", b: "Supplier scorecards, first Monday of the month." } ] },
+    { q: "What does a sustainable week look like for you, in one sentence?", replies: [
+      { a: "u_maria", b: "Home by 6 with my One-time Tasks moved forward and nothing I promised dropped." },
+      { a: "u_diego", b: "Routes planned by Tuesday, no weekend Slack." },
+      { a: "u_lena", b: "Clinic runs without me in every meeting." } ] },
   ],
 
   masterclasses: [
@@ -171,21 +242,85 @@ window.TB_SEED = {
     ],
   },
 
+  // Community posts. h = hours ago, likes = how many people liked it.
   posts: [
-    { id: "p1", scope: "common", authorId: "u_andrew", ts: -3600e3 * 5, body: "Welcome to the Time Boss community. Introduce yourself: name, role, and the one diversion you'd love to never see again.", likes: ["u_maria", "u_lena", "u_tess"],
-      comments: [{ authorId: "u_lena", ts: -3600e3 * 4, body: "Lena, clinic director. 'Got a sec?' drop-ins. Every day." },
-                 { authorId: "u_tess", ts: -3600e3 * 3, body: "Tess here. Slack. Just... Slack." }] },
-    { id: "p2", scope: "common", authorId: "u_omar", ts: -3600e3 * 26, body: "Ran my first weekly planning meeting with the tool here. Took 40 min, but I actually knew what Monday was for. Small win.", likes: ["u_andrew", "u_dev"], comments: [] },
-    { id: "p3", scope: "acme", authorId: "u_maria", ts: -3600e3 * 8, body: "Team: let's all finish Dealing with Diversions by Friday. We'll compare diversion logs in Monday's ops sync.", likes: ["u_dev"],
-      comments: [{ authorId: "u_dev", ts: -3600e3 * 7, body: "On it. Mine is 90% radio calls from drivers." }] },
-    { id: "p4", scope: "northwind", authorId: "u_lena", ts: -3600e3 * 30, body: "Trying a 'front desk office hours' block 2 to 3pm so staff batch questions. Will report back.", likes: ["u_omar"], comments: [] },
-    { id: "p5", scope: "brightline", authorId: "u_tess", ts: -3600e3 * 12, body: "Studio rule starting Monday: no meetings before 11am. Peak hours are for making.", likes: [], comments: [] },
+    { id: "p1", authorId: "u_andrew", h: 3, likes: 18, body: "Welcome to everyone who joined from Acme this month. Introduce yourself below: name, role, and the one task that always seems to hijack your Tuesday.",
+      comments: [{ a: "u_sofia", h: 2.5, b: "Sofia, ops coordinator. Tuesday is 'can you pull this number real quick' day." },
+                 { a: "u_ben", h: 2, b: "Ben, safety. Incident reports that land at 4:55pm." },
+                 { a: "u_mei", h: 1, b: "Mei, product. Roadmap questions in Slack DMs. All of them." }] },
+    { id: "p2", authorId: "u_priya", h: 6, likes: 14, body: "Six weeks in a row of Weekly Planning Meetings. Biggest change: I stopped putting 'finish budget' on my calendar and started blocking subtasks with a definition of Done. Two hours max, every time. It's boring and it works.",
+      comments: [{ a: "u_erin", h: 5, b: "The 2 hour rule changed how I scope everything." },
+                 { a: "u_andrew", h: 4, b: "Boring and it works is the whole system in four words." }] },
+    { id: "p3", authorId: "u_sam", h: 9, likes: 11, body: "Honest post: I've skipped my Daily Review three days running. By 5pm I'm fried and it feels like one more meeting. How do you all make it stick?",
+      comments: [{ a: "u_grace", h: 8.5, b: "I do it standing up, 10 minutes, before I close the laptop. If I sit down it turns into email." },
+                 { a: "u_dev", h: 8, b: "Calendar block at 4:45 with an alarm. Treat it like a meeting with your boss, because it is." },
+                 { a: "u_coach2", h: 7, b: "Shrink it. Just answer: what worked, what didn't, and where do incomplete tasks go. Three minutes beats zero." }] },
+    { id: "p4", authorId: "u_dev", h: 14, likes: 9, body: "Time trade win today. Unplanned fleet issue came in at 10. Worked it, moved my scheduled route audit into my Whirlwind block at 3, and still finished both. A month ago that would have been a lost day and a guilty evening." ,
+      comments: [{ a: "u_marcus", h: 13, b: "Same issue hit my side. Your call kept it from spreading, thanks." }] },
+    { id: "p5", authorId: "u_victor", h: 20, likes: 22, body: "Leadership team note: we're running the Weekly Planning Meeting together on Friday afternoons now, 45 minutes, then everyone shares their plan in our channel. Fewer surprises on Monday, and I'm not chasing status all week.",
+      comments: [{ a: "u_maria", h: 19, b: "First Friday was rough, second one took 35 minutes. Already worth it." },
+                 { a: "u_patrick", h: 18, b: "Sharing the plan is the part I underestimated. Hard to blow off something you told 8 people." }] },
+    { id: "p6", authorId: "u_lena", h: 26, likes: 7, body: "Trying 'front desk office hours' 2 to 3pm so staff batch their questions. Week two: interruptions down by about half. Parking Lot sticky notes on the desk help too." ,
+      comments: [{ a: "u_omar", h: 24, b: "Can confirm, I'm one of the people who used to walk in every 20 minutes." }] },
+    { id: "p7", authorId: "u_rachel", h: 30, likes: 16, body: "Tip for EAs and anyone managing someone else's calendar: block their Whirlwind time first. Once that's protected, the One-time Tasks actually stay where you put them.",
+      comments: [{ a: "u_victor", h: 29, b: "This is why my calendar finally works. Thank you, Rachel." }] },
+    { id: "p8", authorId: "u_marcus", h: 34, likes: 6, body: "Peak season question: how do you plan at your Highest Sustainable Pace when the work itself is above it for 8 weeks straight?",
+      comments: [{ a: "u_andrew", h: 33, b: "Name it as a sprint, put an end date on it, and plan the recovery week now. A sprint without a finish line is just your new pace." },
+                 { a: "u_luis", h: 30, b: "We stagger who's 'on' each week in the warehouse. Not everyone sprints at once." }] },
+    { id: "p9", authorId: "u_grace", h: 40, likes: 12, body: "Deleted my Friday 'catch up on everything' block. Replaced it with Whirlwind time every day at 3. Friday is now for actual work, and nothing piles up." ,
+      comments: [] },
+    { id: "p10", authorId: "u_kenji", h: 46, likes: 8, body: "Built a little script that pulls my calendar into a Backlog view for Weekly Planning. Happy to share if anyone on the data side wants it.",
+      comments: [{ a: "u_tyler", h: 45, b: "Yes please." }, { a: "u_nina", h: 44, b: "Send it over, I'll check it against our security policy and we can roll it out." }] },
+    { id: "p11", authorId: "u_tess", h: 52, likes: 9, body: "Studio rule since last month: no meetings before 11am. Peak hours are for making. Client complaints so far: zero.", comments: [] },
+    { id: "p12", authorId: "u_chloe", h: 58, likes: 10, body: "Ran my first Weekly Planning Meeting in this app. Decide What To Do With What Doesn't Fit was the eye opener. I had 11 things that didn't fit. Deferred 4, delegated 3, deleted 4. Deleting felt illegal.",
+      comments: [{ a: "u_hannah", h: 56, b: "Deleting felt illegal is going on a sticky note." }, { a: "u_coach2", h: 50, b: "Welcome to the club. It gets less scary." }] },
+    { id: "p13", authorId: "u_erin", h: 66, likes: 5, body: "Month-end close used to eat the last three days of the month. Blocked it as a Recurring Task with subtasks, two hours each. Closed a day early this month.", comments: [] },
+    { id: "p14", authorId: "u_owen", h: 72, likes: 7, body: "Not a desk guy. Running my Daily Review on my phone in the truck before I head home. Takes 5 minutes. Still counts.",
+      comments: [{ a: "u_maria", h: 70, b: "Absolutely counts. Love this." }] },
+    { id: "p15", authorId: "u_andrew", h: 80, likes: 25, body: "Reminder: the point of the Daily Review isn't to grade your day. It's to decide what happens to the incomplete tasks so they don't follow you home. Backlog or Calendar. That's it.",
+      comments: [{ a: "u_sam", h: 78, b: "Needed this one." }] },
+    { id: "p16", authorId: "u_jamal", h: 90, likes: 6, body: "Sales team experiment: every rep shares their weekly plan in our Monday huddle. Pipeline meetings went from 60 minutes to 25.", comments: [] },
+    { id: "p17", authorId: "u_hannah", h: 100, likes: 11, body: "Rolling Time Boss into new hire onboarding at Acme. Week one now includes their first Weekly Planning Meeting with their manager. Feedback welcome.",
+      comments: [{ a: "u_zoe", h: 98, b: "Candidates are asking about it in interviews already." }] },
+    { id: "p18", authorId: "u_aisha", h: 110, likes: 4, body: "Question for the group: do you put your Parking Lot in a notes app, on paper, or straight into your task manager?",
+      comments: [{ a: "u_rachel", h: 108, b: "Paper. Crossing things off is half the joy." }, { a: "u_kenji", h: 107, b: "Task manager inbox, processed during Whirlwind." }, { a: "u_diego", h: 100, b: "Sticky note on my monitor. Thrown away daily." }] },
+    { id: "p19", authorId: "u_omar", h: 124, likes: 5, body: "First Weekly Planning Meeting took 40 minutes, but I actually knew what Monday was for. Small win.", comments: [] },
+    { id: "p20", authorId: "u_mei", h: 140, likes: 9, body: "Breaking big projects into subtasks with a clear definition of Done has fixed my 'I worked all day and nothing is finished' feeling. Highly recommend.", comments: [] },
+    { id: "p21", authorId: "u_leah", h: 160, likes: 3, body: "Wholeheartedly commit sounded cheesy to me until I tried it. Saying 'this is the plan' out loud makes it easier to say no to the stuff that isn't.", comments: [] },
+    { id: "p22", authorId: "u_coach2", h: 180, likes: 13, body: "Masterclass this Thursday: AI-Infused Productivity. We'll build a prompt that runs your Weekly Planning Meeting with you. RSVP in Events.",
+      comments: [{ a: "u_tyler", h: 178, b: "RSVP'd. Bringing questions." }] },
+    { id: "p23", authorId: "u_andre", h: 200, likes: 4, body: "Maintenance team blocked two hours of Whirlwind every afternoon for the radio and walk-ups. Mornings are for scheduled PMs only. Fewer half-finished jobs.", comments: [] },
+    { id: "p24", authorId: "u_diego", h: 220, likes: 6, body: "Small win: planned next week's routes on Friday instead of Monday morning. Monday felt like a normal day for once.", comments: [] },
   ],
 
-  // Seed progress so dashboards don't look empty
+  // Answer pools used to generate realistic meeting history for demo users
+  sampleAnswers: {
+    weekly: {
+      keep: ["Blocking Whirlwind time daily", "Planning on Friday afternoon", "Phone in another room for deep work", "Sharing my plan with the team"],
+      start: ["Breaking tasks into 2-hour subtasks", "Protecting a lunch break", "Blocking personal priorities first", "Ending the day with a Daily Review"],
+      stop: ["Checking email before 9am", "Saying yes to every meeting", "Working past 6pm", "Leaving incomplete tasks in my head"],
+      dump: ["Vendor contract renewal\nQ4 headcount plan\nUpdate SOP for returns", "Customer QBR deck\nFix reporting dashboard\nInterview loop for analyst", "Budget reforecast\nSafety training schedule\nReply to RFP"],
+      priorities: ["1. Q4 headcount plan\n2. Vendor contract renewal\n3. Returns SOP", "1. Customer QBR deck\n2. Analyst interviews\n3. Dashboard fix", "1. Budget reforecast\n2. RFP response\n3. Training schedule"],
+      subtasks: ["Headcount plan: draft roles list (Done = shared with VP, 1.5h)\nVendor renewal: redline contract (Done = sent to legal, 2h)", "QBR deck: pull metrics (Done = numbers in slide 3, 1h)\nQBR deck: narrative (Done = draft sent to Grace, 2h)"],
+      nofit: ["Process audit: defer to next month\nWebsite copy review: delegate to Chloe", "Old report cleanup: delete\nWeekly status email: digitize with a template", "Offsite planning: downsize to one afternoon"],
+      shareWith: ["Maria", "My manager", "Leadership team channel", "My accountability partner"],
+      note: ["Protect Thursday morning", "One thing at a time", "Home by 6 every day", ""],
+    },
+    daily: {
+      worked: ["Morning block on the One-time Task held", "Parked three interruptions and cleared them in Whirlwind", "Started on time, finished on time", "Delegated the vendor follow-up"],
+      didnt: ["Meetings ran over", "Got pulled into a customer escalation", "Skipped Whirlwind and email piled up", "Started late after a long commute"],
+      correct: ["Add 15 minute buffers after meetings", "Move deep work earlier", "Block Whirlwind before lunch", "Say no to the 4pm add-on"],
+      toBacklog: ["Process doc update", "Team survey draft", "Expense cleanup", ""],
+      toCalendar: ["Finish forecast draft: tomorrow 9am", "Call supplier: tomorrow 2pm", "Review contract: Thursday 10am", ""],
+      tomorrow: ["Forecast draft (unblocks the board pack)\nTwo interviews (we need the hire)", "Client QBR prep (renewal on the line)\nRoute review (saves fuel)", "Close the vendor deal (cost savings)\n1:1 with Dev (he's stuck)"],
+      adjust: ["Moved the team sync to Thursday", "Shortened lunch meeting to 30 min", "None needed", "Pushed report to Friday"],
+    },
+  },
+
+  // Explicit lesson progress for a few users; everyone else gets generated progress
   progress: {
-    u_maria: ["ws1", "ws2", "ws3", "dv1", "dv2", "hsp1", "en1"],
-    u_dev: ["ws1", "ws2", "dv1"],
+    u_maria: ["ws1", "ws2", "ws3", "dv1", "dv2", "dv3", "hsp1", "hsp2", "en1"],
+    u_dev: ["ws1", "ws2", "ws3", "dv1"],
     u_sam: ["ws1"],
     u_lena: ["ws1", "ws2", "ws3", "dv1", "dv2", "dv3", "rc1", "qg1", "qg2"],
     u_omar: ["ws1", "ws2", "ws3", "hsp1", "hsp2"],
@@ -194,38 +329,46 @@ window.TB_SEED = {
 };
 
 window.TB_PROMPTS = {
-  weekly: `You are my Time Boss weekly planning coach. Run my weekly planning meeting with me, one step at a time. Ask one question, wait for my answer, then move on. Be direct and push back when my plan is unrealistic.
+  weekly: `You are my Time Boss coach. Run my Weekly Planning Meeting with me, one step at a time. Ask one question, wait for my answer, then move on. Be direct and push back when my plan doesn't fit my week.
 
-Framework (Time Boss):
-- Highest Sustainable Pace (HSP): the amount of focused work I can sustain week after week with energy at 3/5 or better. Never let me plan above it.
-- Diversions: anything that pulls me off what I decided matters. Each gets one response: Do, Defer, Delegate, or Decline. Recurring diversions need a root-cause fix.
-- Big 3: the three outcomes that make this week a win. Each should move a quarterly goal.
+Timing: prior to the beginning of my work week.
 
-Steps:
-1. Review last week: wins, misses, what diverted me, energy (1-5), focused hours.
-2. Brain dump: everything on my mind. Help me sort it.
-3. Quarterly check: remind me of my 3 quarterly goals (ask me if you don't know them).
-4. Big 3: help me choose this week's Big 3 and tie each to a goal.
-5. Pace check: count my focus blocks against my HSP. Cut if over.
-6. Diversion plan: name the 2-3 diversions most likely this week and pre-decide my response.
-7. Calendar: have me block time for the Big 3 in my peak energy hours.
-8. Commit: summarize the plan in a tight bulleted list I can paste into my calendar or notes.
+Time Boss terms:
+- Highest Sustainable Pace (HSP): the pace I can hold week after week without burning out. Never let me plan above it.
+- Backlog: my list of One-time Tasks not yet scheduled.
+- Recurring Tasks: work that repeats on a schedule.
+- Whirlwind time: blocks for unplanned work, my Parking Lot, and my inboxes.
 
-Start with step 1.`,
+REFLECT
+1. Reflect on my week: in consideration of my HSP, what should I keep doing, start doing, and stop doing?
+2. Dump what needs to be done: help me add any new One-time Tasks to my Backlog.
 
-  daily: `You are my Time Boss daily review coach. Run a 10-minute end-of-day review with me. One question at a time, short and direct.
+DECIDE
+3. Decide what to do: prioritize all One-time Tasks that would be valuable to move forward next week.
+4. Decide how to do it: break down the One-time Tasks that have to move forward next week into manageable subtasks with a clear definition of "Done" (2 hours max each).
+5. Decide when to do it, in this order: (a) personal priorities are blocked, (b) Recurring Tasks are blocked, (c) Whirlwind time is blocked, (d) block my prioritized One-time Tasks in order of priority from my Backlog.
+6. Decide what to do with what doesn't fit: defer, delegate, digitize, downsize, or delete. Only "do it" to keep promises or commitments.
 
-Framework (Time Boss):
-- Diversions get one of four responses: Do, Defer, Delegate, Decline. Recurring ones need a root-cause fix.
-- Highest Sustainable Pace: I should end the day with enough energy for tomorrow.
-
-Steps:
-1. Wins: what did I finish today? Did I move my weekly Big 3?
-2. Diversions: what pulled me off plan? For each, which response did I use, and which should I have used? Flag anything that's happened 3+ times as a root-cause candidate.
-3. Energy: rate 1-5. If under 3, ask what drained me.
-4. Tomorrow: what are my top 3? What's the first thing I do?
-5. One improvement for tomorrow.
-6. Summarize in 5 bullets I can save.
+COMMIT
+7. Share my plan: ask who I'll share it with, and give me a short summary I can send them.
+8. Wholeheartedly commit to my plan.
 
 Start with step 1.`,
+
+  daily: `You are my Time Boss coach. Run my Daily Review Meeting with me at the end of my workday. 15 minutes. One question at a time, short and direct.
+
+Time Boss terms:
+- Backlog: my list of One-time Tasks not yet scheduled.
+- Whirlwind time: blocks for unplanned work, my Parking Lot, and my inboxes.
+
+REFLECT
+1. What worked? What didn't work? What needs course correction?
+
+DECIDE
+2. Decide what to do with incomplete tasks: each one goes to my Backlog or onto my Calendar.
+
+COMMIT
+3. Review tomorrow's plan with me. Remind me of the value of each item, and help me make adjustments as needed.
+
+Finish with a 5-bullet summary I can save. Start with step 1.`,
 };
