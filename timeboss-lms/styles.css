@@ -420,6 +420,18 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .level .grid { margin-top: 0; }
 .demo-link { color: rgba(255, 255, 255, .55); text-decoration: underline; text-underline-offset: 3px; margin-top: 18px; }
 
+/* Habits locked until Master Your Week */
+.locked-habits { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
+.locked-habits h3 { color: #fff; font-size: clamp(22px, 2.4vw, 28px); margin: 6px 0 6px; }
+.locked-habits p { color: rgba(255, 255, 255, .7); max-width: 56ch; margin: 0; }
+.locked-habits .ic.lock.big { color: var(--teal-2); width: 28px; height: 28px; margin: 0; }
+.habits-preview .pip { width: 22px; height: 22px; }
+nav a.locked { color: rgba(255, 255, 255, .45); }
+nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
+.nav-lock { margin-left: auto; width: 14px; height: 14px; color: rgba(255, 255, 255, .4); }
+.level-sub { font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 80px); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 100px; font-weight: 700; border-bottom: 3px solid var(--teal); transition: transform .25s, opacity .25s; opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
@@ -442,6 +454,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
   main { padding: 24px 16px 48px; }
   .team-grid { grid-template-columns: 1fr; }
   .phase-track { grid-template-columns: 1fr; }
+  .locked-habits { grid-template-columns: 1fr; }
+  .habits-preview { display: none; }
   .phase-track li + li { border-left: 0; border-top: 1px solid var(--line); }
   .habits { grid-template-columns: 1fr; }
   .habits { padding: 24px 22px; }

@@ -95,9 +95,9 @@
   // 1. Unlock Your Week Workshop → 2. Master Your Week Cohort → 3. Maximize Your Week (ongoing education)
   const WORKSHOP = "workshop";
   const PHASES = [
-    { n: 1, name: "Unlock Your Week Workshop", short: "Workshop" },
-    { n: 2, name: "Master Your Week Cohort", short: "Cohort" },
-    { n: 3, name: "Maximize Your Week", short: "Ongoing education" },
+    { n: 1, name: "Unlock Your Week", sub: "Workshop" },
+    { n: 2, name: "Master Your Week", sub: "Group Coaching Cohort" },
+    { n: 3, name: "Maximize Your Week", sub: "Continuing Education" },
   ];
 
   // ---------- store ----------
@@ -113,7 +113,7 @@
     // Generated meeting history: a Markov chain per user so streaks look like real habits
     const toolRuns = [];
     const answersFor = (tool, r) => Object.fromEntries(TOOLS[tool].steps.flatMap((s) => s.fields).map((f) => [f.k, f.type === "check" ? "Yes" : pick(r, SEED.sampleAnswers[tool][f.k] || [""])]));
-    members.forEach((u) => {
+    members.filter((u) => u.phase !== 1).forEach((u) => {
       const r = rng(uidKey(u.id)), base = u.habit ?? 0.35 + r() * 0.6;
       let prev = true;
       for (let i = 60; i >= 1; i--) {
@@ -201,6 +201,8 @@
   const workshopDone = (id) => courseProgress(id, courseById(WORKSHOP)).pct === 100;
   const phaseOf = (u = me()) => (u.role === "coach" || u.mywDone ? 3 : workshopDone(u.id) ? 2 : 1);
   const unlocked = (c, u = me()) => c.id === WORKSHOP || phaseOf(u) === 3;
+  // Habits (Weekly Planning + Daily Review Meetings, streaks) and Events open once someone reaches Master Your Week
+  const hasHabits = (u = me()) => phaseOf(u) >= 2;
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
   const allLessons = () => SEED.courses.flatMap((c) => c.lessons.map((l) => ({ ...l, courseId: c.id })));
   const done = (userId) => S.progress[userId] || {};
@@ -306,7 +308,8 @@
   // ---------- layout ----------
   function nav() {
     const u = me(), c = company(u.companyId), r = location.hash;
-    const link = (href, label, ic) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""}">${icon(ic)}<span>${label}</span></a>`;
+    const link = (href, label, ic, locked = false) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""} ${locked ? "locked" : ""}">${icon(ic)}<span>${label}</span>${locked ? icon("lock", "ic lock nav-lock") : ""}</a>`;
+    const lockH = !hasHabits(u);
     return `
       <div class="brand-wrap">${logo("Community")}</div>
       <nav>
@@ -317,11 +320,11 @@
         <div class="navlabel">Learn</div>
         ${link("#/learn", "Courses", "learn")}
         <div class="navlabel">Live</div>
-        ${link("#/events", "Events & RSVP", "events")}
+        ${link("#/events", "Events & RSVP", "events", lockH)}
         ${link("#/office-hours", "Office Hours", "office")}
         <div class="navlabel">Habits</div>
-        ${link("#/tools/weekly", "Weekly Planning Meeting", "weekly")}
-        ${link("#/tools/daily", "Daily Review Meeting", "daily")}
+        ${link("#/tools/weekly", "Weekly Planning Meeting", "weekly", lockH)}
+        ${link("#/tools/daily", "Daily Review Meeting", "daily", lockH)}
       </nav>
       ${mywCta()}
       <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
@@ -349,7 +352,7 @@
   // Home: where you are in the three phases, and the next step
   function phaseCard() {
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
-    const track = `<ol class="phase-track">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : ""}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.n < ph ? "Complete" : p.n === ph ? "You are here" : p.short}</small></span></li>`).join("")}</ol>`;
+    const track = `<ol class="phase-track">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : ""}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</li>`).join("")}</ol>`;
     let body;
     if (ph === 1) {
       const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
@@ -444,6 +447,7 @@
   // What to do next, in plain words, based on the clock and what's done
   function nextUp() {
     const id = me().id, now = new Date(), wd = isWorkday(now);
+    if (!hasHabits()) return "Next up: your next Unlock Your Week Workshop lesson.";
     if (!wpmWeeks(id).has(plannedWeek(now)) && (now.getDay() >= 5 || now.getDay() === 0)) return "Next up: plan next week with your Weekly Planning Meeting.";
     if (wd && !drmDays(id).has(dateKey(now)) && now.getHours() >= 15) return "Next up: your Daily Review Meeting before you close the laptop.";
     if (wd) return "Work the priorities on your Calendar. Deflect Unknown Tasks to your Parking Lot.";
@@ -458,13 +462,17 @@
       <p class="muted">${fmtDate(Date.now(), { weekday: "long", month: "long", day: "numeric" })}. ${nextUp()}</p></div></header>
 
       ${phaseCard()}
-      <section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
+      ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
 
       <div class="grid two">
         <div class="card stat"><span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat"><span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
           : `<div class="card stat"><span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
-      </div>
+      </div>` : `<section class="habits locked-habits" aria-label="Your habits">
+        <div>${icon("lock", "ic lock big")}<h3>Your habits start in Master Your Week</h3>
+        <p>The Weekly Planning Meeting and the Daily Review Meeting, with streaks you can see grow. They open with the Group Coaching Cohort, along with live events.</p></div>
+        <div class="habits-preview" aria-hidden="true"><div class="chain"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip now"></span></div></div>
+      </section>`}
 
       <div class="grid two">
         <div class="card prompt-card">
@@ -475,9 +483,9 @@
         </div>
         <div class="card">
           <h3>On your calendar</h3>
-          ${upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
+          ${!hasHabits(u) ? `<p class="muted">Live events open in Master Your Week. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
             : `<p class="muted">Nothing booked yet.</p>`}
-          <div class="row"><a class="btn ghost sm" href="#/events">See events</a><a class="btn ghost sm" href="#/office-hours">Book office hours</a></div>
+          <div class="row">${hasHabits(u) ? `<a class="btn ghost sm" href="#/events">See events</a>` : ""}<a class="btn ghost sm" href="#/office-hours">Book office hours</a></div>
         </div>
       </div>`;
   };
@@ -531,7 +539,7 @@
   const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
   function leaderboard(cid) {
-    const ms = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
+    const ms = teamOf(cid).filter((m) => hasHabits(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
     const other = lbSort === "drm" ? "wpm" : "drm";
     ms.sort((a, b) => b[lbSort] - a[lbSort] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
     const link = canManage(cid);
@@ -541,9 +549,17 @@
         const inner = `<span class="rank">${i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}</span><span class="num ${lbSort === "wpm" ? "hi" : ""}">${x.wpm}<small>wk</small></span><span class="num ${lbSort === "drm" ? "hi" : ""}">${x.drm}<small>day</small></span>`;
         return `<li class="${x.m.id === me().id ? "you" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<div>${inner}</div>`}</li>`;
       }).join("")}</ol>
-      <small class="muted">Weeks in a row with a Weekly Planning Meeting, and workdays in a row with a Daily Review Meeting.</small></div>`;
+      <small class="muted">Weeks in a row with a Weekly Planning Meeting, and workdays in a row with a Daily Review Meeting. ${hasHabits() ? "People join the leaderboard when they reach Master Your Week." : "You'll join the leaderboard when you reach Master Your Week."}</small></div>`;
   }
-  function vsTeam(u, team) {
+  function vsTeam(u, all) {
+    const team = all.filter((m) => hasHabits(m));
+    if (u && !hasHabits(u)) {
+      const avg = avgOf(all, (m) => courseProgress(m.id, courseById(WORKSHOP)).pct), you = courseProgress(u.id, courseById(WORKSHOP)).pct;
+      return `<div class="card"><h3>You vs. the team average</h3>
+        <div class="vs"><div class="row between"><b>Unlock Your Week Workshop</b><span><b>${you}%</b> <span class="muted">vs ${Math.round(avg)}%</span></span></div>
+          <div class="bar vs-bar"><span style="width:${you}%"></span><i style="left:${avg}%" title="Team average"></i></div></div>
+        <small class="muted">Habit streaks start in Master Your Week. ${team.length} of ${all.length} teammates are there now.</small></div>`;
+    }
     const maxW = Math.max(1, ...team.map((m) => wpmStreak(m.id))), maxD = Math.max(1, ...team.map((m) => drmStreak(m.id)));
     const rows = [
       ["Weekly Planning Meeting streak", (id) => wpmStreak(id), maxW, " wks"],
@@ -558,17 +574,17 @@
         return `<div class="vs"><div class="row between"><b>${label}</b><span>${u ? `<b>${show(you)}</b> <span class="muted">vs ${show(avg)}</span>` : `<b>${show(avg)}</b>`}</span></div>
           <div class="bar vs-bar">${u ? `<span style="width:${Math.min(100, (you / max) * 100)}%"></span>` : `<span class="avg-fill" style="width:${Math.min(100, (avg / max) * 100)}%"></span>`}${u ? `<i style="left:${Math.min(100, (avg / max) * 100)}%" title="Team average"></i>` : ""}</div></div>`;
       }).join("")}
-      ${u ? `<small class="muted"><i class="avg-key"></i> marks the team average across ${team.length} people.</small>` : ""}</div>`;
+      ${u ? `<small class="muted"><i class="avg-key"></i> marks the team average across the ${team.length} people in Master Your Week or beyond.</small>` : ""}</div>`;
   }
   function roster(cid) {
     const team = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct })).sort((a, b) => b.ms.all - a.ms.all);
-    const avg = (f) => Math.round(avgOf(team, f));
+    const hab = team.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
     return `<div class="card"><div class="card-head"><h3>Team members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
       <div class="table-wrap"><table class="team">
         <thead><tr><th>Member</th><th>Phase</th><th>Weekly Planning<br>Meeting streak</th><th>Daily Review<br>Meeting streak</th><th>Weekly Planning<br>past month</th><th>Daily Review<br>past month</th><th>Courses</th></tr></thead>
         <tbody>${team.map((x) => `<tr><td><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}">${phaseOf(x.m)} · ${PHASES[phaseOf(x.m) - 1].short}</span></td><td>${x.wpm} wk</td><td>${x.drm} day</td><td>${pctCell(x.ms.wpm)}</td><td>${pctCell(x.ms.drm)}</td><td>${x.op}%</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td>Team average</td><td></td><td>${(avgOf(team, (x) => x.wpm)).toFixed(1)} wk</td><td>${(avgOf(team, (x) => x.drm)).toFixed(1)} day</td><td>${avg((x) => x.ms.wpm)}%</td><td>${avg((x) => x.ms.drm)}%</td><td>${avg((x) => x.op)}%</td></tr></tfoot>
+          <td><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}">${phaseOf(x.m)} · ${PHASES[phaseOf(x.m) - 1].sub}</span></td>${hasHabits(x.m) ? `<td>${x.wpm} wk</td><td>${x.drm} day</td><td>${pctCell(x.ms.wpm)}</td><td>${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted">Habits start in Master Your Week</td>`}<td>${x.op}%</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td>Team average</td><td></td><td>${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td>${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td>${avg((x) => x.ms.wpm)}%</td><td>${avg((x) => x.ms.drm)}%</td><td>${Math.round(avgOf(team, (x) => x.op))}%</td></tr></tfoot>
       </table></div></div>`;
   }
   const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
@@ -595,14 +611,14 @@
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
       <header class="page-head member-head"><div class="row">${avatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${PHASES[phaseOf(m) - 1].name}</p></div></div></header>
-      <div class="grid stats">
+      ${!hasHabits(m) ? `<div class="card"><h3>Habits start in Master Your Week</h3><p class="muted">${esc(m.name.split(" ")[0])} is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done. Weekly Planning Meeting and Daily Review Meeting streaks show here once they reach Master Your Week.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
         <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
       <div class="card"><div class="card-head"><h3>Last 30 days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
-        <div class="days">${cells.join("")}</div></div>
+        <div class="days">${cells.join("")}</div></div>`}
       <div class="grid two">
         <div class="card"><h3>Recent meetings</h3>
           ${runs.slice(0, 10).map((r) => `<details class="run"><summary><b>${TOOLS[r.tool].title}</b> ${fmtDate(r.ts, { weekday: "short", month: "short", day: "numeric" })} <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(r.tool, r.answers, r.ts))}</pre></details>`).join("") || `<p class="muted">No meetings yet.</p>`}
@@ -635,7 +651,7 @@
       const p = courseProgress(u.id, x);
       return `<a class="card course" href="${courseHref(x)}"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
     };
-    const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span>${PHASES[n - 1].name}${n === ph ? `<small>You are here</small>` : ""}</h2>${body}</section>`;
+    const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span>${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}</span>${n === ph ? `<small>You are here</small>` : ""}</h2>${body}</section>`;
     return `
       <header class="page-head"><div><h1>Courses</h1><p class="muted">Three steps. Each one unlocks the next.</p></div></header>
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
@@ -680,6 +696,7 @@
 
   // events
   V.events = () => {
+    if (!hasHabits()) return lockedFeature("Events & RSVP");
     const ev = (e) => {
       const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
       const on = rsvpd(e.id);
@@ -760,7 +777,13 @@
         </form>
       </div><aside class="side">${aiPanel}</aside></div>`;
   }
-  V.tools = (tool) => (TOOLS[tool] ? toolView(tool) : notFound());
+  V.tools = (tool) => (!TOOLS[tool] ? notFound() : hasHabits() ? toolView(tool) : lockedFeature(TOOLS[tool].title));
+  function lockedFeature(name) {
+    const nx = nextLessonIn(me(), [courseById(WORKSHOP)]);
+    return `<div class="card locked-card">${icon("lock", "ic lock big")}<h2>${esc(name)} opens in Master Your Week</h2>
+      <p class="muted">Your Weekly Planning Meeting, Daily Review Meeting, habit streaks, and live events all open when you reach Master Your Week, the Group Coaching Cohort. Finish the Unlock Your Week Workshop to get there.</p>
+      ${nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : ""}</div>`;
+  }
 
   V.cohort = () => {
     const c = SEED.cohort;

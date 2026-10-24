@@ -13,10 +13,10 @@ Before publishing, bump the `?v=` tags on styles.css, data.js and app.js in `ind
 
 ## Phases
 
-1. **Unlock Your Week Workshop.** Everyone starts here. Finishing the workshop's lessons unlocks phase 2.
-2. **Master Your Week Cohort.** Enroll from Home or the cohort page. In the prototype, "Demo: mark the cohort complete" on the cohort page stands in for finishing it.
+1. **Unlock Your Week** (Workshop). Everyone starts here. Finishing the workshop's lessons moves the member to phase 2. Habits and Events are locked in this phase.
+2. **Master Your Week** (Group Coaching Cohort). Habits (Weekly Planning Meeting, Daily Review Meeting, streaks, leaderboard) and Events open here. Enroll from Home or the cohort page. In the prototype, "Demo: mark the cohort complete" on the cohort page stands in for finishing it.
    The cohort's sessions open in the app for review once the cohort is complete: Dealing with Diversions; the four Solving the Root Cause of Diversions sessions (Relationships, Environment, Systems, Yourself); and Your Highest Sustainable Pace.
-3. **Maximize Your Week.** Ongoing education: the mini courses (starting with Time Boss x AI), plus masterclasses and live Weekly Planning Meetings.
+3. **Maximize Your Week** (Continuing Education). The mini courses (starting with Time Boss x AI), plus masterclasses and live Weekly Planning Meetings.
 
 Home shows the member's phase and the next step. Demo users in each phase: Sam Okafor (1), Dev Patel (2), Maria Chen (3). Each demo user's starting phase is the `phase` field in `data.js`.
 
