@@ -319,7 +319,7 @@
         <div class="navlabel">Live</div>
         ${link("#/events", "Events & RSVP", "events")}
         ${link("#/office-hours", "Office Hours", "office")}
-        <div class="navlabel">Meetings</div>
+        <div class="navlabel">Habits</div>
         ${link("#/tools/weekly", "Weekly Planning Meeting", "weekly")}
         ${link("#/tools/daily", "Daily Review Meeting", "daily")}
       </nav>

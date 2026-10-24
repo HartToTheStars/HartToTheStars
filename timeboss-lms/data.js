@@ -176,7 +176,7 @@ window.TB_SEED = {
     },
     { id: "ai", kind: "mini", title: "Time Boss x AI", blurb: "Use AI to run your Weekly Planning Meeting, your Daily Review Meeting, and the 5 D's.",
       lessons: [
-        { id: "ai1", title: "Your Weekly Planning Meeting with AI", mins: 8, body: ["Give your AI the Weekly Planning Meeting prompt, your Backlog, and next week's calendar. Let it walk you through Reflect, Decide, and Commit, and push back when your plan doesn't fit."], action: "Copy the Weekly Planning Meeting prompt from the Meetings menu and run it once with your AI." },
+        { id: "ai1", title: "Your Weekly Planning Meeting with AI", mins: 8, body: ["Give your AI the Weekly Planning Meeting prompt, your Backlog, and next week's calendar. Let it walk you through Reflect, Decide, and Commit, and push back when your plan doesn't fit."], action: "Copy the Weekly Planning Meeting prompt from the Habits menu and run it once with your AI." },
         { id: "ai2", title: "Your Daily Review Meeting with AI", mins: 6, body: ["Fifteen minutes at the end of the day: tell your AI what worked, what didn't, and what's incomplete. It helps you decide Backlog or Calendar for each task and reviews tomorrow's plan with you."], action: "Run tonight's Daily Review Meeting with the Daily Review Meeting prompt." },
         { id: "ai3", title: "AI and the 5 D's", mins: 8, body: ["When something doesn't fit next week, AI can help you defer, delegate, digitize, downsize, or delete it: drafting the handoff, building the template, or trimming the scope."], action: "Take one task that didn't fit this week and ask your AI to help you digitize or downsize it." },
       ] },
