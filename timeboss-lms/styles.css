@@ -402,7 +402,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .level.ahead .level-head { color: var(--muted); }
 .level-note { margin: -4px 0 14px; }
 .sublevel { font-size: 17px; margin: 18px 0 10px; color: var(--muted); font-family: var(--font-body); font-weight: 600; letter-spacing: 0; }
-.level-cohort { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin: 0; }
+.level-cohort { display: flex; justify-content: space-between; align-items: center; gap: 18px; flex-wrap: wrap; margin: 0 0 14px; }
 .level-cohort p { margin: 0; }
 .course.locked { opacity: .62; background: var(--paper); box-shadow: none; cursor: not-allowed; }
 .course.locked h3 { color: var(--muted); }
@@ -413,6 +413,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .phase-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 100px; background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
 .phase-pill.p2 { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
 .phase-pill.p3 { background: var(--teal); color: #fff; border-color: transparent; }
+.lesson-question { font-family: var(--font-head); font-size: clamp(20px, 2.2vw, 24px); font-style: italic; color: var(--teal); line-height: 1.35; margin: 4px 0 0; max-width: 36ch; }
+.level .grid { margin-top: 0; }
 .demo-link { color: rgba(255, 255, 255, .55); text-decoration: underline; text-underline-offset: 3px; margin-top: 18px; }
 
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 80px); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 100px; font-weight: 700; border-bottom: 3px solid var(--teal); transition: transform .25s, opacity .25s; opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }

@@ -52,7 +52,7 @@ window.TB_SEED = {
   // Office hours booking (Calendly inline embed)
   officeHours: { calendlyUrl: "https://calendly.com/d/d3mx-5nj-rrw/time-boss-micro-office-hours", mins: 15 },
 
-  // Core program + mini courses. Lessons: { id, title, mins, body (html-ish paragraphs), action }
+  // Workshop (phase 1), Master Your Week cohort curriculum (open for review after the cohort), and mini courses (Maximize Your Week). Lessons: { id, title, mins, body (html-ish paragraphs), action }
   courses: [
     {
       id: "workshop",
@@ -76,7 +76,7 @@ window.TB_SEED = {
     },
     {
       id: "diversions",
-      kind: "core",
+      kind: "cohort",
       title: "Dealing with Diversions",
       blurb: "Spot the interruptions, detours, and shiny objects pulling you off plan, and respond on purpose.",
       lessons: [
@@ -96,27 +96,35 @@ window.TB_SEED = {
     },
     {
       id: "rootcause",
-      kind: "core",
+      kind: "cohort",
       title: "Solving the Root Cause of Diversions",
-      blurb: "Stop playing whack-a-mole. Find the system, habit, or belief that keeps producing the same diversion.",
+      blurb: "Four places diversions come from: Relationships, Environment, Systems, and Yourself.",
       lessons: [
-        { id: "rc1", title: "Symptoms vs. sources", mins: 8,
-          body: ["If the same diversion shows up three times, it isn't an interruption. It's a process.",
-                 "Recurring diversions usually trace back to one of: unclear ownership, missing systems, unclear priorities, or a personal belief ('I have to be available')."],
-          action: "From your diversion log, circle anything that appeared 3+ times." },
-        { id: "rc2", title: "The 5 Whys for your calendar", mins: 10,
-          body: ["Ask why the diversion happened. Then ask why that happened. Keep going until you hit something you can change once and benefit from forever.",
-                 "You'll know you've hit the root when the fix is a decision, a document, or a conversation, not a reminder to try harder."],
-          action: "Run 5 Whys on your top recurring diversion. Write the root and the one-time fix." },
-        { id: "rc3", title: "Installing the fix", mins: 9,
-          body: ["Root-cause fixes need an owner, a date, and a check-in. Treat them like projects, not resolutions.",
-                 "Track the diversion for two weeks after the fix. If it drops, you found it."],
-          action: "Schedule your fix and a 2-week follow-up in your weekly plan." },
+        { id: "rc1", title: "Relationships", mins: 9,
+          question: "How can I make priorities happen and be available to others?",
+          body: ["Many recurring diversions come from the people you work with: drop-ins, pings, and requests that land on your calendar without a plan.",
+                 "The fix is rarely being less available. It's agreeing on when and how you're available, so your priorities and other people's needs both have a place."],
+          action: "Pick the relationship that diverts you most. Propose one agreement on when and how to reach you." },
+        { id: "rc2", title: "Environment", mins: 8,
+          question: "How can I set up my physical and digital space to focus?",
+          body: ["Your surroundings make some behaviors easy and others hard: notifications, open tabs, a phone on the desk, a door that's always open.",
+                 "Design beats discipline. Change the space so focus is the default."],
+          action: "Make one change to your physical space and one to your digital space before your next focus block." },
+        { id: "rc3", title: "Systems", mins: 10,
+          question: "How can I set up my systems to help my future self focus?",
+          body: ["If the same diversion shows up three times, it isn't an interruption. It's a missing system: a checklist, a template, an owner, or a Recurring Task.",
+                 "Build it once so your future self doesn't have to decide again."],
+          action: "Choose your most repeated diversion and build the system that handles it without you." },
+        { id: "rc4", title: "Yourself", mins: 9,
+          question: "With all other diversions handled, how do I get out of my own way?",
+          body: ["Some diversions start inside: avoidance, perfectionism, a quick check that turns into an hour, a belief that you have to be available.",
+                 "Name the pattern, notice when it shows up, and decide in advance what you'll do instead."],
+          action: "Write down the internal diversion you see most in yourself and your planned response to it." },
       ],
     },
     {
       id: "hsp",
-      kind: "core",
+      kind: "cohort",
       title: "Your Highest Sustainable Pace",
       blurb: "Find the output level you can hold for months, not days, and plan around it.",
       lessons: [

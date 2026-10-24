@@ -355,9 +355,9 @@
       body = `<h2>Enroll in the Master Your Week Cohort</h2><p>You finished the workshop. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}: ${c.weeks} weeks, live with a Time Boss coach, ${c.seatsLeft} seats left. Completing it unlocks Maximize Your Week.</p>
         <div class="row"><a class="btn" href="#/cohort">Enroll in Cohort</a></div>`;
     } else {
-      const nx = nextLessonIn(u, SEED.courses.filter((x) => x.id !== WORKSHOP)), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
+      const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
       const rsvpBtn = (e, label) => rsvpd(e.id) ? `<a class="btn ghost" href="#/events">✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}</a>` : `<button class="btn ghost" data-action="rsvp" data-id="${e.id}">${label}</button>`;
-      body = `<h2>Maximize Your Week</h2><p>Ongoing education: courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}</p>
+      body = `<h2>Maximize Your Week</h2><p>Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}</p>
         <div class="row">${nx ? `<a class="btn" href="#/learn/${nx.c.id}/${nx.l.id}">Watch Next Course</a>` : `<a class="btn" href="#/learn">Browse courses</a>`}
         ${rsvpBtn(mc, "RSVP for Next Masterclass")}${rsvpBtn(wp, "RSVP for Weekly Planning Meeting")}</div>`;
     }
@@ -625,31 +625,33 @@
     if (lessonId) return lessonView(courseId, lessonId);
     if (courseId) return courseView(courseId);
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
+    const kindTag = (x) => (x.kind === "workshop" ? "Workshop" : x.kind === "cohort" ? (ph === 3 ? "Review" : "Cohort session") : "Mini course");
     const tile = (x) => {
-      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><span class="tag">${x.kind === "core" ? "Core" : "Mini course"}</span><small class="muted">${icon("lock", "ic lock")} Locked</small></div><h3>${esc(x.title)}</h3><p class="muted">${esc(x.blurb)}</p><small>Unlocks after the Master Your Week Cohort</small></div>`;
+      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3><p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
       const p = courseProgress(u.id, x);
-      return `<a class="card course" href="#/learn/${x.id}"><div class="row between"><span class="tag ${x.kind === "core" ? "core" : ""}">${x.kind === "workshop" ? "Workshop" : x.kind === "core" ? "Core" : "Mini course"}</span><small class="muted">${x.lessons.length} lessons</small></div><h3>${esc(x.title)}</h3><div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
+      return `<a class="card course" href="#/learn/${x.id}"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3><div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
     };
     const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span>${PHASES[n - 1].name}${n === ph ? `<small>You are here</small>` : ""}</h2>${body}</section>`;
     return `
       <header class="page-head"><div><h1>Courses</h1><p class="muted">Three steps. Each one unlocks the next.</p></div></header>
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
       ${level(2, `<div class="card level-cohort"><div><h3>${esc(c.name)} Cohort</h3><p class="muted">${c.weeks} weeks, live with a Time Boss coach. Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.</p></div>
-        ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 ? `<a class="btn" href="#/cohort">Enroll in Cohort</a>` : `<span class="tag">Complete ✓</span>`}</div>`)}
-      ${level(3, `${ph < 3 ? `<p class="muted level-note">Courses, masterclasses, and ongoing education unlock when you complete the Master Your Week Cohort.</p>` : ""}
-        <h3 class="sublevel">Core courses</h3><div class="grid two">${SEED.courses.filter((x) => x.kind === "core").map(tile).join("")}</div>
-        <h3 class="sublevel">Mini courses</h3><div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
+        ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 ? `<a class="btn" href="#/cohort">Enroll in Cohort</a>` : `<span class="tag">Complete ✓</span>`}</div>
+        <p class="muted level-note">${ph === 3 ? "What the cohort covered, open for review any time." : "The cohort covers these live. They open here for review once you complete it."}</p>
+        <div class="grid three">${SEED.courses.filter((x) => x.kind === "cohort").map(tile).join("")}</div>`)}
+      ${level(3, `${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete the Master Your Week Cohort: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
+        <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
   };
   const lockedView = () => `<a class="back" href="#/learn">← Courses</a><div class="card locked-card">${icon("lock", "ic lock big")}<h2>Unlocks after the Master Your Week Cohort</h2>
-    <p class="muted">Maximize Your Week courses open once you complete the cohort.</p>${mywCta()}</div>`;
+    <p class="muted">Cohort sessions open here for review, and Maximize Your Week courses unlock, once you complete the cohort.</p>${mywCta()}</div>`;
   function courseView(id) {
     const c = courseById(id); if (!c) return notFound();
     if (!unlocked(c)) return lockedView();
     const d = done(me().id), p = courseProgress(me().id, c);
     return `<a class="back" href="#/learn">← Courses</a>
-      <header class="page-head"><div><span class="tag ${c.kind}">${c.kind === "workshop" ? "Step 1 · Workshop" : c.kind === "core" ? "Core" : "Mini course"}</span><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
+      <header class="page-head"><div><span class="tag">${c.kind === "workshop" ? "Unlock Your Week Workshop" : c.kind === "cohort" ? "Master Your Week · review" : "Maximize Your Week · mini course"}</span><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
       <div class="card">${bar(p.pct)}<small>${p.n}/${p.total} lessons complete</small>
-        <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
+        <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.question ? esc(l.question) + " · " : ""}${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
   }
   function lessonView(cid, lid) {
     const c = SEED.courses.find((x) => x.id === cid), i = c?.lessons.findIndex((l) => l.id === lid);
@@ -658,8 +660,9 @@
     const l = c.lessons[i], next = c.lessons[i + 1], isDone = !!done(me().id)[l.id];
     return `<a class="back" href="#/learn/${c.id}">← ${esc(c.title)}</a>
       <article class="card lesson">
-        <span class="eyebrow">Lesson ${i + 1} of ${c.lessons.length} · ${l.mins} min</span>
+        <span class="eyebrow">${l.question ? "Part" : "Lesson"} ${i + 1} of ${c.lessons.length} · ${l.mins} min</span>
         <h1>${esc(l.title)}</h1>
+        ${l.question ? `<p class="lesson-question">${esc(l.question)}</p>` : ""}
         <div class="video">▶ Video placeholder</div>
         ${l.body.map((p) => `<p>${esc(p)}</p>`).join("")}
         <div class="action-box"><b>Your action</b><p>${esc(l.action)}</p></div>
