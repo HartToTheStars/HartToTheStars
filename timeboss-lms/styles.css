@@ -413,6 +413,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .phase-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 100px; background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
 .phase-pill.p2 { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
 .phase-pill.p3 { background: var(--teal); color: #fff; border-color: transparent; }
+.course .series { margin: -2px 0 8px; color: var(--teal); font-weight: 600; }
+.course .series + .accent-line { margin-top: 8px; }
+.course.locked .series { color: var(--muted); }
 .lesson-question { font-family: var(--font-head); font-size: clamp(20px, 2.2vw, 24px); font-style: italic; color: var(--teal); line-height: 1.35; margin: 4px 0 0; max-width: 36ch; }
 .level .grid { margin-top: 0; }
 .demo-link { color: rgba(255, 255, 255, .55); text-decoration: underline; text-underline-offset: 3px; margin-top: 18px; }

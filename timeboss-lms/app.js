@@ -194,6 +194,10 @@
 
   // ---------- progress + habit metrics ----------
   const courseById = (id) => SEED.courses.find((c) => c.id === id);
+  // Single-session courses (e.g. each Root Cause part) open straight to their content
+  const courseHref = (c) => (c.lessons.length === 1 ? `#/learn/${c.id}/${c.lessons[0].id}` : `#/learn/${c.id}`);
+  const seriesLen = (c) => SEED.courses.filter((x) => x.series === c.series).length;
+  const nextInSeries = (c) => c.series && SEED.courses.find((x) => x.series === c.series && x.part === c.part + 1);
   const workshopDone = (id) => courseProgress(id, courseById(WORKSHOP)).pct === 100;
   const phaseOf = (u = me()) => (u.role === "coach" || u.mywDone ? 3 : workshopDone(u.id) ? 2 : 1);
   const unlocked = (c, u = me()) => c.id === WORKSHOP || phaseOf(u) === 3;
@@ -627,9 +631,9 @@
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
     const kindTag = (x) => (x.kind === "workshop" ? "Workshop" : x.kind === "cohort" ? (ph === 3 ? "Review" : "Cohort session") : "Mini course");
     const tile = (x) => {
-      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3><p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
+      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)} · Part ${x.part} of ${seriesLen(x)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
       const p = courseProgress(u.id, x);
-      return `<a class="card course" href="#/learn/${x.id}"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3><div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
+      return `<a class="card course" href="${courseHref(x)}"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
     };
     const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span>${PHASES[n - 1].name}${n === ph ? `<small>You are here</small>` : ""}</h2>${body}</section>`;
     return `
@@ -658,9 +662,10 @@
     if (!c || i < 0) return notFound();
     if (!unlocked(c)) return lockedView();
     const l = c.lessons[i], next = c.lessons[i + 1], isDone = !!done(me().id)[l.id];
-    return `<a class="back" href="#/learn/${c.id}">← ${esc(c.title)}</a>
+    const nextSession = !next && nextInSeries(c);
+    return `<a class="back" href="${c.lessons.length === 1 ? "#/learn" : `#/learn/${c.id}`}">← ${c.lessons.length === 1 ? "Courses" : esc(c.title)}</a>
       <article class="card lesson">
-        <span class="eyebrow">${l.question ? "Part" : "Lesson"} ${i + 1} of ${c.lessons.length} · ${l.mins} min</span>
+        <span class="eyebrow">${c.series ? `${esc(c.series)} · Part ${c.part} of ${seriesLen(c)}` : `Lesson ${i + 1} of ${c.lessons.length}`} · ${l.mins} min</span>
         <h1>${esc(l.title)}</h1>
         ${l.question ? `<p class="lesson-question">${esc(l.question)}</p>` : ""}
         <div class="video">▶ Video placeholder</div>
@@ -668,7 +673,7 @@
         <div class="action-box"><b>Your action</b><p>${esc(l.action)}</p></div>
         <div class="row between">
           <button class="btn ${isDone ? "ghost" : ""}" data-action="toggle-lesson" data-id="${l.id}">${isDone ? "✓ Completed (undo)" : "Mark complete"}</button>
-          ${next ? `<a class="btn ghost" href="#/learn/${c.id}/${next.id}">Next: ${esc(next.title)}</a>` : c.id === WORKSHOP && workshopDone(me().id) && phaseOf() === 2 ? `<a class="btn" href="#/cohort">Enroll in Cohort</a>` : `<a class="btn ghost" href="#/learn">Back to courses</a>`}
+          ${next ? `<a class="btn ghost" href="#/learn/${c.id}/${next.id}">Next: ${esc(next.title)}</a>` : nextSession ? `<a class="btn ghost" href="${courseHref(nextSession)}">Next: ${esc(nextSession.title)}</a>` : c.id === WORKSHOP && workshopDone(me().id) && phaseOf() === 2 ? `<a class="btn" href="#/cohort">Enroll in Cohort</a>` : `<a class="btn ghost" href="#/learn">Back to courses</a>`}
         </div>
       </article>`;
   }
