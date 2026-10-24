@@ -3,9 +3,9 @@
 
 window.TB_SEED = {
   companies: [
-    { id: "acme", name: "Acme Logistics", color: "#2f6fed", seats: 25 },
-    { id: "northwind", name: "Northwind Health", color: "#13a37f", seats: 12 },
-    { id: "brightline", name: "Brightline Studio", color: "#b4479d", seats: 8 },
+    { id: "acme", name: "Acme Logistics", color: "#44849f", seats: 25 },
+    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12 },
+    { id: "brightline", name: "Brightline Studio", color: "#d6811f", seats: 8 },
   ],
 
   users: [

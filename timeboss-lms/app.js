@@ -33,7 +33,7 @@
   // ---------- helpers ----------
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const initials = (n) => n.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#1d2a44"}">${esc(initials(u.name))}</span>`;
+  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#2E7A8C"}">${esc(initials(u.name))}</span>`;
   const dateKey = (d = new Date()) => d.toISOString().slice(0, 10);
   const fmtDate = (t, o = { weekday: "short", month: "short", day: "numeric" }) => new Date(t).toLocaleDateString(undefined, o);
   const fmtTime = (t) => new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -187,26 +187,46 @@
     return md;
   }
 
+  // Line icons in the timeboss.us style (feather-like, teal stroke)
+  const ICON = {
+    home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+    community: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4 1.6 4.5 4"/>',
+    company: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/>',
+    prompt: '<path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/>',
+    learn: '<path d="M2 6.5 12 3l10 3.5-10 3.5z"/><path d="M6 8.5V14c0 1.7 2.7 3 6 3s6-1.3 6-3V8.5"/>',
+    events: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    office: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    weekly: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+    daily: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  };
+  const icon = (k, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+  const LOGO = "https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/file-uploads/themes/2157407052/settings_images/5e0128-cfd4-1143-d6f7-0f3224163ce_d738fc1-5d2-fe-cfa5-26b76167ca6_70b8dc-88d4-d7d-6ca2-f8fdeacce_Time-Boss-Logo-White-1.png";
+  // Use the real logo only once it has loaded; otherwise show the wordmark (no flicker on re-render)
+  let logoOk = false;
+  Object.assign(new Image(), { onload: () => { logoOk = true; if (me()) render(); }, src: LOGO });
+  const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b><small>${sub}</small></div></div>`;
+
   // ---------- layout ----------
   function nav() {
     const u = me(), c = company(u.companyId), r = location.hash;
-    const link = (href, label, icon) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""}"><span class="ni">${icon}</span>${label}</a>`;
+    const link = (href, label, ic) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""}">${icon(ic)}<span>${label}</span></a>`;
     return `
-      <div class="brand"><span class="logo">⏱</span><div><b>Time Boss</b><small>Community</small></div></div>
+      <div class="brand-wrap">${logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss"><small class="brand-sub">Community</small>` : wordmark("Community")}</div>
       <nav>
-        ${link("#/home", "Home", "◉")}
-        ${link("#/community", "Community", "✦")}
-        ${c ? link("#/company", esc(c.name), "▣") : ""}
-        ${isCoach() ? link("#/companies", "Companies", "▣") : ""}
-        ${link("#/prompt", "Daily Prompt", "✎")}
+        ${link("#/home", "Home", "home")}
+        ${link("#/community", "Community", "community")}
+        ${c ? link("#/company", esc(c.name), "company") : ""}
+        ${isCoach() ? link("#/companies", "Companies", "company") : ""}
+        ${link("#/prompt", "Daily Prompt", "prompt")}
         <div class="navlabel">Learn</div>
-        ${link("#/learn", "Courses", "▤")}
+        ${link("#/learn", "Courses", "learn")}
         <div class="navlabel">Live</div>
-        ${link("#/events", "Events & RSVP", "◷")}
-        ${link("#/office-hours", "Office Hours", "☏")}
+        ${link("#/events", "Events & RSVP", "events")}
+        ${link("#/office-hours", "Office Hours", "office")}
         <div class="navlabel">Tools</div>
-        ${link("#/tools/weekly", "Weekly Planning", "▦")}
-        ${link("#/tools/daily", "Daily Review", "☑")}
+        ${link("#/tools/weekly", "Weekly Planning", "weekly")}
+        ${link("#/tools/daily", "Daily Review", "daily")}
       </nav>
       <a class="cohort-mini" href="#/cohort"><b>Master Your Week</b><span>Next cohort ${fmtDate(SEED.cohort.startsOn + "T12:00", { month: "short", day: "numeric" })} · ${SEED.cohort.seatsLeft} seats</span></a>
       <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
@@ -227,7 +247,7 @@
   V.login = () => `
     <div class="login">
       <div class="login-card">
-        <div class="brand big"><span class="logo">⏱</span><div><b>Time Boss</b><small>Community · prototype</small></div></div>
+        <div class="login-top">${wordmark("Community · prototype")}</div>
         <p class="muted">Pick a demo user. Each company sees its own private space; everyone shares the common area.</p>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
           <div class="login-group"><h4>${cid ? esc(company(cid).name) : "Time Boss coaches"}</h4>
@@ -262,7 +282,7 @@
 
       <div class="grid stats">
         <div class="card stat"><span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
-        <div class="card stat"><span class="muted">Streak</span><b>${streak(u.id)} 🔥</b><small>days in a row showing up</small></div>
+        <div class="card stat"><span class="muted">Streak</span><b>${streak(u.id)}</b><small>days in a row showing up</small></div>
         <div class="card stat"><span class="muted">Weekly plans</span><b>${runs.filter((r) => r.tool === "weekly").length}</b><small>${lastWeekly ? "last " + ago(lastWeekly.ts) : "none yet"}</small></div>
         <div class="card stat"><span class="muted">Daily reviews</span><b>${runs.filter((r) => r.tool === "daily").length}</b><small>${lastDaily ? "last " + ago(lastDaily.ts) : "none yet"}</small></div>
       </div>
@@ -286,9 +306,9 @@
         <div class="card">
           <div class="row between"><span class="eyebrow">Your week</span></div>
           <div class="quick">
-            <a href="#/tools/weekly" class="quick-tile"><b>▦ Run weekly planning</b><small>45 min · Big 3, pace, diversions</small></a>
-            <a href="#/tools/daily" class="quick-tile"><b>☑ Run daily review</b><small>10 min · wins, diversions, tomorrow</small></a>
-            <a href="#/office-hours" class="quick-tile"><b>☏ Book office hours</b><small>15 min with a coach</small></a>
+            <a href="#/tools/weekly" class="quick-tile">${icon("weekly")}<b>Run weekly planning</b><small>45 min · Big 3, pace, diversions</small></a>
+            <a href="#/tools/daily" class="quick-tile">${icon("daily")}<b>Run daily review</b><small>10 min · wins, diversions, tomorrow</small></a>
+            <a href="#/office-hours" class="quick-tile">${icon("office")}<b>Book office hours</b><small>15 min with a coach</small></a>
           </div>
           ${energies.length > 1 ? `<div class="spark"><span class="muted">Energy trend</span>${sparkline(energies)}</div>` : ""}
         </div>
@@ -401,7 +421,7 @@
     if (lessonId) return lessonView(courseId, lessonId);
     if (courseId) return courseView(courseId);
     const u = me(), op = overallProgress(u.id);
-    const tile = (c) => { const p = courseProgress(u.id, c); return `<a class="card course" href="#/learn/${c.id}"><div class="row between"><span class="tag ${c.kind}">${c.kind === "core" ? "Core" : "Mini course"}</span><small class="muted">${c.lessons.length} lessons</small></div><h3>${esc(c.title)}</h3><p class="muted">${esc(c.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`; };
+    const tile = (c) => { const p = courseProgress(u.id, c); return `<a class="card course" href="#/learn/${c.id}"><div class="row between"><span class="tag ${c.kind}">${c.kind === "core" ? "Core" : "Mini course"}</span><small class="muted">${c.lessons.length} lessons</small></div><h3>${esc(c.title)}</h3><div class="accent-line"></div><p class="muted">${esc(c.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`; };
     return `
       <header class="page-head"><div><h1>Courses</h1><p class="muted">You're ${op.pct}% through the full library (${op.n}/${op.total} lessons).</p></div></header>
       <h2 class="section">Core program</h2><div class="grid two">${SEED.courses.filter((c) => c.kind === "core").map(tile).join("")}</div>
