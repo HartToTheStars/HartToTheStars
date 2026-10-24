@@ -11,11 +11,19 @@ Run locally: `python3 -m http.server` in this folder.
 
 Before publishing, bump the `?v=` tags on styles.css, data.js and app.js in `index.html` (any new value, e.g. the commit hash). here.now caches those files in browsers for up to a day, so an unchanged URL keeps serving the old version.
 
+## Phases
+
+1. **Unlock Your Week Workshop.** Everyone starts here. Finishing the workshop's lessons unlocks phase 2.
+2. **Master Your Week Cohort.** Enroll from Home or the cohort page. In the prototype, "Demo: mark the cohort complete" on the cohort page stands in for finishing it.
+3. **Maximize Your Week.** Ongoing education: all other courses unlock, plus masterclasses and live Weekly Planning Meetings.
+
+Home shows the member's phase and the next step. Demo users in each phase: Sam Okafor (1), Dev Patel (2), Maria Chen (3). Each demo user's starting phase is the `phase` field in `data.js`.
+
 ## Habits
 
-- **WPM streak:** consecutive weeks with a Weekly Planning Meeting. A meeting run Friday to Sunday plans the following week; Monday to Thursday plans the current week.
-- **DRM streak:** consecutive workdays (Mon to Fri) with a Daily Review Meeting. Today counts once it's done.
-- **Past month completion:** DRM over the last 30 days of workdays, WPM over the last 4 weeks.
+- **Weekly Planning Meeting streak:** consecutive weeks with a Weekly Planning Meeting. A meeting run Friday to Sunday plans the following week; Monday to Thursday plans the current week.
+- **Daily Review Meeting streak:** consecutive workdays (Mon to Fri) with a Daily Review Meeting. Today counts once it's done.
+- **Past month completion:** Daily Review Meetings over the last 30 days of workdays, Weekly Planning Meetings over the last 4 weeks.
 
 Both meetings follow the Time Boss "Checklist for Your Week" (Reflect, Decide, Commit).
 
