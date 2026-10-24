@@ -33,7 +33,7 @@
   // ---------- helpers ----------
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const initials = (n) => n.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#2E7A8C"}">${esc(initials(u.name))}</span>`;
+  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
   const dateKey = (d = new Date()) => d.toISOString().slice(0, 10);
   const fmtDate = (t, o = { weekday: "short", month: "short", day: "numeric" }) => new Date(t).toLocaleDateString(undefined, o);
   const fmtTime = (t) => new Date(t).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
@@ -201,10 +201,11 @@
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   };
   const icon = (k, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
-  const LOGO = "https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/file-uploads/themes/2157407052/settings_images/5e0128-cfd4-1143-d6f7-0f3224163ce_d738fc1-5d2-fe-cfa5-26b76167ca6_70b8dc-88d4-d7d-6ca2-f8fdeacce_Time-Boss-Logo-White-1.png";
+  // White logo from www.timeboss.us/images/Time_Boss_Logo_White.png, for dark (navy) backgrounds
+  const LOGO = "assets/time-boss-logo-white.png";
   // Use the real logo only once it has loaded; otherwise show the wordmark (no flicker on re-render)
   let logoOk = false;
-  Object.assign(new Image(), { onload: () => { logoOk = true; if (me()) render(); }, src: LOGO });
+  Object.assign(new Image(), { onload: () => { logoOk = true; render(); }, src: LOGO });
   const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b><small>${sub}</small></div></div>`;
 
   // ---------- layout ----------
@@ -247,7 +248,7 @@
   V.login = () => `
     <div class="login">
       <div class="login-card">
-        <div class="login-top">${wordmark("Community · prototype")}</div>
+        <div class="login-top">${logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss"><small class="brand-sub">Community · prototype</small>` : wordmark("Community · prototype")}</div>
         <p class="muted">Pick a demo user. Each company sees its own private space; everyone shares the common area.</p>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
           <div class="login-group"><h4>${cid ? esc(company(cid).name) : "Time Boss coaches"}</h4>
