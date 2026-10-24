@@ -9,6 +9,8 @@ State lives in each browser's `localStorage`, so nothing is shared between visit
 
 Run locally: `python3 -m http.server` in this folder.
 
+Before publishing, bump the `?v=` tags on styles.css, data.js and app.js in `index.html` (any new value, e.g. the commit hash). here.now caches those files in browsers for up to a day, so an unchanged URL keeps serving the old version.
+
 ## Habits
 
 - **WPM streak:** consecutive weeks with a Weekly Planning Meeting. A meeting run Friday to Sunday plans the following week; Monday to Thursday plans the current week.
