@@ -8,7 +8,7 @@ window.TB_SEED = {
     { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio" },
   ],
 
-  // phase: 1 = Unlock Your Week Workshop, 2 = workshop done, Master Your Week Cohort next, 3 = completed the cohort (Maximize Your Week)
+  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (enrolled: true = in the current cohort; otherwise ready to enroll), 3 = Maximize Your Week (completed the cohort)
   // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
     { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
@@ -17,10 +17,10 @@ window.TB_SEED = {
     { id: "u_maria", name: "Maria Chen", title: "VP Operations", companyId: "acme", role: "admin", phase: 3, habit: 0.93 },
     { id: "u_victor", name: "Victor Hughes", title: "CEO", companyId: "acme", role: "admin", phase: 3, habit: 0.78 },
     { id: "u_patrick", name: "Patrick Doyle", title: "CFO", companyId: "acme", role: "member", phase: 3, habit: 0.7 },
-    { id: "u_dev", name: "Dev Patel", title: "Dispatch Manager", companyId: "acme", role: "member", phase: 2, habit: 0.88 },
+    { id: "u_dev", name: "Dev Patel", title: "Dispatch Manager", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.88 },
     { id: "u_sam", name: "Sam Okafor", title: "Account Lead", companyId: "acme", role: "member", phase: 1, habit: 0.45 },
     { id: "u_priya", name: "Priya Raman", title: "Director of Finance", companyId: "acme", role: "member", phase: 3, habit: 0.96 },
-    { id: "u_marcus", name: "Marcus Bell", title: "Fleet Manager", companyId: "acme", role: "member", phase: 2, habit: 0.62 },
+    { id: "u_marcus", name: "Marcus Bell", title: "Fleet Manager", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.62 },
     { id: "u_hannah", name: "Hannah Brooks", title: "HR Business Partner", companyId: "acme", role: "member", phase: 3, habit: 0.84 },
     { id: "u_luis", name: "Luis Ortega", title: "Warehouse Supervisor", companyId: "acme", role: "member", phase: 1, habit: 0.55 },
     { id: "u_grace", name: "Grace Kim", title: "Customer Success Manager", companyId: "acme", role: "member", phase: 3, habit: 0.91 },
@@ -28,7 +28,7 @@ window.TB_SEED = {
     { id: "u_aisha", name: "Aisha Mohammed", title: "Procurement Lead", companyId: "acme", role: "member", phase: 3, habit: 0.86 },
     { id: "u_ben", name: "Ben Carter", title: "Safety Coordinator", companyId: "acme", role: "member", phase: 1, habit: 0.38 },
     { id: "u_chloe", name: "Chloe Martin", title: "Marketing Manager", companyId: "acme", role: "member", phase: 3, habit: 0.8 },
-    { id: "u_jamal", name: "Jamal Washington", title: "Regional Sales Director", companyId: "acme", role: "member", phase: 2, habit: 0.67 },
+    { id: "u_jamal", name: "Jamal Washington", title: "Regional Sales Director", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.67 },
     { id: "u_erin", name: "Erin Walsh", title: "Controller", companyId: "acme", role: "member", phase: 3, habit: 0.9 },
     { id: "u_diego", name: "Diego Alvarez", title: "Routing Planner", companyId: "acme", role: "member", phase: 1, habit: 0.58 },
     { id: "u_nina", name: "Nina Petrova", title: "IT Manager", companyId: "acme", role: "member", phase: 3, habit: 0.82 },
@@ -38,12 +38,12 @@ window.TB_SEED = {
     { id: "u_sofia", name: "Sofia Rossi", title: "Operations Coordinator", companyId: "acme", role: "member", phase: 3, habit: 0.87 },
     { id: "u_caleb", name: "Caleb Johnson", title: "Account Executive", companyId: "acme", role: "member", phase: 2, habit: 0.5 },
     { id: "u_leah", name: "Leah Goldberg", title: "Billing Specialist", companyId: "acme", role: "member", phase: 2, habit: 0.77 },
-    { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", phase: 2, habit: 0.64 },
+    { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.64 },
     { id: "u_mei", name: "Mei Lin", title: "Product Manager", companyId: "acme", role: "member", phase: 3, habit: 0.89 },
     { id: "u_zoe", name: "Zoe Bennett", title: "Recruiter", companyId: "acme", role: "member", phase: 1, habit: 0.42 },
 
     { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin", phase: 3, habit: 0.85 },
-    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, habit: 0.7 },
+    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, enrolled: true, habit: 0.7 },
     { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin", phase: 3, habit: 0.76 },
   ],
 
@@ -280,6 +280,7 @@ window.TB_SEED = {
     name: "Master Your Week",
     startsOn: "2026-11-16",
     weeks: 6,
+    currentWeek: 3, // the cohort enrolled members are in now; their habit history starts when it did
     seatsLeft: 9,
     url: "https://timeboss.us",
     bullets: [
