@@ -371,7 +371,7 @@
         <div class="navlabel">Learn</div>
         ${link("#/learn", "Courses", "learn")}
         <div class="navlabel">Live</div>
-        ${link("#/events", "Events & RSVP", "events", lockH)}
+        ${link("#/events", "Upcoming Events", "events", lockH)}
         ${link("#/office-hours", "Office Hours", "office")}
         <div class="navlabel">Habits</div>
         ${link("#/tools/weekly", "Weekly Planning Meeting", "weekly", lockH)}
@@ -577,22 +577,14 @@
           : `<a class="btn sm" href="#/tools/${tool}">Run now</a><small>${t.when}</small>`}
       </div></div>`;
   }
-  // What to do next, in plain words, based on the clock and what's done
-  function nextUp() {
-    const id = me().id, now = new Date(), wd = isWorkday(now);
-    if (!hasHabits()) return phaseOf() === 1 ? "Next up: your next Unlock Your Week Workshop lesson." : "Next up: enroll in the Master Your Week Cohort.";
-    if (!wpmWeeks(id).has(plannedWeek(now)) && (now.getDay() >= 5 || now.getDay() === 0)) return "Next up: plan next week with your Weekly Planning Meeting.";
-    if (wd && !drmDays(id).has(dateKey(now)) && now.getHours() >= 15) return "Next up: your Daily Review Meeting before you close the laptop.";
-    if (wd) return "Work the priorities on your Calendar. Deflect Unknown Tasks to your Parking Lot.";
-    return "Enjoy the weekend. Your habits will be here Monday.";
-  }
+
 
   V.home = () => {
     const u = me(), op = overallProgress(u.id), p = promptFor(), ms = monthStats(u.id);
     const upcoming = allEvents().filter((e) => rsvpd(e.id)).sort((a, b) => a.start - b.start).slice(0, 3);
     return `
       <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}</h1>
-      <p class="muted">${fmtDate(Date.now(), { weekday: "long", month: "long", day: "numeric" })}. ${nextUp()}</p></div></header>
+</div></header>
 
       ${phaseCard()}
       ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
@@ -612,7 +604,7 @@
           <a class="btn accent sm" href="#/community">Answer in Community</a>
         </div>
         <div class="card">
-          ${cardHead("events", "Events & RSVP", "#/events")}
+          ${cardHead("events", "Upcoming Events", "#/events")}
           <h3>On your calendar</h3>
           ${!hasHabits(u) ? `<p class="muted">Live events open when you join Master Your Week. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
             : `<p class="muted">Nothing booked yet.</p>`}
@@ -836,7 +828,7 @@
         <div class="event-actions"><button class="btn ${on ? "ghost" : ""}" data-action="rsvp" data-id="${e.id}">${on ? "✓ Going" : "RSVP"}</button>
           ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to calendar</a>` : ""}</div></div>`;
     };
-    return `<header class="page-head"><div><h1>Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
+    return `<header class="page-head"><div><h1>Upcoming Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
       <h2 class="section">Monthly masterclass</h2>${masterclassEvents().map(ev).join("")}
       <h2 class="section">Weekly Planning Meeting (live, group)</h2><p class="muted">Plan next week alongside other Time Bosses. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map(ev).join("")}`;
   }
@@ -951,7 +943,7 @@
   let pmOpen = false;
   function profileMenu() {
     const u = me();
-    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileAvatar(u, "pm")}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileAvatar(u, "menu-av")}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       ${pmOpen ? `<div class="pm-menu" role="menu"><div class="pm-who">${avatar(u)}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
         <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch user</button></div>` : ""}</div>`;
   }

@@ -519,8 +519,8 @@ body.modal-open { overflow: hidden; }
 .pm-btn { display: flex; align-items: center; gap: 6px; background: none; padding: 2px 4px 2px 2px; border-radius: 100px; color: var(--heading); }
 .pm-btn:hover { background: var(--paper); }
 .pm-chev { width: 16px; height: 16px; }
-.pav.pav-pm { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
-.pav.pav-pm .pbs { gap: 2px; }
+.pav.pav-menu-av { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
+.pav.pav-menu-av .pbs { gap: 2px; }
 .topbar .pb.wpm { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .55); }
 .pm-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 260px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 22px 48px -18px rgba(14, 27, 46, .35); padding: 8px; display: grid; }
 .pm-who { display: flex; gap: 10px; align-items: center; padding: 8px 10px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
