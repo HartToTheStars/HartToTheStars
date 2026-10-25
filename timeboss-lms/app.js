@@ -68,6 +68,7 @@
       title: "Daily Review Meeting",
       mins: 15,
       when: "End of your workday · 15 minutes",
+      sub: "15 minutes at the end of your workday.", // page subtitle
       prompt: window.TB_PROMPTS.daily,
       steps: [
         { phase: "Reflect", title: "Reflect on your day", guide: "What worked? What didn't work? What needs course correction?",
@@ -1135,7 +1136,7 @@
 
     if (!draft) {
       let lastPhase = "";
-      return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.</p></div></header>
+      return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.sub || `${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.`}</p></div></header>
         <div class="feed-wrap"><div class="feed-main">
           <div class="card"><ol class="steps-preview">${t.steps.map((s, i) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li value="${i + 1}"><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           ${sample ? "" : socialProof(tool)}
