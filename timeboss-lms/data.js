@@ -299,7 +299,7 @@ window.TB_SEED = {
 
   cohort: {
     name: "Master Your Week",
-    startsOn: "2026-11-16",
+    startsOn: "2026-11-02",
     weeks: 6,
     currentWeek: 3, // the cohort enrolled members are in now; their habit history starts when it did
     seatsLeft: 9,

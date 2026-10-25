@@ -437,7 +437,8 @@
       body = `<h2>You're in the Master Your Week Cohort</h2><p>Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.</p>
         <div class="row"><a class="btn" href="#/tools/weekly">Run Weekly Planning Meeting</a><a class="btn ghost" href="#/cohort">View Cohort</a></div>`;
     } else if (ph === 2) {
-      body = `<h2>Enroll in the Master Your Week Cohort</h2><p>You finished the workshop. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}: ${c.weeks} weeks, live with a Time Boss coach, ${c.seatsLeft} seats left. Enrolling opens your habits: the Weekly Planning Meeting, the Daily Review Meeting, and live events.</p>
+      body = `<h2>Enroll in the Master Your Week Cohort</h2><p>${c.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks.</p>
+        <dl class="cohort-facts"><div><dt>Next Cohort</dt><dd>Starts ${longDate(new Date(c.startsOn + "T12:00"))}</dd></div><div><dt>Seats Available</dt><dd>${c.seatsLeft}</dd></div></dl>
         <div class="row"><button class="btn" data-action="enroll">Enroll in Cohort</button><a class="btn ghost" href="#/cohort">About the Cohort</a></div>`;
     } else {
       const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
