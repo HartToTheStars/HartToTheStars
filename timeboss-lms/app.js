@@ -635,7 +635,7 @@
   };
   // Home: the next live events with RSVP right there
   function eventsCard({ sample = false } = {}) {
-    const list = allEvents().sort((a, b) => a.start - b.start).slice(0, 3);
+    const list = allEvents().sort((a, b) => a.start - b.start).slice(0, sample ? 5 : 3); // the locked example shows more below its message
     const row = (e) => `<li class="ev-row"><span class="date-chip sm"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></span>
       <div class="ev-main"><b>${esc(e.title)}</b><small>${fmtDate(e.start, { weekday: "short" })} · ${fmtTime(e.start)} · ${e.mins} min</small></div>
       ${!sample && rsvpd(e.id) ? `<a class="btn ghost sm" href="#/events">✓ Going</a>` : `<button class="btn sm" ${sample ? "" : `data-action="rsvp" data-id="${e.id}"`}>RSVP</button>`}</li>`;
