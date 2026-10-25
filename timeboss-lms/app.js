@@ -631,7 +631,7 @@
           <a class="btn ghost sm" href="#/office-hours">Book Office Hours</a>
         </div>
       </div>
-      ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "You unlock live events when you join the Master Your Week group coaching cohort", "events-lock", { compact: true })}`;
+      ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "Join the Master Your Week group coaching cohort to unlock Upcoming Events.", "events-lock", { compact: true })}`;
   };
   // Home: the next live events with RSVP right there
   function eventsCard({ sample = false } = {}) {
@@ -921,7 +921,7 @@
   }
 
   // events
-  V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "You unlock live events when you join the Master Your Week group coaching cohort", "page"));
+  V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "Join the Master Your Week group coaching cohort to unlock Upcoming Events.", "page"));
   function eventsPage() {
     const ev = (e) => {
       const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
