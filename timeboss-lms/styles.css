@@ -428,7 +428,21 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .reply small.meta { color: rgba(255, 255, 255, .5); }
 
 /* team space */
-.team-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.team-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "vs lb" "act lb"; column-gap: 18px; align-items: start; }
+.tg-vs { grid-area: vs; } .tg-act { grid-area: act; }
+.tg-lb { grid-area: lb; position: sticky; top: 24px; } /* the leaderboard stays in view while the activity scrolls */
+.act-list { list-style: none; margin: 0; padding: 0; }
+.act { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; }
+.act + .act { border-top: 1px solid var(--line); }
+.act .av-stack { flex: none; padding-top: 4px; min-width: 40px; }
+.act-av { flex: none; }
+.act-main { min-width: 0; display: grid; gap: 2px; font-size: 15px; }
+.act-main p { margin: 0; color: var(--ink); }
+.act-name { color: var(--heading); font-weight: 700; text-decoration: none; }
+.act-name:hover { text-decoration: underline; }
+.act-snip { color: var(--muted); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.act-when { font-size: 13px; color: var(--muted); text-decoration: none; }
+.team-activity .btn { margin-top: 10px; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .card-head h3 { margin: 0; font-size: 20px; }
 .seg { display: flex; width: 100%; border: 1px solid var(--line-strong); border-radius: 100px; padding: 2px; margin-bottom: 8px; }
@@ -733,7 +747,8 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 @media (max-width: 1000px) {
-  .team-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; grid-template-areas: "vs" "lb" "act"; }
+  .tg-lb { position: static; }
   .feed-wrap { grid-template-columns: 1fr; }
   .side { position: static; }
   .grid.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -782,7 +797,8 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .seg { border-radius: 18px; }
   .remind-time { border-left: 0; border-top: 1px solid var(--line); padding: 12px 0 0; }
   main { padding: 24px 16px 48px; }
-  .team-grid { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; grid-template-areas: "vs" "lb" "act"; }
+  .tg-lb { position: static; }
   .phase-track { grid-template-columns: 1fr; }
   /* Phones: Your Next Step sits right under the current phase, later phases below it */
   .phase-card { display: flex; flex-direction: column; }

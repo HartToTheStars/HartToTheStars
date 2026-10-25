@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v6"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v7"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -166,7 +166,10 @@
       const r = rng(uidKey(u.id) + 1);
       const ids = SEED.progress[u.id] || (u.phase === 1 ? wsIds.slice(0, Math.floor(r() * wsIds.length))
         : u.phase === 2 ? wsIds : [...wsIds, ...lessonIds.slice(0, Math.floor(lessonIds.length * (u.habit ?? 0.5) * (0.3 + r() * 0.6)))]);
-      progress[u.id] = Object.fromEntries(ids.map((id, i) => [id, now - (ids.length - i) * DAY]));
+      // Spread completions out: each person's latest lesson lands somewhere in the last few weeks, earlier ones a day or two apart
+      let t = now - (0.3 + r() * 20) * DAY;
+      const times = ids.map(() => { const x = t; t -= (1 + r() * 2) * DAY; return x; }).reverse();
+      progress[u.id] = Object.fromEntries(ids.map((id, i) => [id, Math.round(times[i])]));
     });
 
     // Prompt replies for today and the three previous days
@@ -820,14 +823,66 @@
       </table></div></div>`;
   }
   const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
+  // Latest Activity: what the team did in the last two weeks (posts, comments, prompt answers,
+  // finished phases and courses, and habit runs grouped per meeting per day)
+  let actLimit = 20;
+  function teamActivity(cid) {
+    const c = company(cid), team = teamOf(cid), ids = new Set(team.map((m) => m.id)), since = Date.now() - 14 * DAY, items = [];
+    const name = (m) => `<a class="act-name" href="#/people/${m.id}">${esc(m.name)}</a>`;
+    const add = (ts, who, html, href, snippet = "") => ts >= since && items.push({ ts, who, html, href, snippet });
+    S.posts.forEach((p) => {
+      if (ids.has(p.authorId)) add(p.ts, [user(p.authorId)], `${name(user(p.authorId))} posted in the Community`, `#/post/${p.id}`, p.body);
+      p.comments.forEach((cm) => {
+        if (ids.has(cm.authorId)) add(cm.ts, [user(cm.authorId)], `${name(user(cm.authorId))} commented on ${esc(user(p.authorId).name)}'s post`, `#/post/${p.id}/${cm.id}`, cm.body);
+        cm.replies.forEach((r) => ids.has(r.authorId) && add(r.ts, [user(r.authorId)], `${name(user(r.authorId))} replied to ${r.authorId === cm.authorId ? "their own comment" : esc(user(cm.authorId).name)}`, `#/post/${p.id}/${r.id}`, r.body));
+      });
+    });
+    Object.entries(S.promptReplies).forEach(([k, list]) => list.forEach((a) => {
+      if (ids.has(a.authorId)) add(a.ts, [user(a.authorId)], `${name(user(a.authorId))} answered the daily prompt`, `#/prompt/${k}/${a.id}`, a.body);
+      a.replies.forEach((r) => ids.has(r.authorId) && add(r.ts, [user(r.authorId)], `${name(user(r.authorId))} replied to ${r.authorId === a.authorId ? "their own answer" : `${esc(user(a.authorId).name)}'s answer`}`, `#/prompt/${k}/${r.id}`, r.body));
+    }));
+    // Finished courses; finishing the workshop or the cohort also finishes a phase
+    team.forEach((m) => {
+      const done = S.progress[m.id] || {};
+      const finished = (lessons) => lessons.length && lessons.every((l) => done[l.id]) ? Math.max(...lessons.map((l) => done[l.id])) : 0;
+      SEED.courses.forEach((co) => {
+        const ts = finished(co.lessons);
+        if (!ts) return;
+        add(ts, [m], co.id === WORKSHOP ? `${name(m)} completed Phase 1: Unlock Your Week` : `${name(m)} completed the ${esc(co.title)} ${co.kind === "cohort" ? "session" : "course"}`, courseHref(co));
+      });
+      if (m.mywDone) {
+        const ts = finished(SEED.courses.filter((co) => co.kind === "cohort").flatMap((co) => co.lessons));
+        if (ts) add(ts, [m], `${name(m)} completed Phase 2: Master Your Week`, `#/people/${m.id}`);
+      }
+    });
+    // Habit runs, grouped by meeting and day; private members' runs stay hidden
+    const groups = {};
+    S.toolRuns.forEach((r) => {
+      const m = ids.has(r.userId) && user(r.userId);
+      if (!m || !visibleTo(m) || r.ts < since) return;
+      const g = (groups[r.tool + dateKey(new Date(r.ts))] ||= { tool: r.tool, ts: 0, who: [] });
+      g.ts = Math.max(g.ts, r.ts);
+      if (!g.who.includes(m)) g.who.push(m);
+    });
+    Object.values(groups).forEach((g) => {
+      const t = TOOLS[g.tool].title;
+      add(g.ts, g.who, g.who.length === 1 ? `${name(g.who[0])} completed their ${t}` : `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`);
+    });
+    items.sort((a, b) => b.ts - a.ts);
+    const row = (it) => `<li class="act">${it.who.length > 1 ? avatarStack(it.who.map((u) => ({ u })), 4) : `<a href="#/people/${it.who[0].id}" class="act-av" aria-hidden="true" tabindex="-1">${avatar(it.who[0], "md")}</a>`}
+      <div class="act-main"><p>${it.html}</p>${it.snippet ? `<a class="act-snip" href="${it.href}">${esc(it.snippet)}</a>` : ""}<a class="act-when" href="${it.href}">${ago(it.ts)}</a></div></li>`;
+    return `<div class="card team-activity">${cardHead("company", `Latest Activity at ${esc(c.name)}`)}
+      ${items.length ? `<ul class="act-list">${items.slice(0, actLimit).map(row).join("")}</ul>${items.length > actLimit ? `<button class="btn ghost sm" data-action="more-activity">Show More Activity</button>` : ""}` : `<p class="muted">No activity in the last two weeks.</p>`}</div>`;
+  }
   function teamView(cid) {
     const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null;
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
       <div class="team-grid">
-        <div>${vsTeam(u, team)}</div>
-        <aside>${leaderboard(cid)}</aside>
+        <div class="tg-vs">${vsTeam(u, team)}</div>
+        <aside class="tg-lb">${leaderboard(cid)}</aside>
+        <div class="tg-act">${teamActivity(cid)}</div>
       </div>
       ${canManage(cid) ? roster(cid) : ""}`;
   }
@@ -1242,6 +1297,7 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
+      "more-activity": () => { actLimit += 20; render(); },
       photo: () => { photoFor = id; render(); document.querySelector(".photo-modal .btn")?.focus(); },
       "close-photo": () => { photoFor = null; render(); },
       replay: () => { celebrateFresh = true; render(); },
