@@ -1115,8 +1115,8 @@
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <details><summary>Preview prompt</summary><pre>${esc(t.prompt)}</pre></details>
-      <div class="row"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
-      <a class="btn ghost sm" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a><a class="btn ghost sm" href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT</a></div></div>`;
+      <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
+      <span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="478" height="120" alt="Gemini, Claude, or ChatGPT"></span></div></div>`;
 
     if (!draft) {
       let lastPhase = "";
