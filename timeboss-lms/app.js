@@ -805,7 +805,7 @@
     const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null;
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
-      <p class="muted">Your private team space. ${team.length} members. Only ${esc(c.name)} and Time Boss coaches can see it.</p></div></header>
+      <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
       <div class="team-grid">
         <div>${vsTeam(u, team)}</div>
         <aside>${leaderboard(cid)}</aside>
