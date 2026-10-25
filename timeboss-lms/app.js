@@ -832,7 +832,7 @@
     let [, view, a, b] = location.hash.split("/");
     if (!view || !V[view]) { location.hash = "#/home"; return; }
     root.className = "";
-    root.innerHTML = `<div class="topbar"><a href="#/home" class="topbar-logo">${logo()}</a><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button></div>
+    root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a></div>
       <aside class="sidebar">${nav()}</aside><div class="content"><main id="main">${V[view](a, b)}</main>${footer()}</div>`;
     tickTimer();
     countUp();
