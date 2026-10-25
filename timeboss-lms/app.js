@@ -535,12 +535,13 @@
 
   // ---------- locked previews ----------
   // Example habit data shown behind the lock so members can see what they're working toward
-  const SAMPLE = { weekly: { n: 6, len: 8, on: [0, 0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
+  const SAMPLE = { weekly: { n: 6, len: 7, on: [0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
   const sampleChain = (tool, light = false) => `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${SAMPLE[tool].on.map((x) => `<span class="pip ${x ? "on" : ""}"></span>`).join("")}</div>`;
+  const chainLabel = (tool) => `<small class="chain-label">${tool === "weekly" ? "Last 7 weeks" : "Last 10 workdays"}</small>`;
   const sampleHalf = (tool) => {
     const n = SAMPLE[tool].n;
     return `<div class="habits-half">${cardHead(tool, TOOLS[tool].title)}
-      <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}</div>`;
+      <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}${chainLabel(tool)}</div>`;
   };
   // Real-looking preview, dimmed and inert, with the lock message on top
   function lockedOver(preview, title, cls = "", { compact = false, proofTool = null } = {}) {
@@ -616,7 +617,7 @@
     return `<div class="habits-half">
       ${cardHead(tool, t.title, `#/tools/${tool}`)}
       <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
-      ${chain(tool, id, tool === "weekly" ? 8 : 10)}
+      ${chain(tool, id, tool === "weekly" ? 7 : 10)}${chainLabel(tool)}
       ${socialProof(tool, { compact: true })}
       <div class="habits-foot">
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
