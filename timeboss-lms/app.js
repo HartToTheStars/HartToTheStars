@@ -521,6 +521,18 @@
       <div class="modal photo-modal" role="dialog" aria-modal="true" aria-label="${esc(p.name)}'s photo">
         ${avatar(p, "xxl")}<b>${esc(p.name)}</b><button class="btn ghost sm" data-action="close-photo">Close</button></div>`;
   }
+  // The AI system prompt, readable in a scrolling modal
+  let promptFor_ = null;
+  function promptModalView() {
+    if (!promptFor_) return "";
+    const t = TOOLS[promptFor_];
+    return `<div class="modal-backdrop" data-action="close-prompt"></div>
+      <div class="modal prompt-modal" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
+        <div class="modal-head"><h2 id="prompt-title">${t.title} Prompt</h2><button class="ghost sm" data-action="close-prompt" aria-label="Close">Close</button></div>
+        <pre class="prompt-text">${esc(t.prompt)}</pre>
+        <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${promptFor_}">Copy System Prompt</button><span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="478" height="120" alt="Gemini, Claude, or ChatGPT"></span></div>
+      </div>`;
+  }
   function ranModalView() {
     if (!ranModal) return "";
     // A fixed list (a grouped Latest Activity line) or who ran a meeting this period, with team/everyone tabs
@@ -1114,7 +1126,7 @@
     const streakN = sample ? SAMPLE[tool].n : tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
-      <details><summary>Preview prompt</summary><pre>${esc(t.prompt)}</pre></details>
+      <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
       <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
       <span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="478" height="120" alt="Gemini, Claude, or ChatGPT"></span></div></div>`;
 
@@ -1266,8 +1278,8 @@
     root.className = "";
     const main = V[view](a, b); // first, so a page that marks notifications read updates the bell
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
-      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}`;
-    document.body.classList.toggle("modal-open", !!ranModal || !!photoFor);
+      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}`;
+    document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_);
     if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
       scrolledFor = location.hash;
@@ -1312,8 +1324,8 @@
     const from = "#" + (e.oldURL.split("#")[1] || "");
     if (goingBack) goingBack = false; else if (from !== "#") visited.push(from);
   });
-  window.addEventListener("hashchange", () => { phaseSel = null; scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor)) { ranModal = null; photoFor = null; render(); } });
+  window.addEventListener("hashchange", () => { promptFor_ = null; phaseSel = null; scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor || promptFor_)) { ranModal = null; photoFor = null; promptFor_ = null; render(); } });
   // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
   const tip = Object.assign(document.createElement("div"), { className: "tip", hidden: true });
   tip.setAttribute("role", "tooltip");
@@ -1374,6 +1386,8 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
+      "prompt-preview": () => { promptFor_ = tool; render(); document.querySelector(".prompt-modal .ghost")?.focus(); },
+      "close-prompt": () => { promptFor_ = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
       "glb-toggle": () => { glbOpen = !glbOpen; render(); },
       "show-group": () => { const g = actGroups[id]; if (g) { ranModal = g; render(); document.querySelector(".modal .ghost")?.focus(); } },
