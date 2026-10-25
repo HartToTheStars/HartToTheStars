@@ -136,6 +136,8 @@ output { color: var(--teal); font-weight: 900; }
 
 .stat b { display: block; font-family: var(--font-head); font-size: clamp(36px, 3.6vw, 48px); font-weight: 800; color: var(--navy); margin: 2px 0 4px; letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: lining-nums; }
 .stat .chain { margin: 4px 0 8px; }
+.stat .streak-num { display: flex; align-items: baseline; gap: 10px; }
+.stat .streak-num span { font-size: 15px; color: var(--muted); }
 .stat > span.muted { font-size: 14px; font-weight: 600; color: var(--muted); }
 .stat .bar { margin: 6px 0; }
 .prompt-card { background: var(--navy); color: #fff; border: 0; }

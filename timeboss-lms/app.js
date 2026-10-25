@@ -567,6 +567,12 @@
     </div>`;
 
   // Habit chain: one pip per workday (Daily Review Meeting) or planned week (Weekly Planning Meeting), oldest to newest
+  // A streak on a light card: the number with its unit beside it, then the recent weeks or workdays as pips, labeled
+  function streakStat(tool, id) {
+    const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id), len = tool === "weekly" ? 7 : 10;
+    const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : n === 1 ? "workday in a row" : "workdays in a row";
+    return `<div class="streak-num"><b>${n}</b><span>${unit}</span></div>${chain(tool, id, len, { light: true })}<small>Last ${len} ${tool === "weekly" ? "weeks" : "workdays"}</small>`;
+  }
   function chain(tool, id, len, { light = false, fresh = false } = {}) {
     const out = [];
     if (tool === "daily") {
@@ -838,8 +844,8 @@
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
       <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they join the Master Your Week Cohort</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
-        <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
-        <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
+        <div class="card stat"><span class="muted">Weekly Planning streak</span>${streakStat("weekly", m.id)}</div>
+        <div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
@@ -1056,8 +1062,7 @@
     if (!p) return notFound();
     const isMe = p.id === me().id, isCoachP = p.role === "coach" || !p.companyId, c = company(p.companyId);
     const streakCard = (tool) => {
-      const n = tool === "weekly" ? wpmStreak(p.id) : drmStreak(p.id);
-      return `<div class="card stat">${cardHead(tool, TOOLS[tool].title)}<b>${n}</b>${chain(tool, p.id, tool === "weekly" ? 8 : 10, { light: true })}<small>${tool === "weekly" ? (n === 1 ? "week" : "weeks") : n === 1 ? "workday" : "workdays"} in a row</small></div>`;
+      return `<div class="card stat">${cardHead(tool, TOOLS[tool].title)}${streakStat(tool, p.id)}</div>`;
     };
     const habits = isCoachP ? "" : !hasHabits(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your habits unlock when you join" : `${esc(p.name.split(" ")[0])}'s habits unlock when they join`} the Master Your Week Cohort.</p></div>`
       : !visibleTo(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your activity is private." : `${esc(p.name.split(" ")[0])} keeps their activity private.`}</p></div>`
