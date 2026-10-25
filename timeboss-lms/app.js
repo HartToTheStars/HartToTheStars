@@ -179,7 +179,8 @@
   const company = (id) => S.companies.find((c) => c.id === id);
   const isCoach = (u = me()) => u && u.role === "coach";
   const teamOf = (cid) => S.users.filter((u) => u.companyId === cid);
-  const avatar = (u, size = "") => `<span class="avatar ${size}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
+  // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
+  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.role === "coach" || !u.companyId ? "" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -208,6 +209,13 @@
   // Habits (Weekly Planning + Daily Review Meetings, streaks) and Events open once someone starts Master Your Week (enrolls)
   const enrolled = (u = me()) => phaseOf(u) === 3 || (phaseOf(u) === 2 && !!u.mywEnrolled);
   const hasHabits = enrolled;
+  // Status badges under a member's profile: phase, Weekly Planning Meeting streak, Daily Review Meeting streak (locked until they enroll)
+  function statusChips(u, { dark = false } = {}) {
+    if (u.role === "coach" || !u.companyId) return "";
+    const ph = phaseOf(u), on = hasHabits(u);
+    const streak = (ic, n, label) => `<span class="chip ${on ? "" : "locked"}" title="${label}${on ? `: ${n} in a row` : ": starts in Master Your Week"}">${icon(ic, "ic chip-ic")}${on ? n : icon("lock", "ic chip-ic")}</span>`;
+    return `<span class="chips ${dark ? "dark" : ""}"><span class="chip phase p${ph}" title="Phase ${ph}: ${esc(phaseLabel(u))}">${ph}</span>${streak("weekly", wpmStreak(u.id), "Weekly Planning Meeting streak")}${streak("daily", drmStreak(u.id), "Daily Review Meeting streak")}</span>`;
+  }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
   const allLessons = () => SEED.courses.flatMap((c) => c.lessons.map((l) => ({ ...l, courseId: c.id })));
@@ -333,7 +341,7 @@
         ${link("#/tools/daily", "Daily Review Meeting", "daily", lockH)}
       </nav>
       ${mywCta()}
-      <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
+      <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small>${statusChips(u, { dark: true })}</div>
         <button class="ghost sm" data-action="logout" title="Switch user">Switch</button></div>`;
   }
 
@@ -536,7 +544,7 @@
   function postCard(p) {
     const a = user(p.authorId), liked = p.likes.includes(me().id);
     return `<article class="card post">
-      <div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
+      <div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small>${statusChips(a)}</div></div>
       <div class="post-body">${paras(p.body)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
@@ -640,7 +648,7 @@
       cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? ", Daily Review Meeting" : ""}${planned ? ", Weekly Planning Meeting" : ""}"></span>`);
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
-      <header class="page-head member-head"><div class="row">${avatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
+      <header class="page-head member-head"><div class="row">${avatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p>${statusChips(m)}</div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits start when they join Master Your Week</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
         <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
@@ -756,9 +764,12 @@
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
     const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you."
       : tool === "weekly" ? "Your week is planned. Share it with someone and protect the blocks." : "Incomplete tasks have a home. Tomorrow's plan is reviewed. You can close the laptop.";
+    const milestone = grew && (n === 1 ? "Day one of a new streak." : n % 5 === 0 ? `Milestone: ${n} ${tool === "weekly" ? "weeks" : "workdays"} in a row.` : "");
     return `<section class="celebrate" aria-live="polite">
       <h1>${t.title} done</h1><p>${line}</p>
-      <span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span><span class="unit">${unit}</span>
+      <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
+      <span class="unit">${unit}</span>
+      ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
       ${chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew })}
       <div class="row"><a class="btn accent" href="#/home">Back to home</a><a class="btn ghost" href="#/community">Share a win in Community</a></div>
     </section>`;
@@ -841,11 +852,29 @@
   }
   // Count the streak up from the previous number on the completion screen
   function countUp() {
+    if (!document.querySelector(".celebrate") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    confetti();
     const el = document.querySelector(".celebrate .big[data-from]");
-    if (!el || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el) return;
     const to = el.textContent;
     el.textContent = el.dataset.from;
     setTimeout(() => { el.textContent = to; el.classList.add("bump"); }, 1000); // lands as the new pip drops into the chain
+  }
+  // A short burst of confetti in Time Boss colors over the completion screen
+  function confetti() {
+    const host = document.querySelector(".celebrate");
+    const colors = ["#9fc2d0", "#3c768d", "#ffffff", "#E8D9C8", "#4a8aa3"];
+    const box = document.createElement("div");
+    box.className = "confetti";
+    box.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 90; i++) {
+      const p = document.createElement("i");
+      const x = (Math.random() - 0.5) * 2;
+      p.style.cssText = `--x:${(x * 340).toFixed(0)}px;--y:${(-140 - Math.random() * 260).toFixed(0)}px;--fall:${(420 + Math.random() * 260).toFixed(0)}px;--r:${(Math.random() * 900 - 450).toFixed(0)}deg;--d:${(Math.random() * 0.25).toFixed(2)}s;background:${colors[i % colors.length]};width:${6 + Math.random() * 6}px;height:${8 + Math.random() * 8}px;border-radius:${Math.random() < 0.3 ? "50%" : "2px"}`;
+      box.appendChild(p);
+    }
+    host.appendChild(box);
+    setTimeout(() => box.remove(), 3200);
   }
   window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
 
