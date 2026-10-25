@@ -669,7 +669,6 @@
     const posts = S.posts.slice().sort((a, b) => b.ts - a.ts);
     const past = [1, 2, 3].map((i) => { const d = new Date(Date.now() - i * DAY); return { d, k: dateKey(d), q: promptFor(d).q }; });
     return `
-      <header class="page-head"><div><h1>Community</h1><p class="muted">Everyone in Time Boss, every company. Share wins, questions, and what's working.</p></div></header>
       <div class="feed-wrap"><div>
         ${pinnedPrompt()}
         ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, a question, or what's working...", button: "Post", cls: "card post-box" })}
