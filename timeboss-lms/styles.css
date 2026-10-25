@@ -752,6 +752,13 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   main { padding: 24px 16px 48px; }
   .team-grid { grid-template-columns: 1fr; }
   .phase-track { grid-template-columns: 1fr; }
+  /* Phones: Your Next Step sits right under the current phase, later phases below it */
+  .phase-card { display: flex; flex-direction: column; }
+  .phase-card .phase-track { display: contents; }
+  .phase-card .phase-track li { background: var(--paper); }
+  .phase-card .phase-track li.current { background: var(--card); }
+  .phase-card .phase-track li.after { order: 2; }
+  .phase-card .phase-body { order: 1; }
   .locked-wrap.page .locked-overlay { padding-top: 90px; }
   .habits-lock .locked-overlay { padding-bottom: 16px; }
   .habits-lock .locked-preview .habits { padding-bottom: 215px; }

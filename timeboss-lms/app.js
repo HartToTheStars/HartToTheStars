@@ -427,7 +427,7 @@
   // Home: where you are in the three phases, and the next step
   function phaseCard() {
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
-    const track = `<ol class="phase-track">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : ""}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</li>`).join("")}</ol>`;
+    const track = `<ol class="phase-track" role="list">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : "after"}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</li>`).join("")}</ol>`;
     let body;
     if (ph === 1) {
       const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
