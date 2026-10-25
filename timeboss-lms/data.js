@@ -49,6 +49,12 @@ window.TB_SEED = {
 
   coaches: ["u_andrew", "u_coach2"],
 
+  // Demo profile photos (assets/avatars, Unsplash placeholders). Members get them in order, except these, who stay on initials
+  // so the stored random avatar colors show. Coaches never get one (Andrew is a real person).
+  demoPhotos: { count: 33, initialsOnly: ["u_sam", "u_ben", "u_owen", "u_zoe", "u_kenji"] },
+  // Random avatar background colors, picked once per person and stored with them
+  avatarColors: ["#3c768d", "#5e8497", "#2f6b5f", "#4a6fa5", "#7a6a9a", "#8a5a6e", "#b0612a", "#a07a2c", "#6b7f3a", "#2f4f6f", "#7d5a3c", "#3f7f6a"],
+
   // Extra community members at other companies so community-wide counts ("67 Time Bosses ran theirs") look real.
   // They post nothing and don't appear on the login screen.
   communityFill: {

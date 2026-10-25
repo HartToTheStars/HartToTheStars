@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v4"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v5"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -118,6 +118,12 @@
           mywDone: phase === 3, mywEnrolled: true, fill: true, email: `${first.toLowerCase()}@${c.domain}` });
       }
     });
+    // Each person gets a stored random avatar color, and most demo members a placeholder photo
+    const colorRng = rng(777), photoQueue = Array.from({ length: SEED.demoPhotos.count }, (_, i) => `assets/avatars/${String(i + 1).padStart(2, "0")}.jpg`);
+    users.forEach((u) => {
+      u.color = pick(colorRng, SEED.avatarColors);
+      if (u.role !== "coach" && !SEED.demoPhotos.initialsOnly.includes(u.id) && photoQueue.length && (!u.fill || colorRng() < 0.25)) u.photo = photoQueue.shift();
+    });
     const members = users.filter((u) => u.role !== "coach");
     const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };
 
@@ -210,7 +216,7 @@
   // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
   // "Acme Logistics · 3h ago" under a name in comments and replies; coaches show Time Boss
   const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")} · ${ago(ts)}</small>`;
-  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "ring-coach" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
+  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "ring-coach" : `ring-p${phaseOf(u)}`}" style="background:${u.color || (u.companyId ? company(u.companyId)?.color : "#5e8497")}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -1142,7 +1148,7 @@
         if (!company(cid)) S.companies.push({ id: cid, name: v.newCompany.trim(), color: `hsl(${Math.random() * 360 | 0} 40% 40%)`, seats: 10 });
       }
       const isFirst = !S.users.some((u) => u.companyId === cid);
-      const u = { id: "u_" + uid(), name: v.name.trim(), email: v.email.trim(), title: v.title.trim() || "Member", companyId: cid, role: isFirst ? "admin" : "member" };
+      const u = { id: "u_" + uid(), color: SEED.avatarColors[Math.floor(Math.random() * SEED.avatarColors.length)], name: v.name.trim(), email: v.email.trim(), title: v.title.trim() || "Member", companyId: cid, role: isFirst ? "admin" : "member" };
       S.users.push(u); S.sessionUserId = u.id; location.hash = "#/home";
     }
     if (kind === "tool-step") {

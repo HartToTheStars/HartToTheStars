@@ -32,6 +32,10 @@ Both meetings follow the Time Boss "Checklist for Your Week" (Reflect, Decide, C
 
 Open `#/preview/weekly` or `#/preview/daily` (add a number for a streak, e.g. `#/preview/daily/10` for a milestone), or use "Preview the celebration" on a meeting's page. Nothing is saved; Replay plays it again.
 
+## Avatars
+
+Each person gets a random background color from `avatarColors` in `data.js`, stored with them. Most demo members also get a placeholder portrait from `assets/avatars/` (Unsplash, see `CREDITS.txt`); people listed in `demoPhotos.initialsOnly` and the coaches stay on initials. Members can upload their own photo on the Profile page.
+
 ## Community features
 
 - **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View all. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
