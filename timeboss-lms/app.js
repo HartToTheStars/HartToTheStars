@@ -1009,7 +1009,7 @@
     };
     const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span><span class="level-title">${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}${n === ph ? `<small>You are here</small>` : ""}</span></span></h2>${body}</section>`;
     return `
-      <header class="page-head"><div><h1>Courses</h1><p class="muted">Three steps. Each one unlocks the next.</p></div></header>
+      <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
       ${level(2, `<div class="card level-cohort"><div><h3>${esc(c.name)} Cohort</h3><p class="muted">${c.weeks} weeks, live with a Time Boss coach. Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled · week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete ✓</span>`}</div>
