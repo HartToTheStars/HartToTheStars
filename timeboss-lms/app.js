@@ -623,6 +623,13 @@
       <a class="link-all" href="#/events">See all events</a></div>`;
   }
 
+  // One writing box everywhere: my avatar beside a text box that grows, with a character count and the action below
+  function composeBox({ form, attrs = "", rows = 2, max = 1000, placeholder, button, cls = "", btnCls = "" }) {
+    return `<form data-form="${form}" ${attrs} class="compose ${cls}">
+      <div class="compose-row">${avatar(me(), "sm")}<textarea name="body" rows="${rows}" maxlength="${max}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" data-autogrow data-counter required></textarea></div>
+      <div class="compose-actions"><small class="char-count" aria-live="polite">0 / ${max.toLocaleString()}</small><button class="btn sm ${btnCls}">${button}</button></div></form>`;
+  }
+
   // community: pinned daily prompt, then the feed
   let freshReply = 0; // ts of the reply just posted, so it can animate in once
   function pinnedPrompt() {
@@ -631,8 +638,7 @@
     return `<section class="card prompt-card pinned">
       <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
-      <form data-form="reply" class="reply-form"><div class="reply-input">${avatar(me(), "sm")}<textarea name="body" rows="2" maxlength="1000" placeholder="Your answer..." data-autogrow data-counter required></textarea></div>
-        <div class="reply-actions"><small class="char-count" aria-live="polite">0 / 1,000</small><button class="btn accent sm">Reply</button></div></form>
+      ${composeBox({ form: "reply", rows: 2, placeholder: "Your answer...", button: "Reply", cls: "reply-form", btnCls: "accent" })}
       <div class="replies">${replies.slice(0, 3).map(reply).join("")}
         ${replies.length > 3 ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(3).map(reply).join("")}</details>` : ""}</div>
     </section>`;
@@ -648,7 +654,7 @@
       </div>
       <div class="comments">
         ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${profileAvatar(ca, "md")}<div><b>${esc(ca.name)}</b>${whereWhen(ca, c.ts)}<div>${esc(c.body)}</div></div></div>`; }).join("")}
-        <form data-form="comment" data-id="${p.id}" class="comment-form"><input name="body" placeholder="Write a comment..." required><button class="ghost sm">Reply</button></form>
+        ${composeBox({ form: "comment", attrs: `data-id="${p.id}"`, rows: 1, placeholder: "Write a comment...", button: "Comment", cls: "comment-form" })}
       </div>
     </article>`;
   }
@@ -659,7 +665,7 @@
       <header class="page-head"><div><h1>Community</h1><p class="muted">Everyone in Time Boss, every company. Share wins, questions, and what's working.</p></div></header>
       <div class="feed-wrap"><div>
         ${pinnedPrompt()}
-        <form class="card composer" data-form="post">${avatar(me())}<textarea name="body" rows="2" placeholder="Share a win, a question, or a task you deflected to your Parking Lot..." required></textarea><button class="btn">Post</button></form>
+        ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, a question, or what's working...", button: "Post", cls: "card post-box" })}
         ${posts.map(postCard).join("")}
       </div>
       <aside class="side">${mywCta()}
@@ -1113,8 +1119,8 @@
     if (!kind) return;
     e.preventDefault();
     const v = readForm(f);
-    if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim(), likes: [], comments: [] });
-    if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim() });
+    if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), likes: [], comments: [] });
+    if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 1000) });
     if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim().slice(0, 1000) }); }
     if (kind === "profile") {
       const u = me();
