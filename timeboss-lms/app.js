@@ -1475,7 +1475,7 @@
   document.addEventListener("mousedown", (e) => { if (e.target.closest(".compose-tools, .picker")) e.preventDefault(); }); // keep the cursor in the text box
   document.addEventListener("click", (e) => {
     document.querySelectorAll(".compose.active").forEach((f) => {
-      if (f.contains(e.target)) return;
+      if (f.contains(e.target) || f.contains(document.activeElement)) return; // still in use (e.g. a Reply button just opened and focused it)
       f.querySelector(".picker")?.remove();
       if (!f.querySelector("textarea").value.trim() && !f.classList.contains("has-att")) f.classList.remove("active");
     });
