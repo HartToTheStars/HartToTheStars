@@ -322,7 +322,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .lb li > * { display: flex; align-items: center; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 14.5px; }
 .lb li a:hover { background: var(--paper); }
 .lb li.you > * { background: var(--teal-soft); border-radius: 8px; font-weight: 700; }
-.lb .rank { width: 22px; text-align: right; font-family: var(--font-head); font-weight: 800; color: var(--muted); font-size: 15px; }
+.lb .rank { width: 22px; text-align: right; font-family: var(--font-head); font-weight: 800; color: var(--muted); font-size: 15px; font-variant-numeric: lining-nums tabular-nums; }
 .lb li:nth-child(-n+3) .rank { color: var(--teal); font-size: 18px; }
 .lb .num { width: 42px; flex: none; text-align: right; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .lb .num.hi { color: var(--navy); font-weight: 800; }
@@ -386,7 +386,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .phase-track li.current .phase-name b { color: var(--heading); }
 .phase-name small { font-size: 12.5px; }
 .phase-track li.current .phase-name small { color: var(--teal); font-weight: 600; }
-.phase-n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-head); font-weight: 800; font-size: 15px; border: 2px solid var(--line-strong); color: var(--muted); background: var(--card); }
+.phase-n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-grid; place-items: center; font-family: var(--font-body); font-weight: 700; font-size: 14px; line-height: 1; font-variant-numeric: lining-nums tabular-nums; border: 2px solid var(--line-strong); color: var(--muted); background: var(--card); }
 .done > .phase-n, .done .phase-n { background: var(--teal); border-color: var(--teal); color: #fff; font-family: var(--font-body); font-size: 14px; }
 .current > .phase-n, .current .phase-n { background: var(--navy); border-color: var(--navy); color: #fff; }
 .phase-body { padding: 24px 26px 26px; }
