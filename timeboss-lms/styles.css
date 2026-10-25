@@ -479,7 +479,7 @@ nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
 .locked-msg p { font-size: 15px; margin-bottom: 16px; }
 .locked-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--teal); background: var(--teal-soft); padding: 4px 12px; border-radius: 100px; }
 .habits-lock .locked-preview { filter: blur(.6px) saturate(.8); opacity: .8; }
-.habits-lock .locked-preview .habits { padding-bottom: 96px; }
+.habits-lock .locked-preview .habits { padding-bottom: 170px; }
 .habits-lock .locked-overlay { place-items: end center; padding: 0 20px 22px; }
 .habits-lock .locked-msg { display: flex; align-items: center; gap: 16px; text-align: left; max-width: none; padding: 14px 16px 14px 20px; flex-wrap: wrap; justify-content: center; }
 .habits-lock .locked-msg h2 { font-size: 19px; margin: 0; }

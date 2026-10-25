@@ -510,7 +510,7 @@
         <span class="locked-badge">${icon("lock", "ic lock")} Example</span>
         <h2>${esc(title)}</h2>
         ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} people in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
-        ${compact ? "" : `<p class="muted">Your Weekly Planning Meeting, Daily Review Meeting, habit streaks, and live events open when you enroll in Master Your Week, the Group Coaching Cohort.${ph === 1 ? " Finish the Unlock Your Week Workshop first." : ""}</p>`}
+        ${compact ? "" : `<p class="muted">${ph === 1 ? "First, finish the Unlock Your Week Workshop." : "Habits and live events open together when you enroll."}</p>`}
         ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
       </div></div></div>`;
   }
@@ -593,7 +593,7 @@
         <div class="card stat">${cardHead("daily", "Habits")}<span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
           : `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
-      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Your habits start when you join Master Your Week", "habits-lock", { compact: true })}
+      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "You unlock Habits when you join the Master Your Week group coaching cohort", "habits-lock", { compact: true })}
 
       <div class="grid two">
         <div class="card prompt-card">
@@ -606,7 +606,7 @@
         <div class="card">
           ${cardHead("events", "Upcoming Events", "#/events")}
           <h3>On your calendar</h3>
-          ${!hasHabits(u) ? `<p class="muted">Live events open when you join Master Your Week. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
+          ${!hasHabits(u) ? `<p class="muted">You unlock live events when you join the Master Your Week group coaching cohort. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
             : `<p class="muted">Nothing booked yet.</p>`}
           <div class="row">${hasHabits(u) ? `<a class="btn ghost sm" href="#/events">See events</a>` : ""}<a class="btn ghost sm" href="#/office-hours">Book office hours</a></div>
         </div>
@@ -706,7 +706,7 @@
       <div class="table-wrap"><table class="team">
         <thead><tr><th>Member</th><th>Phase</th><th>Weekly Planning<br>Meeting streak</th><th>Daily Review<br>Meeting streak</th><th>Weekly Planning<br>past month</th><th>Daily Review<br>past month</th><th>Courses</th></tr></thead>
         <tbody>${team.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}"><span class="pill-pre">Phase </span>${phaseOf(x.m)}<span class="pill-sub"> · ${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}</span></span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits start when they join Master Your Week</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("")}</tbody>
+          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}"><span class="pill-pre">Phase </span>${phaseOf(x.m)}<span class="pill-sub"> · ${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}</span></span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("")}</tbody>
         <tfoot><tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(team, (x) => x.op))}%</td></tr></tfoot>
       </table></div></div>`;
   }
@@ -734,7 +734,7 @@
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
       <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
-      ${!hasHabits(m) ? `<div class="card"><h3>Habits start when they join Master Your Week</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
+      ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they join the Master Your Week group coaching cohort</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
         <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
@@ -818,7 +818,7 @@
   }
 
   // events
-  V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "Live events open when you join Master Your Week", "page"));
+  V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "You unlock live events when you join the Master Your Week group coaching cohort", "page"));
   function eventsPage() {
     const ev = (e) => {
       const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
@@ -920,7 +920,7 @@
       </div><aside class="side">${aiPanel}</aside></div>`;
   }
   V.tools = (tool) => (!TOOLS[tool] ? notFound() : hasHabits() ? toolView(tool)
-    : lockedOver(toolView(tool, { sample: true }), `Your ${TOOLS[tool].title} opens when you join Master Your Week`, "page", { proofTool: tool }));
+    : lockedOver(toolView(tool, { sample: true }), `You unlock the ${TOOLS[tool].title} when you join the Master Your Week group coaching cohort`, "page", { proofTool: tool }));
 
   V.cohort = () => {
     const c = SEED.cohort;
