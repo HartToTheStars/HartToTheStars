@@ -463,9 +463,16 @@ body.lightbox-open { overflow: hidden; }
 .reply small.meta { color: rgba(255, 255, 255, .5); }
 
 /* team space */
-.team-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "vs lb" "act lb"; column-gap: 18px; align-items: start; }
-.tg-vs { grid-area: vs; } .tg-act { grid-area: act; }
-.tg-lb { grid-area: lb; position: sticky; top: 24px; } /* the leaderboard stays in view while the activity scrolls */
+.team-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "act side"; column-gap: 18px; align-items: start; }
+.tg-act { grid-area: act; }
+.tg-side { grid-area: side; }
+.vs-label { display: grid; line-height: 1.3; }
+.vs-label small { color: var(--muted); font-size: 13px; }
+.vs-key { display: block; margin-top: 4px; }
+.vs-next { display: grid; gap: 4px; justify-items: start; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+.vs-next .muted { font-size: 13px; }
+.vs-next b { color: var(--heading); line-height: 1.35; }
+.vs-next .btn { margin-top: 6px; }
 .act-list { list-style: none; margin: 0; padding: 0; }
 .act { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; }
 .act + .act { border-top: 1px solid var(--line); }
@@ -792,8 +799,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
 @media (max-width: 1000px) {
-  .team-grid { grid-template-columns: 1fr; grid-template-areas: "vs" "lb" "act"; }
-  .tg-lb { position: static; }
+  .team-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "act"; }
   .feed-wrap { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; }
   .grid.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -842,8 +848,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .seg { border-radius: 18px; }
   .remind-time { border-left: 0; border-top: 1px solid var(--line); padding: 12px 0 0; }
   main { padding: 24px 16px 48px; }
-  .team-grid { grid-template-columns: 1fr; grid-template-areas: "vs" "lb" "act"; }
-  .tg-lb { position: static; }
+  .team-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "act"; }
   .phase-track { grid-template-columns: 1fr; }
   /* Phones: Your Next Step sits right under the current phase, later phases below it */
   .phase-card { display: flex; flex-direction: column; }

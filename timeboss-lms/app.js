@@ -839,31 +839,26 @@
       }).join("")}</ol>
       <small class="muted">Weeks in a row with a Weekly Planning Meeting, and workdays in a row with a Daily Review Meeting. ${hasHabits() ? "People join the leaderboard when they enroll in Master Your Week." : "You'll join the leaderboard when you enroll in Master Your Week."}</small></div>`;
   }
+  // You vs. the team across the three phases, with your next step
   function vsTeam(u, all) {
-    const team = all.filter((m) => hasHabits(m));
-    if (u && !hasHabits(u)) {
-      const avg = avgOf(all, (m) => courseProgress(m.id, courseById(WORKSHOP)).pct), you = courseProgress(u.id, courseById(WORKSHOP)).pct;
-      return `<div class="card"><h3>You vs. the team average</h3>
-        <div class="vs"><div class="row between"><b>Unlock Your Week Workshop</b><span><b>${you}%</b> <span class="muted">vs ${Math.round(avg)}%</span></span></div>
-          <div class="bar vs-bar"><span style="width:${you}%" data-tip="You: ${you}% of the workshop done"></span><i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of the workshop done" aria-label="Team average: ${Math.round(avg)}%"></i></div></div>
-        <small class="muted">Habit streaks start when you enroll in Master Your Week. ${team.length} of ${all.length} teammates have.</small></div>`;
-    }
-    const maxW = Math.max(1, ...team.map((m) => wpmStreak(m.id))), maxD = Math.max(1, ...team.map((m) => drmStreak(m.id)));
+    const lessons = (kinds) => SEED.courses.filter((c) => kinds.includes(c.kind)).flatMap((c) => c.lessons.map((l) => l.id));
+    const pctDone = (id, ids) => { const d = S.progress[id] || {}; return ids.length ? (ids.filter((l) => d[l]).length / ids.length) * 100 : 0; };
     const rows = [
-      ["Weekly Planning Meeting streak", (id) => wpmStreak(id), maxW, " wks"],
-      ["Daily Review Meeting streak", (id) => drmStreak(id), maxD, " days"],
-      ["Past month completion", (id) => monthStats(id).all, 100, "%"],
-      ["Course progress", (id) => overallProgress(id).pct, 100, "%"],
+      [1, "Workshop", lessons(["workshop"])],
+      [2, "Cohort sessions", lessons(["cohort"])],
+      [3, "Mini courses", lessons(["mini"])],
     ];
-    return `<div class="card"><h3>${u ? "You vs. the team average" : "Team averages"}</h3>
-      ${rows.map(([label, f, max, unit]) => {
-        const avg = avgOf(team, (m) => f(m.id)), you = u ? f(u.id) : null;
-        const show = (v) => (unit === "%" ? Math.round(v) : Math.round(v * 10) / 10) + unit;
-        return `<div class="vs"><div class="row between"><b>${label}</b><span>${u ? `<b>${show(you)}</b> <span class="muted">vs ${show(avg)}</span>` : `<b>${show(avg)}</b>`}</span></div>
-          <div class="bar vs-bar">${u ? `<span style="width:${Math.min(100, (you / max) * 100)}%" data-tip="You: ${show(you)}"></span>` : `<span class="avg-fill" style="width:${Math.min(100, (avg / max) * 100)}%" data-tip="Team average: ${show(avg)}"></span>`}${u ? `<i style="left:${Math.min(100, (avg / max) * 100)}%" data-tip="Team average: ${show(avg)}" aria-label="Team average: ${show(avg)}"></i>` : ""}</div></div>`;
+    const step = u && nextStep(u);
+    return `<div class="card vs-card"><h3>${u ? "You vs. the team" : "Team progress"}</h3>
+      ${rows.map(([n, what, ids]) => {
+        const avg = avgOf(all, (m) => pctDone(m.id, ids)), you = u ? pctDone(u.id, ids) : null, ph = PHASES[n - 1];
+        return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
+          <div class="bar vs-bar">${u ? `<span style="width:${you}%" data-tip="You: ${Math.round(you)}% of ${what.toLowerCase()} done"></span><i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of ${what.toLowerCase()} done" aria-label="Team average: ${Math.round(avg)}%"></i>` : `<span class="avg-fill" style="width:${avg}%" data-tip="Team average: ${Math.round(avg)}%"></span>`}</div></div>`;
       }).join("")}
-      ${u ? `<small class="muted"><i class="avg-key"></i> marks the team average across the ${team.length} people who've started Master Your Week.</small>` : ""}</div>`;
+      ${u ? `<small class="muted vs-key"><i class="avg-key"></i> marks the average across all ${all.length} people at ${esc(company(u.companyId).name)}.</small>
+      <div class="vs-next"><span class="muted">Your next step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
   }
+
   function roster(cid) {
     const team = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct })).sort((a, b) => b.ms.all - a.ms.all);
     const hab = team.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
@@ -935,8 +930,7 @@
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
       <div class="team-grid">
-        <div class="tg-vs">${vsTeam(u, team)}</div>
-        <aside class="tg-lb">${leaderboard(cid)}</aside>
+        <aside class="tg-side">${vsTeam(u, team)}${leaderboard(cid)}</aside>
         <div class="tg-act">${teamActivity(cid)}</div>
       </div>
       ${canManage(cid) ? roster(cid) : ""}`;
