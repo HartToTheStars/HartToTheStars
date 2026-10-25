@@ -406,6 +406,33 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .char-count { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .char-count.near { color: #b0612a; }
 .comment-form { margin-top: 8px; }
+/* Writing tools: image, emoji, GIF. Shown while the box is in use */
+.compose-field { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.compose-actions { position: relative; }
+.compose-tools { display: none; gap: 2px; margin: 0 auto 0 26px; } /* icons line up with the text box */
+.compose.active .compose-tools, .compose.has-att .compose-tools { display: flex; }
+.tool { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--teal); cursor: pointer; font: 800 11px/1 var(--font-label); letter-spacing: .04em; }
+.tool .ic { width: 19px; height: 19px; }
+.tool-gif { border: 1.5px solid currentColor; width: auto; height: 22px; padding: 0 6px; margin: 6px 4px; border-radius: 5px; }
+@media (hover: hover) { .tool:hover { background: var(--teal-soft); } .tool-gif:hover { background: var(--teal-soft); } }
+.reply-form .tool { color: var(--teal-2); }
+@media (hover: hover) { .reply-form .tool:hover { background: rgba(255, 255, 255, .08); } }
+.picker { display: grid; gap: 4px; margin: 8px 0 0 34px; padding: 8px; background: var(--card); border: 1px solid var(--line-strong); border-radius: 12px; box-shadow: var(--shadow-hover); }
+.picker-emoji { grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); }
+.picker-gif { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pick-emoji { height: 36px; border: 0; border-radius: 8px; background: none; font-size: 22px; cursor: pointer; }
+.pick-gif { padding: 0; border: 0; border-radius: 8px; overflow: hidden; cursor: pointer; background: none; }
+.pick-gif img { display: block; width: 100%; aspect-ratio: 8 / 5; object-fit: cover; }
+@media (hover: hover) { .pick-emoji:hover { background: var(--teal-soft); } .pick-gif:hover { outline: 2px solid var(--teal); } }
+.att-preview { position: relative; width: min(240px, 100%); }
+.att-preview:empty { display: none; }
+.att-preview .att { margin: 0; }
+.att-preview .att img { width: 100%; max-width: none; }
+.att-remove { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(10, 21, 32, .75); color: #fff; font-size: 17px; line-height: 1; cursor: pointer; }
+.att { margin: 10px 0 2px; width: min(520px, 100%); }
+.att img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); }
+.att-gif, .note .att-gif { width: min(280px, 100%); }
+.note .att { width: min(360px, 100%); }
 .post-box .compose-actions { margin-bottom: 0; }
 .reply-form { margin: 24px 0 18px; } /* room around the answer box on the prompt card */
 .reply-form textarea { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: #fff; resize: none; overflow: hidden; line-height: 1.5; min-height: 66px; max-height: 320px; }
@@ -749,7 +776,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 1000px) {
   .team-grid { grid-template-columns: 1fr; grid-template-areas: "vs" "lb" "act"; }
   .tg-lb { position: static; }
-  .feed-wrap { grid-template-columns: 1fr; }
+  .feed-wrap { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; }
   .grid.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }

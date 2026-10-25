@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v7"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v8"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -127,8 +127,9 @@
     const members = users.filter((u) => u.role !== "coach");
     const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };
     // Comments and prompt replies: a few likes each (or l from data.js) and any seeded replies (r)
-    const seedNote = (id, a, b, ts, l, r = []) => ({ id, authorId: a, body: b, ts, likes: likers(l ?? Math.floor(rng(uidKey(id))() * 6), uidKey(id + "l"), a),
-      replies: r.map((x, k) => seedNote(`${id}-r${k}`, x.a, x.b, now - x.h * 3600e3, x.l)) });
+    const seedAtt = (x) => (x.img ? { type: "img", src: x.img } : x.gif ? { type: "gif", src: x.gif } : undefined);
+    const seedNote = (id, a, b, ts, l, r = [], att) => ({ id, authorId: a, body: b, ts, att, likes: likers(l ?? Math.floor(rng(uidKey(id))() * 6), uidKey(id + "l"), a),
+      replies: r.map((x, k) => seedNote(`${id}-r${k}`, x.a, x.b, now - x.h * 3600e3, x.l, [], seedAtt(x))) });
 
     // Generated meeting history: a Markov chain per user so streaks look like real habits
     const toolRuns = [];
@@ -186,8 +187,8 @@
       notifSeen: {}, // userId -> ts of the last visit to Notifications
       companies: [...SEED.companies, ...SEED.communityFill.companies],
       users,
-      posts: SEED.posts.map((p) => ({ id: p.id, authorId: p.authorId, body: p.body, ts: now - p.h * 3600e3, likes: likers(p.likes, uidKey(p.id), p.authorId),
-        comments: p.comments.map((c, j) => seedNote(`${p.id}-c${j}`, c.a, c.b, now - c.h * 3600e3, c.l, c.r)) })),
+      posts: SEED.posts.map((p) => ({ id: p.id, authorId: p.authorId, body: p.body, ts: now - p.h * 3600e3, att: seedAtt(p), likes: likers(p.likes, uidKey(p.id), p.authorId),
+        comments: p.comments.map((c, j) => seedNote(`${p.id}-c${j}`, c.a, c.b, now - c.h * 3600e3, c.l, c.r, seedAtt(c))) })),
       progress,
       promptReplies, // dateKey -> [{id, authorId, ts, body, likes, replies}]
       rsvps: {}, // eventId -> [userId]
@@ -367,6 +368,8 @@
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+    smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
     reply: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
@@ -655,8 +658,44 @@
   // One writing box everywhere: my avatar beside a text box that grows, with a character count and the action below
   function composeBox({ form, attrs = "", rows = 2, max = 1000, placeholder, button, cls = "", btnCls = "" }) {
     return `<form data-form="${form}" ${attrs} class="compose ${cls}">
-      <div class="compose-row">${avatar(me(), "sm")}<textarea name="body" rows="${rows}" maxlength="${max}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" data-autogrow data-counter required></textarea></div>
-      <div class="compose-actions"><small class="char-count" aria-live="polite">0 / ${max.toLocaleString()}</small><button class="btn sm ${btnCls}">${button}</button></div></form>`;
+      <div class="compose-row">${avatar(me(), "sm")}<div class="compose-field"><textarea name="body" rows="${rows}" maxlength="${max}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" data-autogrow data-counter></textarea><div class="att-preview"></div></div></div>
+      <input type="hidden" name="att">
+      <div class="compose-actions"><div class="compose-tools">
+          <label class="tool" data-tip="Add an image" aria-label="Add an image">${icon("image")}<input type="file" accept="image/*" data-attach hidden></label>
+          <button type="button" class="tool" data-action="emoji-menu" data-tip="Add an emoji" aria-label="Add an emoji">${icon("smile")}</button>
+          <button type="button" class="tool tool-gif" data-action="gif-menu" data-tip="Add a GIF" aria-label="Add a GIF">GIF</button>
+        </div><small class="char-count" aria-live="polite">0 / ${max.toLocaleString()}</small><button class="btn sm ${btnCls}">${button}</button></div></form>`;
+  }
+  // An image or GIF attached to a post, comment, or reply
+  const attView = (att) => (att?.src ? `<div class="att ${att.type === "gif" ? "att-gif" : ""}"><img src="${esc(att.src)}" alt="${att.type === "gif" ? "GIF" : "Attached image"}" loading="lazy"></div>` : "");
+  const EMOJIS = ["👍", "🙌", "🎉", "💪", "🔥", "✅", "🙏", "👏", "😂", "😊", "😅", "🤔", "❤️", "💯", "🚀", "🎯", "⏰", "📅", "☕", "🧠", "✨", "🤝", "👀", "😴"];
+  // Pickers open inside the writing box without a re-render, so typed text stays put
+  function openPicker(form, kind) {
+    form.querySelector(".picker")?.remove();
+    const p = document.createElement("div");
+    p.className = `picker picker-${kind}`;
+    p.innerHTML = kind === "emoji"
+      ? EMOJIS.map((e) => `<button type="button" class="pick-emoji" data-emoji="${e}" aria-label="${e}">${e}</button>`).join("")
+      : SEED.gifs.map((g) => `<button type="button" class="pick-gif" data-gif="${g.src}" aria-label="${esc(g.label)}"><img src="${g.src}" alt="${esc(g.label)}"></button>`).join("");
+    form.querySelector(".compose-actions").before(p);
+  }
+  function setAttachment(form, att) {
+    form.querySelector("[name=att]").value = att ? JSON.stringify(att) : "";
+    form.querySelector(".att-preview").innerHTML = att ? `${attView(att)}<button type="button" class="att-remove" data-action="remove-att" aria-label="Remove attachment">×</button>` : "";
+    form.classList.toggle("has-att", !!att);
+    form.querySelector(".picker")?.remove();
+  }
+  // Uploaded images are shrunk so a few fit in browser storage (production: upload to file storage)
+  function loadImage(file, maxSide = 1000) {
+    return new Promise((resolve, reject) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const k = Math.min(1, maxSide / Math.max(img.width, img.height)), cv = Object.assign(document.createElement("canvas"), { width: Math.round(img.width * k), height: Math.round(img.height * k) });
+        cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url); resolve(cv.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = reject; img.src = url;
+    });
   }
 
   // community: pinned daily prompt, then the feed
@@ -665,7 +704,7 @@
   // A comment (or prompt reply) with Like and Reply, its replies indented under it, one level deep
   function note(n, cls, dark, parent = null) {
     const a = user(n.authorId), liked = n.likes.includes(me().id), top = parent || n, first = esc(a.name.split(" ")[0]);
-    const body = `<div class="note ${cls} ${n.ts === freshNote ? "fresh" : ""}" id="n-${n.id}">${profileAvatar(a, parent ? "sm" : "md")}<div class="note-main"><b>${esc(a.name)}</b>${whereWhen(a, n.ts)}<div>${esc(n.body)}</div>
+    const body = `<div class="note ${cls} ${n.ts === freshNote ? "fresh" : ""}" id="n-${n.id}">${profileAvatar(a, parent ? "sm" : "md")}<div class="note-main"><b>${esc(a.name)}</b>${whereWhen(a, n.ts)}<div>${esc(n.body)}</div>${attView(n.att)}
       <div class="note-actions"><button class="note-act ${liked ? "liked" : ""}" data-action="like-note" data-id="${n.id}" aria-pressed="${liked}" aria-label="${liked ? "Unlike" : "Like"}">${liked ? "♥" : "♡"} ${n.likes.length || "Like"}</button><button class="note-act" data-action="reply-note" data-id="${top.id}" data-name="${first}">Reply</button></div></div></div>`;
     if (parent) return body;
     const open = replyTo?.id === n.id, kids = n.replies.map((r) => note(r, cls, dark, n)).join("");
@@ -689,7 +728,7 @@
     const shown = full ? p.comments : p.comments.slice(-2);
     return `<article class="card post" id="post-${p.id}">
       <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · <a class="post-time" href="${href}">${ago(p.ts)}</a></small></div></div>
-      <div class="post-body">${paras(p.body)}</div>
+      <div class="post-body">${paras(p.body)}${attView(p.att)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
         ${full ? `<span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>` : `<a class="muted sm post-count" href="${href}">${plural(p.comments.length, "comment", "comments")}</a>`}
@@ -1298,6 +1337,9 @@
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
+      "emoji-menu": () => { const f = el.closest("form"); f.querySelector(".picker-emoji") ? f.querySelector(".picker").remove() : openPicker(f, "emoji"); },
+      "gif-menu": () => { const f = el.closest("form"); f.querySelector(".picker-gif") ? f.querySelector(".picker").remove() : openPicker(f, "gif"); },
+      "remove-att": () => setAttachment(el.closest("form"), null),
       photo: () => { photoFor = id; render(); document.querySelector(".photo-modal .btn")?.focus(); },
       "close-photo": () => { photoFor = null; render(); },
       replay: () => { celebrateFresh = true; render(); },
@@ -1333,8 +1375,10 @@
     if (!kind) return;
     e.preventDefault();
     const v = readForm(f);
-    if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), likes: [], comments: [] });
-    const newNote = () => ({ id: uid(), authorId: me().id, ts: (freshNote = Date.now()), body: v.body.trim().slice(0, 1000), likes: [], replies: [] });
+    const att = v.att ? JSON.parse(v.att) : undefined;
+    if (["post", "comment", "reply", "note-reply"].includes(kind) && !v.body.trim() && !att) return f.querySelector("textarea").focus();
+    if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), att, likes: [], comments: [] });
+    const newNote = () => ({ id: uid(), authorId: me().id, ts: (freshNote = Date.now()), body: v.body.trim().slice(0, 1000), att, likes: [], replies: [] });
     if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push(newNote());
     if (kind === "reply") (S.promptReplies[f.dataset.day || dateKey()] ||= []).push(newNote()); // answers can go on past prompts too
     if (kind === "note-reply") { const { replies, ...r } = newNote(); allNotes().find((n) => n.id === f.dataset.id).replies.push(r); replyTo = null; }
@@ -1383,6 +1427,29 @@
       const c = t.form?.querySelector(".char-count"), max = +t.maxLength;
       if (c) { c.textContent = `${t.value.length.toLocaleString()} / ${max.toLocaleString()}`; c.classList.toggle("near", t.value.length >= max * 0.9); }
     }
+  });
+  // Writing tools (image, emoji, GIF) show while a writing box is in use
+  document.addEventListener("focusin", (e) => e.target.closest?.(".compose")?.classList.add("active"));
+  document.addEventListener("mousedown", (e) => { if (e.target.closest(".compose-tools, .picker")) e.preventDefault(); }); // keep the cursor in the text box
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll(".compose.active").forEach((f) => {
+      if (f.contains(e.target)) return;
+      f.querySelector(".picker")?.remove();
+      if (!f.querySelector("textarea").value.trim() && !f.classList.contains("has-att")) f.classList.remove("active");
+    });
+    const em = e.target.closest(".pick-emoji"), gf = e.target.closest(".pick-gif");
+    if (em) {
+      const t = em.closest("form").querySelector("textarea");
+      t.focus(); t.setRangeText(em.dataset.emoji, t.selectionStart, t.selectionEnd, "end");
+      t.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (gf) setAttachment(gf.closest("form"), { type: "gif", src: gf.dataset.gif });
+  });
+  document.addEventListener("change", async (e) => {
+    if (!e.target.matches("[data-attach]") || !e.target.files[0]) return;
+    const f = e.target.closest("form");
+    try { setAttachment(f, { type: "img", src: await loadImage(e.target.files[0]) }); } catch { toast("That file isn't an image we can read. Try a JPG or PNG."); }
+    e.target.value = "";
   });
   // Photo upload on the Profile page
   document.addEventListener("change", async (e) => {
