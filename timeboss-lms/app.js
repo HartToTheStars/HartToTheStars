@@ -227,13 +227,14 @@
   // Habits (Weekly Planning + Daily Review Meetings, streaks) and Events open once someone starts Master Your Week (enrolls)
   const enrolled = (u = me()) => phaseOf(u) === 3 || (phaseOf(u) === 2 && !!u.mywEnrolled);
   const hasHabits = enrolled;
-  // Status badges under a member's profile: phase, Weekly Planning Meeting streak, Daily Review Meeting streak (locked until they enroll)
-  function statusChips(u, { dark = false } = {}) {
-    if (u.role === "coach" || !u.companyId) return "";
-    const ph = phaseOf(u), on = hasHabits(u);
-    if (on && !visibleTo(u)) return `<span class="chips ${dark ? "dark" : ""}"><span class="chip phase p${ph}" title="Phase ${ph}: ${esc(phaseLabel(u))}">${ph}</span><span class="chip locked" title="Activity is private">${icon("lock", "ic chip-ic")} Private</span></span>`;
-    const streak = (ic, n, label) => `<span class="chip ${on ? "" : "locked"}" title="${label}${on ? `: ${n} in a row` : ": starts in Master Your Week"}">${icon(ic, "ic chip-ic")}${on ? n : icon("lock", "ic chip-ic")}</span>`;
-    return `<span class="chips ${dark ? "dark" : ""}"><span class="chip phase p${ph}" title="Phase ${ph}: ${esc(phaseLabel(u))}">${ph}</span>${streak("weekly", wpmStreak(u.id), "Weekly Planning Meeting streak")}${streak("daily", drmStreak(u.id), "Daily Review Meeting streak")}</span>`;
+  // Profile picture with three badges on its rim: phase (bottom left), Weekly Planning Meeting streak (bottom), Daily Review Meeting streak (right)
+  function profileAvatar(u, size = "") {
+    if (u.role === "coach" || !u.companyId) return avatar(u, size);
+    const ph = phaseOf(u), on = hasHabits(u), shown = on && visibleTo(u);
+    const why = !on ? "starts in Master Your Week" : "private";
+    const b = (pos, n, label, cls = "") => `<span class="pb pb-${pos} ${cls}" title="${label}">${n}</span>`;
+    const lock = icon("lock", "ic pb-lock");
+    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
   }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
@@ -360,7 +361,7 @@
         ${link("#/tools/daily", "Daily Review Meeting", "daily", lockH)}
       </nav>
       ${mywCta()}
-      <div class="me">${avatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small>${statusChips(u, { dark: true })}</div>
+      <div class="me">${profileAvatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
         <button class="ghost sm" data-action="logout" title="Switch user">Switch</button></div>`;
   }
 
@@ -470,7 +471,7 @@
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ran-title">
         <div class="modal-head"><h2 id="ran-title">Ran their ${TOOLS[tool].title} ${periodLabel(tool)}</h2><button class="ghost sm" data-action="close-modal" aria-label="Close">Close</button></div>
         ${u.companyId ? `<div class="seg"><button class="${scope === "team" ? "on" : ""}" data-action="ran-scope" data-id="team">${esc(company(u.companyId).name)} (${p.all.filter((x) => x.u.companyId === u.companyId).length})</button><button class="${scope === "all" ? "on" : ""}" data-action="ran-scope" data-id="all">Everyone (${p.all.length})</button></div>` : ""}
-        <ul class="ran-list">${list.map((x) => `<li>${avatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)} · ${esc(company(x.u.companyId).name)} · ${ago(x.ts)}</small>${statusChips(x.u)}</div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
+        <ul class="ran-list">${list.map((x) => `<li>${profileAvatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)} · ${esc(company(x.u.companyId).name)} · ${ago(x.ts)}</small></div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
       </div>`;
   }
 
@@ -606,7 +607,7 @@
   let freshReply = 0; // ts of the reply just posted, so it can animate in once
   function pinnedPrompt() {
     const p = promptFor(), replies = (S.promptReplies[dateKey()] || []).slice().sort((a, b) => b.ts - a.ts);
-    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${avatar(a, "sm")}<div><b>${esc(a.name)}</b> <small class="muted">${ago(r.ts)}</small><div>${esc(r.body)}</div></div></div>`; };
+    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${profileAvatar(a, "md")}<div><b>${esc(a.name)}</b> <small class="muted">${ago(r.ts)}</small><div>${esc(r.body)}</div></div></div>`; };
     return `<section class="card prompt-card pinned">
       <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
@@ -618,14 +619,14 @@
   function postCard(p) {
     const a = user(p.authorId), liked = p.likes.includes(me().id);
     return `<article class="card post">
-      <div class="post-head">${avatar(a)}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small>${statusChips(a)}</div></div>
+      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
       <div class="post-body">${paras(p.body)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
         <span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>
       </div>
       <div class="comments">
-        ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${avatar(ca, "sm")}<div><b>${esc(ca.name)}</b> <small class="muted">${ago(c.ts)}</small><div>${esc(c.body)}</div></div></div>`; }).join("")}
+        ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${profileAvatar(ca, "md")}<div><b>${esc(ca.name)}</b> <small class="muted">${ago(c.ts)}</small><div>${esc(c.body)}</div></div></div>`; }).join("")}
         <form data-form="comment" data-id="${p.id}" class="comment-form"><input name="body" placeholder="Write a comment..." required><button class="ghost sm">Reply</button></form>
       </div>
     </article>`;
@@ -722,7 +723,7 @@
       cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? ", Daily Review Meeting" : ""}${planned ? ", Weekly Planning Meeting" : ""}"></span>`);
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
-      <header class="page-head member-head"><div class="row">${avatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p>${statusChips(m)}</div></div></header>
+      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits start when they join Master Your Week</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
         <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
