@@ -532,7 +532,7 @@
         <span class="locked-badge">${icon("lock", "ic lock")} Example</span>
         <h2>${esc(title)}</h2>
         ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} people in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
-        ${compact ? "" : `<p class="muted">${ph === 1 ? "First, finish the Unlock Your Week Workshop." : "Habits and live events open together when you enroll."}</p>`}
+        ${compact ? "" : `<p class="muted">${ph === 1 ? "First, finish the Unlock Your Week Workshop." : "Habits and Events unlock when you enroll."}</p>`}
         ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
       </div></div></div>`;
   }
