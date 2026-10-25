@@ -1274,6 +1274,13 @@
     host.appendChild(box);
     setTimeout(() => box.remove(), 3200);
   }
+  // Our own page history for Back: browser history isn't reliable inside an embedded frame (like the artifact viewer)
+  const visited = [];
+  let goingBack = false;
+  window.addEventListener("hashchange", (e) => {
+    const from = "#" + (e.oldURL.split("#")[1] || "");
+    if (goingBack) goingBack = false; else if (from !== "#") visited.push(from);
+  });
   window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor)) { ranModal = null; photoFor = null; render(); } });
   // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
@@ -1332,7 +1339,7 @@
       "like-note": () => toggleLike(allNotes().find((x) => x.id === id)),
       "reply-note": () => { replyTo = { id, name: el.dataset.name }; render(); const t = document.querySelector(".note-reply-form textarea"); t?.focus({ preventScroll: true }); t?.closest("form")?.scrollIntoView({ block: "center" }); },
       "lb-sort": () => { lbSort = id; render(); },
-      back: () => (history.length > 1 ? history.back() : (location.hash = "#/community")),
+      back: () => { const to = visited.pop() || "#/community"; goingBack = to !== location.hash; location.hash = to; },
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
