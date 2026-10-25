@@ -545,6 +545,20 @@ table.team td.t-name .avatar { flex: none; }
 .vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
 .avg-key { position: static; display: inline-block; vertical-align: middle; transform: none; margin-right: 4px; }
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
+.roster-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.roster-head h3 { margin: 0; }
+.roster-tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
+.roster-tools input { flex: 1 1 220px; margin: 0; }
+.roster-tools select { display: none; margin: 0; }
+.th-sort { padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; white-space: nowrap; }
+.th-sort.on { color: var(--heading); font-weight: 700; }
+@media (hover: hover) { .th-sort:hover { color: var(--teal); } }
+.pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.pager .muted { margin-right: auto; font-size: 13px; }
+.pager .btn[disabled] { opacity: .4; pointer-events: none; }
+.add-users-form .add-one { gap: 12px; flex-wrap: wrap; }
+.add-users-form .add-one label { flex: 1 1 200px; }
+.add-users-form small { display: block; margin-top: 4px; font-weight: 500; }
 table.team { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.team th { text-align: left; font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 8px 6px; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
 table.team td { padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -872,6 +886,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .remind-card { grid-template-columns: 1fr; }
   /* Team members table becomes one card per person */
   table.team thead { display: none; }
+  .roster-tools select { display: block; flex: 1 1 100%; }
   table.team, table.team tbody, table.team tfoot { display: block; }
   table.team tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
   table.team td { padding: 0; border: 0; white-space: normal; font-size: 14px; }

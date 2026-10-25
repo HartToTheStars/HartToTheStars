@@ -45,7 +45,7 @@ Each person gets a random background color from `avatarColors` in `data.js`, sto
 
 - **RSVP sends a calendar invite.** When a member RSVPs to an event, email them a calendar invite (.ics attachment or Google/Microsoft calendar API) at their account email, and withdraw it when they cancel. The prototype shows a toast and offers an .ics download.
 - **Office hours** are booked through the Calendly inline embed in `data.js` (`officeHours.calendlyUrl`), prefilled with the member's name and email. Calendly sends its own confirmation and invite.
-- **Team detail** (roster, per-member drill-in) is visible to company admins (team leaders) and Time Boss coaches only. The streak leaderboard is visible to everyone on the team.
+- **Team detail** (roster, per-member drill-in) is visible to company admins (team leaders) and Time Boss coaches only. The Team Members table has search, sortable columns, 10 per page, and Add People (one at a time or a pasted "Name, email" list). Production should create the accounts and email each person an invite. The streak leaderboard is visible to everyone on the team.
 - **Reminder emails** follow each member's Settings (on/off and time). The prototype stores the choice only.
 - **Daily Notifications email:** one email a day at the member's chosen time listing every notification since the last one (likes, comments, and replies on their posts, comments, and prompt answers). Skip the send when there's nothing new. The prototype stores the choice only.
 - **Comments:** comments and daily prompt answers can be liked and replied to. Replies are one level deep and appear indented under the comment.

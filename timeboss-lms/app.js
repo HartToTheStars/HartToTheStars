@@ -894,17 +894,52 @@
       <div class="vs-next"><span class="muted">Your next step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
   }
 
-  function roster(cid) {
-    const team = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct })).sort((a, b) => b.ms.all - a.ms.all);
-    const hab = team.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
-    return `<div class="card"><div class="card-head"><h3>Team Members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
-      <div class="table-wrap"><table class="team">
-        <thead><tr><th>Member</th><th>Phase</th><th>Weekly Planning<br>Meeting streak</th><th>Daily Review<br>Meeting streak</th><th>Weekly Planning<br>past month</th><th>Daily Review<br>past month</th><th>Courses</th></tr></thead>
-        <tbody>${team.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${phaseOf(x.m)} - ${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(team, (x) => x.op))}%</td></tr></tfoot>
-      </table></div></div>`;
+  // Team Members: search, sort by any column, 10 per page, and Add People (leaders and coaches only)
+  const roster$ = { q: "", sort: "month", dir: -1, page: 0 };
+  const ROSTER_COLS = [
+    ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
+    ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)],
+    ["mwpm", "Weekly Planning<br>past month", (x) => (hasHabits(x.m) ? x.ms.wpm : -1)], ["mdrm", "Daily Review<br>past month", (x) => (hasHabits(x.m) ? x.ms.drm : -1)],
+    ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
+  ];
+  function rosterRows(cid) {
+    const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct }));
+    const q = roster$.q.trim().toLowerCase(), key = ROSTER_COLS.find((c) => c[0] === roster$.sort)[2];
+    const list = all.filter((x) => !q || `${x.m.name} ${x.m.email} ${x.m.title}`.toLowerCase().includes(q))
+      .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
+    const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
+    const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
+          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${phaseOf(x.m)} - ${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="7" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+    const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
+    const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
+    return { rows, foot, pager };
   }
+  function roster(cid) {
+    const r = rosterRows(cid), arrow = (k) => (roster$.sort === k ? (roster$.dir === 1 ? " ↑" : " ↓") : "");
+    const head = ROSTER_COLS.filter((c) => c[1]).map(([k, label]) => `<th><button class="th-sort ${roster$.sort === k ? "on" : ""}" data-action="roster-sort" data-id="${k}" aria-sort="${roster$.sort === k ? (roster$.dir === 1 ? "ascending" : "descending") : "none"}">${label}${arrow(k)}</button></th>`).join("");
+    return `<div class="card roster" data-cid="${cid}"><div class="card-head roster-head"><h3>Team Members</h3><button class="btn sm" data-action="add-users">Add People</button></div>
+      <small class="muted">Only team leaders and coaches see this. Select a name for detail.</small>
+      <div class="roster-tools"><input type="search" id="roster-q" placeholder="Search by name, email, or role" value="${esc(roster$.q)}" aria-label="Search team members">
+        <select id="roster-sort" aria-label="Sort by">${ROSTER_COLS.map(([k, label]) => `<option value="${k}" ${roster$.sort === k ? "selected" : ""}>Sort: ${k === "month" ? "Past month completion" : label.replace("<br>", " ")}</option>`).join("")}</select></div>
+      <div class="table-wrap"><table class="team"><thead><tr>${head}</tr></thead><tbody id="roster-body">${r.rows}</tbody><tfoot>${r.foot}</tfoot></table></div>
+      <div id="roster-pager">${r.pager}</div></div>`;
+  }
+  // Add people to the team: one by name and email, or a pasted list, one "Name, email" per line
+  let addUsersOpen = false;
+  function addUsersView() {
+    if (!addUsersOpen) return "";
+    return `<div class="modal-backdrop" data-action="close-add-users"></div>
+      <div class="modal add-users" role="dialog" aria-modal="true" aria-labelledby="add-title">
+        <div class="modal-head"><h2 id="add-title">Add People</h2><button class="ghost sm" data-action="close-add-users" aria-label="Close">Close</button></div>
+        <form data-form="add-users" class="add-users-form">
+          <div class="row add-one"><label>Name<input name="name" autocomplete="off" placeholder="Jordan Smith"></label><label>Email<input name="email" type="email" autocomplete="off" placeholder="jordan@company.com"></label></div>
+          <label>Or paste a list<textarea name="list" rows="6" placeholder="Jordan Smith, jordan@company.com&#10;Casey Lee, casey@company.com"></textarea><small class="muted">One person per line: name, comma, email.</small></label>
+          <div class="row"><button class="btn">Add People</button></div>
+        </form>
+      </div>`;
+  }
+
   const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
   // Latest Activity: what the team did in the last two weeks (posts, comments, prompt answers,
   // finished phases and courses, and habit runs grouped per meeting per day)
@@ -1281,8 +1316,8 @@
     root.className = "";
     const main = V[view](a, b); // first, so a page that marks notifications read updates the bell
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
-      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}`;
-    document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_);
+      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}${addUsersView()}`;
+    document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_ || addUsersOpen);
     if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
       scrolledFor = location.hash;
@@ -1327,8 +1362,8 @@
     const from = "#" + (e.oldURL.split("#")[1] || "");
     if (goingBack) goingBack = false; else if (from !== "#") visited.push(from);
   });
-  window.addEventListener("hashchange", () => { promptFor_ = null; phaseSel = null; scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor || promptFor_)) { ranModal = null; photoFor = null; promptFor_ = null; render(); } });
+  window.addEventListener("hashchange", () => { addUsersOpen = false; promptFor_ = null; phaseSel = null; scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor || promptFor_ || addUsersOpen)) { ranModal = null; photoFor = null; promptFor_ = null; addUsersOpen = false; render(); } });
   // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
   const tip = Object.assign(document.createElement("div"), { className: "tip", hidden: true });
   tip.setAttribute("role", "tooltip");
@@ -1389,6 +1424,10 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
+      "roster-sort": () => { roster$.dir = roster$.sort === id ? -roster$.dir : id === "name" || id === "phase" ? 1 : -1; roster$.sort = id; roster$.page = 0; render(); },
+      "roster-page": () => { roster$.page = Math.max(0, roster$.page + +id); render(); document.querySelector(".roster")?.scrollIntoView({ block: "start" }); },
+      "add-users": () => { addUsersOpen = true; render(); document.querySelector(".add-users input")?.focus(); },
+      "close-add-users": () => { addUsersOpen = false; render(); },
       "prompt-preview": () => { promptFor_ = tool; render(); document.querySelector(".prompt-modal .ghost")?.focus(); },
       "close-prompt": () => { promptFor_ = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
@@ -1433,6 +1472,21 @@
     if (!kind) return;
     e.preventDefault();
     const v = readForm(f);
+    if (kind === "add-users") {
+      // Production: create the accounts and email each person an invite to join the team
+      const cid = me().companyId || document.querySelector(".roster")?.dataset.cid, lines = [`${v.name || ""}, ${v.email || ""}`, ...String(v.list || "").split(/\n+/)];
+      const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/, added = [], bad = [];
+      lines.map((l) => l.trim()).filter((l) => l && l !== ",").forEach((l) => {
+        const i = l.lastIndexOf(","), name = l.slice(0, i).trim(), email = l.slice(i + 1).trim();
+        if (i < 0 || !name || !ok.test(email)) return bad.push(l);
+        if (S.users.some((u) => u.email?.toLowerCase() === email.toLowerCase())) return;
+        const u = { id: "u_" + uid(), name, email, title: "Member", companyId: cid, role: "member", color: SEED.avatarColors[Math.floor(Math.random() * SEED.avatarColors.length)] };
+        S.users.push(u); added.push(u);
+      });
+      if (!added.length) return toast(bad.length ? `Check the format: "Name, email" on each line.` : "Those people are already on the team.");
+      addUsersOpen = false; save(); render();
+      return toast(`Added ${added.length} ${added.length === 1 ? "person" : "people"}${bad.length ? `. Skipped ${bad.length} line${bad.length === 1 ? "" : "s"} that didn't match "Name, email".` : "."}`);
+    }
     const att = v.att ? JSON.parse(v.att) : undefined;
     if (["post", "comment", "reply", "note-reply"].includes(kind) && !v.body.trim() && !att) return f.querySelector("textarea").focus();
     if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), att, likes: [], comments: [] });
@@ -1502,6 +1556,14 @@
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
   window.addEventListener("hashchange", closeLightbox);
+  // Team Members search and sort select update the table in place, so the search box keeps focus
+  const refreshRoster = () => {
+    const card = document.querySelector(".roster"); if (!card) return;
+    const r = rosterRows(card.dataset.cid);
+    card.querySelector("#roster-body").innerHTML = r.rows; card.querySelector("tfoot").innerHTML = r.foot; card.querySelector("#roster-pager").innerHTML = r.pager;
+  };
+  document.addEventListener("input", (e) => { if (e.target.id === "roster-q") { roster$.q = e.target.value; roster$.page = 0; refreshRoster(); } });
+  document.addEventListener("change", (e) => { if (e.target.id === "roster-sort") { roster$.sort = e.target.value; roster$.dir = e.target.value === "name" || e.target.value === "phase" ? 1 : -1; roster$.page = 0; render(); } });
   // Rows that act as buttons open with Enter or Space too
   document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches?.('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); } });
   // Writing tools (image, emoji, GIF) show while a writing box is in use
