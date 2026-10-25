@@ -631,6 +631,23 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 .events-lock .locked-msg { display: flex; align-items: center; gap: 16px; text-align: left; max-width: none; padding: 14px 16px 14px 20px; flex-wrap: wrap; justify-content: center; }
 .events-lock .locked-msg h2 { font-size: 19px; margin: 0; }
 
+/* Public profile */
+.pav-link { display: block; flex: none; align-self: flex-start; color: inherit; border-radius: 16px; }
+.pav-link:focus-visible { outline: 3px solid var(--teal-2); outline-offset: 2px; }
+.pp-hero { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.pp-hero h1 { margin: 0 0 2px; font-size: clamp(28px, 3vw, 38px); }
+.pp-hero p { margin: 0 0 10px; }
+.pp-hero .phase-pill { font-size: 13px; padding: 4px 12px; white-space: normal; display: inline-block; line-height: 1.35; }
+.pp-note { margin: 12px 0 0 !important; font-size: 14px; color: var(--muted); }
+.pp-note a { color: var(--teal); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.pp-group { padding: 10px 0 12px; border-bottom: 1px solid var(--line); }
+.pp-group:last-child { border-bottom: 0; padding-bottom: 0; }
+.pp-group b { color: var(--heading); }
+.pp-courses { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.pp-courses li { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.ic.pp-check { width: 16px; height: 16px; color: var(--teal); }
+.pp-group .muted.sm { margin: 6px 0 0; }
+
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 80px); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 100px; font-weight: 700; border-bottom: 3px solid var(--teal); transition: transform .25s, opacity .25s; opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
 

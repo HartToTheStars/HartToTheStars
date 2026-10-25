@@ -254,10 +254,13 @@
     const lock = icon("lock", "ic pb-lock");
     return `<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
   }
-  function profileAvatar(u, size = "") {
+  function profileAvatar(u, size = "", { link = true } = {}) {
     // Coaches get the same layout, with a Coach label where members show their numbers
-    if (u.role === "coach" || !u.companyId) return `<span class="pav pav-${size || "md"}">${avatar(u, size)}<span class="pbs"><span class="pb coach-pb">Coach</span></span></span>`;
-    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}${profileBadges(u)}</span>`;
+    const inner = u.role === "coach" || !u.companyId
+      ? `<span class="pav pav-${size || "md"}">${avatar(u, size)}<span class="pbs"><span class="pb coach-pb">Coach</span></span></span>`
+      : `<span class="pav pav-${size || "md"}">${avatar(u, size)}${profileBadges(u)}</span>`;
+    // Tapping a profile picture opens that person's public profile
+    return link ? `<a class="pav-link" href="#/people/${u.id}" aria-label="View ${esc(u.name)}'s profile">${inner}</a>` : inner;
   }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
@@ -756,7 +759,7 @@
       cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? ", Daily Review Meeting" : ""}${planned ? ", Weekly Planning Meeting" : ""}"></span>`);
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
-      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg")}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
+      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they join the Master Your Week group coaching cohort</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span><b>${wpmStreak(m.id)}</b>${chain("weekly", m.id, 8, { light: true })}<small>weeks in a row</small></div>
         <div class="card stat"><span class="muted">Daily Review streak</span><b>${drmStreak(m.id)}</b>${chain("daily", m.id, 10, { light: true })}<small>workdays in a row</small></div>
@@ -966,10 +969,42 @@
   let pmOpen = false;
   function profileMenu() {
     const u = me();
-    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileAvatar(u, "menu-av")}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileAvatar(u, "menu-av", { link: false })}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       ${pmOpen ? `<div class="pm-menu" role="menu"><div class="pm-who">${avatar(u)}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
         <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch User</button></div>` : ""}</div>`;
   }
+
+  // Public profile: what anyone in the community sees when they tap someone's picture
+  V.people = (id) => {
+    const p = S.users.find((x) => x.id === id);
+    if (!p) return notFound();
+    const isMe = p.id === me().id, isCoachP = p.role === "coach" || !p.companyId, c = company(p.companyId);
+    const streakCard = (tool) => {
+      const n = tool === "weekly" ? wpmStreak(p.id) : drmStreak(p.id);
+      return `<div class="card stat">${cardHead(tool, TOOLS[tool].title)}<b>${n}</b>${chain(tool, p.id, tool === "weekly" ? 8 : 10, { light: true })}<small>${tool === "weekly" ? (n === 1 ? "week" : "weeks") : n === 1 ? "workday" : "workdays"} in a row</small></div>`;
+    };
+    const habits = isCoachP ? "" : !hasHabits(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your habits unlock when you join" : `${esc(p.name.split(" ")[0])}'s habits unlock when they join`} the Master Your Week group coaching cohort.</p></div>`
+      : !visibleTo(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your activity is private." : `${esc(p.name.split(" ")[0])} keeps their activity private.`}</p></div>`
+      : `<div class="grid two">${streakCard("weekly")}${streakCard("daily")}</div>`;
+    // Completed courses, grouped by the phase they belong to
+    const d = done(p.id), groups = [
+      [PHASES[0], SEED.courses.filter((x) => x.kind === "workshop")],
+      [PHASES[1], SEED.courses.filter((x) => x.kind === "cohort")],
+      [PHASES[2], SEED.courses.filter((x) => x.kind === "mini")],
+    ];
+    const courses = isCoachP ? "" : `<div class="card">${cardHead("learn", "Completed Courses")}${groups.map(([ph, list]) => {
+      const fin = list.filter((x) => x.lessons.every((l) => d[l.id]));
+      return `<div class="pp-group"><div class="row between"><b>${ph.name}</b><small class="muted">${fin.length} of ${list.length}</small></div>
+        ${fin.length ? `<ul class="pp-courses">${fin.map((x) => `<li>${icon("daily", "ic pp-check")}${esc(x.title)}</li>`).join("")}</ul>` : `<p class="muted sm">None yet</p>`}</div>`;
+    }).join("")}</div>`;
+    return `<a class="back" href="#" data-action="back">← Back</a>
+      <section class="card pp-hero">${avatar(p, "xl")}
+        <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? ` · ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : " · Time Boss"}</p>
+        ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${esc(phaseLabel(p))}</span>`}
+        ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
+      </section>
+      ${habits}${courses}`;
+  };
 
   V.profile = () => {
     const u = me();
@@ -1089,6 +1124,7 @@
       menu: () => document.body.classList.toggle("menu-open"),
       like: () => { const p = S.posts.find((x) => x.id === id), i = p.likes.indexOf(me().id); i < 0 ? p.likes.push(me().id) : p.likes.splice(i, 1); save(); render(); },
       "lb-sort": () => { lbSort = id; render(); },
+      back: () => (history.length > 1 ? history.back() : (location.hash = "#/community")),
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
