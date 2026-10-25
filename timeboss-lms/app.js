@@ -18,6 +18,8 @@
     if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
     return `${Math.floor(s / 86400)}d ago`;
   };
+  // "Saturday, October 24th"
+  const longDate = (d = new Date()) => { const n = d.getDate(), sfx = n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"; return `${d.toLocaleDateString("en-US", { weekday: "long" })}, ${d.toLocaleDateString("en-US", { month: "long" })} ${n}${sfx}`; };
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const paras = (txt) => esc(txt).split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
   const uid = () => Math.random().toString(36).slice(2, 10);
@@ -504,7 +506,7 @@
 
       <div class="grid two">
         <div class="card prompt-card">
-          <span class="pinned-label">${icon("pin", "ic pin")} Today's prompt</span>
+          <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small>
           <h3>${esc(p.q)}</h3>
           <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
           <a class="btn accent sm" href="#/community">Answer in Community</a>
@@ -524,7 +526,7 @@
     const p = promptFor(), replies = (S.promptReplies[dateKey()] || []).slice().sort((a, b) => b.ts - a.ts);
     const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${avatar(a, "sm")}<div><b>${esc(a.name)}</b> <small class="muted">${ago(r.ts)}</small><div>${esc(r.body)}</div></div></div>`; };
     return `<section class="card prompt-card pinned">
-      <div class="row between"><span class="pinned-label">${icon("pin", "ic pin")} Today's prompt, pinned</span><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
+      <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
       <form data-form="reply" class="reply-form">${avatar(me(), "sm")}<input name="body" placeholder="Your answer..." required><button class="btn accent sm">Reply</button></form>
       <div class="replies">${replies.slice(0, 3).map(reply).join("")}

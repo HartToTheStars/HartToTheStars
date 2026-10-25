@@ -300,6 +300,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .pinned { border-left: 4px solid var(--teal-2); }
 .pinned-label { display: inline-flex; align-items: center; gap: 6px; color: var(--teal-2); font-size: 13px; font-weight: 600; }
 .ic.pin { width: 15px; height: 15px; }
+.prompt-date { display: block; color: rgba(255, 255, 255, .6); font-size: 13.5px; margin-top: 2px; }
 .pinned h3 { font-size: clamp(21px, 2.3vw, 27px); margin: 8px 0 16px; max-width: 30ch; }
 .reply-form { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
 .reply-form input { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: #fff; }
