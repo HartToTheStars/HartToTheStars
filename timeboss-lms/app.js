@@ -653,7 +653,7 @@
         </div>
         <div class="card office-card">
           ${cardHead("office", "Office Hours", "#/office-hours")}
-          <h3>15 minutes with a Time Boss coach</h3>
+          <h3>15 Minutes with a Time Boss Coach</h3>
           <p class="muted">Get help on any challenge related to time.</p>
           <a class="btn ghost sm" href="#/office-hours">Book Office Hours</a>
         </div>
@@ -765,7 +765,7 @@
         ${posts.map((p) => postCard(p)).join("")}
       </div>
       <aside class="side">
-        <div class="card"><h3>Previous prompts</h3>
+        <div class="card"><h3>Previous Prompts</h3>
           <ul class="list">${past.map((p) => `<li><a class="past-prompt" href="#/prompt/${p.k}"><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></a></li>`).join("")}</ul></div>
       </aside></div>`;
   };
@@ -870,7 +870,7 @@
       [3, "Mini courses", lessons(["mini"])],
     ];
     const step = u && nextStep(u);
-    return `<div class="card vs-card"><h3>${u ? "You vs. the team" : "Team progress"}</h3>
+    return `<div class="card vs-card"><h3>${u ? "You vs. the Team" : "Team Progress"}</h3>
       ${rows.map(([n, what, ids]) => {
         const avg = avgOf(all, (m) => pctDone(m.id, ids)), you = u ? pctDone(u.id, ids) : null, ph = PHASES[n - 1];
         return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
@@ -883,7 +883,7 @@
   function roster(cid) {
     const team = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct })).sort((a, b) => b.ms.all - a.ms.all);
     const hab = team.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
-    return `<div class="card"><div class="card-head"><h3>Team members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
+    return `<div class="card"><div class="card-head"><h3>Team Members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
       <div class="table-wrap"><table class="team">
         <thead><tr><th>Member</th><th>Phase</th><th>Weekly Planning<br>Meeting streak</th><th>Daily Review<br>Meeting streak</th><th>Weekly Planning<br>past month</th><th>Daily Review<br>past month</th><th>Courses</th></tr></thead>
         <tbody>${team.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
@@ -974,13 +974,13 @@
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
-      <div class="card"><div class="card-head"><h3>Last 30 days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
+      <div class="card"><div class="card-head"><h3>Last 30 Days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
         <div class="days">${cells.join("")}</div></div>`}
       <div class="grid two">
-        <div class="card"><h3>Recent meetings</h3>
+        <div class="card"><h3>Recent Meetings</h3>
           ${runs.slice(0, 10).map((r) => `<details class="run"><summary><b>${TOOLS[r.tool].title}</b> ${fmtDate(r.ts, { weekday: "short", month: "short", day: "numeric" })} <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(r.tool, r.answers, r.ts))}</pre></details>`).join("") || `<p class="muted">No meetings yet.</p>`}
         </div>
-        <div class="card"><h3>Course progress</h3>
+        <div class="card"><h3>Course Progress</h3>
           ${SEED.courses.map((c) => { const p = courseProgress(m.id, c); return `<div class="course-row"><div class="row between"><span>${esc(c.title)}</span><small class="muted">${p.n}/${p.total}</small></div>${bar(p.pct, "thin")}</div>`; }).join("")}
         </div>
       </div>`;
@@ -1062,7 +1062,7 @@
           ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to Calendar</a>` : ""}</div></div>`;
     };
     return `<header class="page-head"><div><h1>Upcoming Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
-      <h2 class="section">Monthly masterclass</h2>${masterclassEvents().map(ev).join("")}
+      <h2 class="section">Monthly Masterclass</h2>${masterclassEvents().map(ev).join("")}
       <h2 class="section">Weekly Planning Meeting (live, group)</h2><p class="muted">Plan next week alongside other Time Bosses. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map(ev).join("")}`;
   }
 
@@ -1123,7 +1123,7 @@
       return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.</p></div></header>
         <div class="feed-wrap"><div>
           <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${sample ? sampleChain(tool, true) : chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
-          ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
+          ${t.during ? `<div class="card"><h3>During the Day, Monday to Friday: Work Your Calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
           <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           ${sample ? "" : socialProof(tool)}
           <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run Your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the Celebration</a></div></div>
