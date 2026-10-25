@@ -580,6 +580,10 @@ nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
 .proof.compact .proof-all { color: var(--teal-2); font-size: 13.5px; }
 .modal-backdrop { position: fixed; inset: 0; background: rgba(10, 21, 32, .55); z-index: 60; }
 .modal { position: fixed; z-index: 61; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100% - 32px)); max-height: min(720px, calc(100dvh - 48px)); display: flex; flex-direction: column; background: var(--card); border-radius: var(--radius); box-shadow: 0 30px 80px -20px rgba(10, 21, 32, .5); padding: 22px 22px 8px; }
+.photo-modal { width: auto; align-items: center; gap: 14px; padding: 28px; }
+.photo-modal b { color: var(--heading); font-size: 18px; }
+.avatar.xxl { width: min(288px, 70vw); height: min(288px, 70vw); font-size: min(96px, 23vw); }
+.pp-photo { padding: 0; border: 0; background: none; border-radius: 50%; cursor: zoom-in; flex: none; }
 .modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
 .modal-head h2 { font-size: clamp(20px, 2.4vw, 24px); margin: 0; }
 .modal .seg { margin-bottom: 10px; }

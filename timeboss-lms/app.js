@@ -492,6 +492,15 @@
     return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)} <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View All</button></span></div>`;
   }
   let ranModal = null; // {tool, scope}
+  // Tapping the picture on a public profile shows it at 300% in a modal
+  let photoFor = null;
+  function photoModalView() {
+    const p = photoFor && S.users.find((x) => x.id === photoFor);
+    if (!p) return "";
+    return `<div class="modal-backdrop" data-action="close-photo"></div>
+      <div class="modal photo-modal" role="dialog" aria-modal="true" aria-label="${esc(p.name)}'s photo">
+        ${avatar(p, "xxl")}<b>${esc(p.name)}</b><button class="btn ghost sm" data-action="close-photo">Close</button></div>`;
+  }
   function ranModalView() {
     if (!ranModal) return "";
     const { tool } = ranModal, p = proofScope(tool), u = me(), scope = u.companyId ? ranModal.scope : "all";
@@ -1065,7 +1074,7 @@
         ${fin.length ? `<ul class="pp-courses">${fin.map((x) => `<li>${icon("daily", "ic pp-check")}${esc(x.title)}</li>`).join("")}</ul>` : `<p class="muted sm">None yet</p>`}</div>`;
     }).join("")}</div>`;
     return `<a class="back" href="#" data-action="back">← Back</a>
-      <section class="card pp-hero">${avatar(p, "xl")}
+      <section class="card pp-hero"><button class="pp-photo" data-action="photo" data-id="${p.id}" aria-label="View ${esc(p.name)}'s photo larger">${avatar(p, "xl")}</button>
         <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? ` · ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : " · Time Boss"}</p>
         ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${esc(phaseLabel(p))}</span>`}
         ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
@@ -1127,8 +1136,8 @@
     root.className = "";
     const main = V[view](a, b); // first, so a page that marks notifications read updates the bell
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
-      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}`;
-    document.body.classList.toggle("modal-open", !!ranModal);
+      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}`;
+    document.body.classList.toggle("modal-open", !!ranModal || !!photoFor);
     if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
       scrolledFor = location.hash;
@@ -1166,8 +1175,8 @@
     host.appendChild(box);
     setTimeout(() => box.remove(), 3200);
   }
-  window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ranModal) { ranModal = null; render(); } });
+  window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor)) { ranModal = null; photoFor = null; render(); } });
   // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
   const tip = Object.assign(document.createElement("div"), { className: "tip", hidden: true });
   tip.setAttribute("role", "tooltip");
@@ -1228,6 +1237,8 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
+      photo: () => { photoFor = id; render(); document.querySelector(".photo-modal .btn")?.focus(); },
+      "close-photo": () => { photoFor = null; render(); },
       replay: () => { celebrateFresh = true; render(); },
       "pm-toggle": () => { pmOpen = !pmOpen; render(); },
       "remove-photo": () => { delete me().photo; save(); render(); toast("Photo removed"); },
