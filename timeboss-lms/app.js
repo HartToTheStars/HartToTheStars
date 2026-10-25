@@ -676,7 +676,7 @@
     return `<section class="card prompt-card pinned">
       <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} ${today ? "Today's Prompt" : "Daily Prompt"}</span><small class="prompt-date">${longDate(d)}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
-      ${today ? composeBox({ form: "reply", rows: 2, placeholder: "Your answer...", button: "Reply", cls: "reply-form", btnCls: "accent" }) : ""}
+      ${composeBox({ form: "reply", attrs: `data-day="${k}"`, rows: 2, placeholder: "Your answer...", button: "Reply", cls: "reply-form", btnCls: "accent" })}
       <div class="replies">${replies.slice(0, shown).map(reply).join("")}
         ${replies.length > shown ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(shown).map(reply).join("")}</details>` : ""}</div>
     </section>`;
@@ -1280,7 +1280,7 @@
     if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), likes: [], comments: [] });
     const newNote = () => ({ id: uid(), authorId: me().id, ts: (freshNote = Date.now()), body: v.body.trim().slice(0, 1000), likes: [], replies: [] });
     if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push(newNote());
-    if (kind === "reply") (S.promptReplies[dateKey()] ||= []).push(newNote());
+    if (kind === "reply") (S.promptReplies[f.dataset.day || dateKey()] ||= []).push(newNote()); // answers can go on past prompts too
     if (kind === "note-reply") { const { replies, ...r } = newNote(); allNotes().find((n) => n.id === f.dataset.id).replies.push(r); replyTo = null; }
     if (kind === "profile") {
       const u = me();
