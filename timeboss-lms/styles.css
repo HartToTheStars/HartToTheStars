@@ -164,8 +164,18 @@ output { color: var(--teal); font-weight: 900; }
 
 
 /* feed */
-.feed-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 22px; align-items: start; }
-.side { position: sticky; top: 24px; }
+.feed-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 310px; grid-template-areas: "main glb" "main side"; column-gap: 22px; align-items: start; }
+.feed-main { grid-area: main; min-width: 0; }
+.feed-glb { grid-area: glb; }
+.side { grid-area: side; }
+/* Community leaderboard: always open beside the feed; collapsed at the top on phones */
+.glb-toggle { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 0; border: 0; background: none; text-align: left; font: inherit; color: inherit; cursor: default; }
+.glb-toggle h3 { margin: 0 0 10px; }
+.glb-title { display: grid; gap: 2px; }
+.glb-toggle .muted { display: none; font-size: 13px; }
+.glb-chev { display: none; margin-left: auto; transition: transform .2s; }
+.glb .lb-cols { grid-template-columns: 1fr; gap: 6px; }
+.lb .grow small { display: block; font-size: 12px; color: var(--muted); font-weight: 500; }
 .post-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
 .post-head b { margin-right: 2px; color: var(--heading); }
 .post-body p:last-child { margin: 0; }
@@ -805,8 +815,16 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 
 @media (max-width: 1000px) {
   .team-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "act"; }
-  .feed-wrap { grid-template-columns: minmax(0, 1fr); }
-  .side { position: static; }
+  .feed-wrap { grid-template-columns: minmax(0, 1fr); grid-template-areas: "glb" "main" "side"; }
+  .glb { padding-block: 16px; }
+  .glb-toggle { cursor: pointer; align-items: center; }
+  .glb-toggle h3 { margin: 0; font-size: 18px; }
+  .glb-toggle .muted { display: block; }
+  .glb-chev { display: inline-block; flex: none; }
+  .glb:not(.open) .glb-body { display: none; }
+  .glb.open .glb-body { margin-top: 12px; }
+  .glb.open .glb-chev { transform: rotate(180deg); }
+  .glb .lb-cols { grid-template-columns: 1fr; }
   .grid.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

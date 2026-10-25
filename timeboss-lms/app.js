@@ -370,6 +370,7 @@
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
     smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
+    chev: '<path d="m6 9 6 6 6-6"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
     reply: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
@@ -758,7 +759,7 @@
     const posts = S.posts.slice().sort((a, b) => b.ts - a.ts);
     const past = [1, 2, 3].map((i) => { const d = new Date(Date.now() - i * DAY); return { d, k: dateKey(d), q: promptFor(d).q }; });
     return `
-      <div class="feed-wrap"><div>
+      <div class="feed-wrap"><div class="feed-glb">${globalLeaderboard()}</div><div class="feed-main">
         ${pinnedPrompt()}
         ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, ask a question, or start a discussion...", button: "Post", cls: "card post-box" })}
         ${posts.map((p) => postCard(p)).join("")}
@@ -828,23 +829,36 @@
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
   // Top five for each meeting, plus you at the bottom with your rank when you're not in the top five
   const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
-  function leaderboard(cid) {
-    const ms = teamOf(cid).filter((m) => hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
-    const link = canManage(cid), meId = me().id;
+  // Two streak boards (Weekly Planning, Daily Review): top five each, plus you with your rank when you're lower
+  function streakBoards(ms, { link = false, showCompany = false } = {}) {
+    const meId = me().id;
     const board = (key, unit, title) => {
       const other = key === "drm" ? "wpm" : "drm";
       const ranked = ms.slice().sort((a, b) => b[key] - a[key] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
       const mine = ranked.findIndex((x) => x.m.id === meId);
       const row = (x, i, gap = false) => {
-        const inner = `<span class="rank">${gap ? ordinal(i + 1) : i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}${x.m.id === meId ? " (you)" : ""}</span><span class="num hi">${x[key]}<small>${unit}</small></span>`;
-        return `<li class="${x.m.id === meId ? "you" : ""} ${gap ? "lb-me" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<div>${inner}</div>`}</li>`;
+        const inner = `<span class="rank">${gap ? ordinal(i + 1) : i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}${x.m.id === meId ? " (you)" : ""}${showCompany ? `<small>${esc(company(x.m.companyId)?.name || "")}</small>` : ""}</span><span class="num hi">${x[key]}<small>${unit}</small></span>`;
+        return `<li class="${x.m.id === meId ? "you" : ""} ${gap ? "lb-me" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<a href="#/people/${x.m.id}">${inner}</a>`}</li>`;
       };
       return `<div class="lb-col">${cardHead(key === "wpm" ? "weekly" : "daily", title)}<ol class="lb">${ranked.slice(0, 5).map((x, i) => row(x, i)).join("")}${mine >= 5 ? `<li class="lb-gap" aria-hidden="true">⋯</li>${row(ranked[mine], mine, true)}` : ""}</ol></div>`;
     };
-    return `<div class="card lb-card"><h3>Streak Leaderboard</h3>
-      <div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${board("drm", "day", "Daily Review Meeting")}</div>
+    return `<div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${board("drm", "day", "Daily Review Meeting")}</div>`;
+  }
+  const streakRows = (people) => people.filter((m) => m.role !== "coach" && m.companyId && hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
+  function leaderboard(cid) {
+    return `<div class="card lb-card"><h3>Streak Leaderboard</h3>${streakBoards(streakRows(teamOf(cid)), { link: canManage(cid) })}
       ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div>`;
   }
+  // Everyone in the community; on phones it sits collapsed at the top of Community
+  let glbOpen = false;
+  function globalLeaderboard() {
+    const ms = streakRows(S.users);
+    return `<div class="card lb-card glb ${glbOpen ? "open" : ""}">
+      <button class="glb-toggle" data-action="glb-toggle" aria-expanded="${glbOpen}"><span class="glb-title"><h3>Community Streak Leaderboard</h3><span class="muted">${ms.length} Time Bosses across the community</span></span>${icon("chev", "ic glb-chev")}</button>
+      <div class="glb-body">${streakBoards(ms, { showCompany: true })}
+      ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div></div>`;
+  }
+
 
   // You vs. the team across the three phases, with your next step
   function vsTeam(u, all) {
@@ -1361,6 +1375,7 @@
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
+      "glb-toggle": () => { glbOpen = !glbOpen; render(); },
       "show-group": () => { const g = actGroups[id]; if (g) { ranModal = g; render(); document.querySelector(".modal .ghost")?.focus(); } },
       phase: () => { phaseSel = +id === phaseOf() ? null : +id; render(); },
       "emoji-menu": () => { const f = el.closest("form"); f.querySelector(".picker-emoji") ? f.querySelector(".picker").remove() : openPicker(f, "emoji"); },
