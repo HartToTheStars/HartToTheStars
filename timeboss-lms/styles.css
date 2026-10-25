@@ -570,6 +570,9 @@ table.team tfoot td { font-weight: 700; color: var(--heading); border-bottom: 0;
 details.run { padding: 9px 0; border-bottom: 1px solid var(--line); }
 details.run summary small { display: inline; margin-left: 6px; }
 .card details.run:last-child { border: 0; }
+/* History rows that are their own cards keep the card padding on the sides */
+details.card.run { padding: 14px 20px; margin-bottom: 10px; }
+details.card.run summary { cursor: pointer; }
 .tool-intro { display: flex; gap: 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px; }
 
 /* office hours */
