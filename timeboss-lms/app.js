@@ -1127,7 +1127,7 @@
     const streakCard = `<div class="card stat">${cardHead(tool, "Your Streak")}${sample
       ? `<div class="streak-num"><b>${SAMPLE[tool].n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool, true)}<small>${tool === "weekly" ? "Last 7 weeks" : "Last 10 workdays"}</small>`
       : streakStat(tool, me().id)}</div>`;
-    const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
+    const aiPanel = `<div class="card ai"><h4>Run This in Your AI Tool of Choice</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
       <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
