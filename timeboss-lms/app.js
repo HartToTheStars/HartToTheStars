@@ -228,13 +228,17 @@
   const enrolled = (u = me()) => phaseOf(u) === 3 || (phaseOf(u) === 2 && !!u.mywEnrolled);
   const hasHabits = enrolled;
   // Profile picture with three badges beneath it: phase (left), Weekly Planning Meeting streak (middle), Daily Review Meeting streak (right)
-  function profileAvatar(u, size = "") {
-    if (u.role === "coach" || !u.companyId) return avatar(u, size);
+  function profileBadges(u) {
+    if (u.role === "coach" || !u.companyId) return "";
     const ph = phaseOf(u), on = hasHabits(u), shown = on && visibleTo(u);
     const why = !on ? "starts in Master Your Week" : "private";
     const b = (pos, n, label, cls = "") => `<span class="pb pb-${pos} ${cls}" title="${label}">${n}</span>`;
     const lock = icon("lock", "ic pb-lock");
-    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span></span>`;
+    return `<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
+  }
+  function profileAvatar(u, size = "") {
+    if (u.role === "coach" || !u.companyId) return avatar(u, size);
+    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}${profileBadges(u)}</span>`;
   }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
@@ -330,6 +334,8 @@
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   };
+  // Card header that mirrors the menu: icon, title, divider. Links to that page when there is one.
+  const cardHead = (ic, title, href) => href ? `<a class="card-hd" href="${href}">${icon(ic)}<span>${title}</span></a>` : `<div class="card-hd">${icon(ic)}<span>${title}</span></div>`;
   const icon = (k, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
   // White logo from www.timeboss.us/images/Time_Boss_Logo_White.png, for dark (navy) backgrounds
   const LOGO = "assets/time-boss-logo-white.png";
@@ -452,7 +458,7 @@
     const useTeam = team.length >= 3;
     return { all, others, team, list: useTeam ? team : others, where: useTeam ? `at ${company(u.companyId).name}` : "in the community", scope: useTeam ? "team" : "all", iRan: all.some((x) => x.u.id === u.id) };
   }
-  const avatarStack = (list, n = 5) => `<span class="stack">${list.slice(0, n).map((x) => avatar(x.u, "sm")).join("")}${list.length > n ? `<span class="stack-more">+${list.length - n}</span>` : ""}</span>`;
+  const avatarStack = (list, n = 5) => `<span class="av-stack">${list.slice(0, n).map((x) => avatar(x.u, "sm")).join("")}${list.length > n ? `<span class="stack-more">+${list.length - n}</span>` : ""}</span>`;
   function socialProof(tool, { compact = false } = {}) {
     const p = proofScope(tool), n = p.list.length;
     if (!n) return "";
@@ -460,8 +466,7 @@
     const did = tool === "weekly" ? `already planned ${planned}` : `already run their Daily Review Meeting ${period}`;
     const text = p.iRan ? (tool === "weekly" ? `You and ${n} other${n === 1 ? "" : "s"} ${p.where} have planned ${planned}.` : `You and ${n} other${n === 1 ? "" : "s"} ${p.where} ran it ${period}.`)
       : `Join ${n} Time Boss${n === 1 ? "" : "es"} ${p.where} who've ${compact && tool === "daily" ? `run theirs ${period}` : did}.`;
-    return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)}</span>
-      <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View all</button></div>`;
+    return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)} <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View all</button></span></div>`;
   }
   let ranModal = null; // {tool, scope}
   function ranModalView() {
@@ -482,7 +487,7 @@
   const sampleChain = (tool, light = false) => `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${SAMPLE[tool].on.map((x) => `<span class="pip ${x ? "on" : ""}"></span>`).join("")}</div>`;
   const sampleHalf = (tool) => {
     const n = SAMPLE[tool].n;
-    return `<div class="habits-half"><span class="habits-name">${TOOLS[tool].title}</span>
+    return `<div class="habits-half">${cardHead(tool, TOOLS[tool].title)}
       <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}</div>`;
   };
   // Real-looking preview, dimmed and inert, with the lock message on top
@@ -551,7 +556,7 @@
     const doneNow = tool === "daily" ? drmDays(id).has(dateKey()) : wpmWeeks(id).has(plannedWeek(Date.now()));
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
     return `<div class="habits-half">
-      <span class="habits-name">${t.title}</span>
+      ${cardHead(tool, t.title, `#/tools/${tool}`)}
       <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
       ${chain(tool, id, tool === "weekly" ? 8 : 10)}
       ${socialProof(tool, { compact: true })}
@@ -583,19 +588,21 @@
       ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
 
       <div class="grid two">
-        <div class="card stat"><span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
-        ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat"><span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
-          : `<div class="card stat"><span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
+        <div class="card stat">${cardHead("daily", "Habits")}<span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
+        ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
+          : `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
       </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Your habits start when you join Master Your Week", "habits-lock", { compact: true })}
 
       <div class="grid two">
         <div class="card prompt-card">
+          ${cardHead("community", "Community", "#/community")}
           <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small>
           <h3>${esc(p.q)}</h3>
           <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
           <a class="btn accent sm" href="#/community">Answer in Community</a>
         </div>
         <div class="card">
+          ${cardHead("events", "Events & RSVP", "#/events")}
           <h3>On your calendar</h3>
           ${!hasHabits(u) ? `<p class="muted">Live events open when you join Master Your Week. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
             : `<p class="muted">Nothing booked yet.</p>`}
@@ -696,9 +703,9 @@
     return `<div class="card"><div class="card-head"><h3>Team members</h3><small class="muted">Only team leaders and coaches see this. Select a name for detail.</small></div>
       <div class="table-wrap"><table class="team">
         <thead><tr><th>Member</th><th>Phase</th><th>Weekly Planning<br>Meeting streak</th><th>Daily Review<br>Meeting streak</th><th>Weekly Planning<br>past month</th><th>Daily Review<br>past month</th><th>Courses</th></tr></thead>
-        <tbody>${team.map((x) => `<tr><td><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}">${phaseOf(x.m)} · ${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}</span></td>${hasHabits(x.m) ? `<td>${x.wpm} wk</td><td>${x.drm} day</td><td>${pctCell(x.ms.wpm)}</td><td>${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted">Habits start when they join Master Your Week</td>`}<td>${x.op}%</td></tr>`).join("")}</tbody>
-        <tfoot><tr><td>Team average</td><td></td><td>${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td>${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td>${avg((x) => x.ms.wpm)}%</td><td>${avg((x) => x.ms.drm)}%</td><td>${Math.round(avgOf(team, (x) => x.op))}%</td></tr></tfoot>
+        <tbody>${team.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
+          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${PHASES[phaseOf(x.m) - 1].name}"><span class="pill-pre">Phase </span>${phaseOf(x.m)}<span class="pill-sub"> · ${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}</span></span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits start when they join Master Your Week</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(team, (x) => x.op))}%</td></tr></tfoot>
       </table></div></div>`;
   }
   const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
@@ -916,7 +923,7 @@
   V.cohort = () => {
     const c = SEED.cohort;
     return `<div class="cohort-hero">
-      <span class="eyebrow">Next cohort · starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}</span>
+      <span class="eyebrow">${phaseOf() === 2 && enrolled() ? `Your cohort · week ${c.currentWeek} of ${c.weeks}` : `Next cohort · starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}`}</span>
       <h1>${esc(c.name)}</h1>
       <p class="lead">Step 2 of 3. A ${c.weeks}-week live cohort that installs the Time Boss habits for good: the Weekly Planning Meeting, the Daily Review Meeting, and a pace you can actually hold.</p>
       <ul class="checks">${c.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}<li>Includes everything in this community</li></ul>
@@ -934,13 +941,13 @@
   let pmOpen = false;
   function profileMenu() {
     const u = me();
-    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${avatar(u)}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileBadges(u)}${avatar(u)}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       ${pmOpen ? `<div class="pm-menu" role="menu"><div class="pm-who">${avatar(u)}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
         <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch user</button></div>` : ""}</div>`;
   }
 
   V.profile = () => {
-    const u = me(), c = company(u.companyId);
+    const u = me();
     return `<header class="page-head"><div><h1>Profile</h1><p class="muted">How you appear to your team and the community.</p></div></header>
       <form class="card profile-form" data-form="profile">
         <div class="photo-row">${avatar(u, "xl")}<div class="stack">
@@ -948,13 +955,15 @@
           ${u.photo ? `<button type="button" class="link" data-action="remove-photo">Remove photo</button>` : `<small class="muted">JPG or PNG. Square photos look best.</small>`}</div></div>
         <label>Name<input name="name" value="${esc(u.name)}" required></label>
         <label>Role<input name="title" value="${esc(u.title)}" placeholder="e.g. VP Operations"></label>
-        <p class="muted sm">${c ? `${esc(c.name)} · ` : ""}${esc(u.email)}${u.role !== "member" ? ` · ${esc(u.role)}` : ""}${u.companyId ? ` · Phase ${phaseOf(u)}: ${esc(phaseLabel(u))}` : ""}</p>
         <div class="row"><button class="btn">Save profile</button></div>
       </form>`;
   };
   V.settings = () => {
     const u = me(), st = settingsOf(u), habitsOn = hasHabits(u) || isCoach();
     const opt = (list, v) => list.map((x) => `<option ${x === v ? "selected" : ""}>${x}</option>`).join("");
+    // One card per reminder: the on/off checkbox and its send time live together
+    const remindCard = (k, on, title, desc, whenK, list, when) => `<div class="remind-card"><label class="remind-head"><input type="checkbox" name="${k}" value="1" ${on ? "checked" : ""}><span><b>${title}</b><small>${desc}</small></span></label>
+      <label class="remind-time"><span>Send at</span><select name="${whenK}">${opt(list, when)}</select></label></div>`;
     return `<header class="page-head"><div><h1>Settings</h1><p class="muted">Your activity and email reminders.</p></div></header>
       <form class="card settings-form" data-form="settings">
         <h3>Activity</h3>
@@ -962,10 +971,8 @@
         <label class="check-row"><input type="radio" name="visibility" value="private" ${st.private ? "checked" : ""}><span><b>Private</b><small>Only you, your team leaders, and Time Boss coaches see your streaks and meetings. Your posts stay visible.</small></span></label>
         <h3 class="settings-gap">Email reminders</h3>
         <p class="muted sm">Sent to ${esc(u.email)}.${habitsOn ? "" : " Reminders start when you enroll in Master Your Week."}</p>
-        <div class="remind-row"><label class="check-row"><input type="checkbox" name="remindWeekly" value="1" ${st.remindWeekly ? "checked" : ""}><span><b>Weekly Planning Meeting</b><small>A reminder to plan before your work week starts.</small></span></label>
-          <select name="weeklyWhen" aria-label="Weekly Planning Meeting reminder time">${opt(["Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}</select></div>
-        <div class="remind-row"><label class="check-row"><input type="checkbox" name="remindDaily" value="1" ${st.remindDaily ? "checked" : ""}><span><b>Daily Review Meeting</b><small>A reminder at the end of each workday, Monday to Friday.</small></span></label>
-          <select name="dailyWhen" aria-label="Daily Review Meeting reminder time">${opt(["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}</select></div>
+        ${remindCard("remindWeekly", st.remindWeekly, "Weekly Planning Meeting", "A reminder to plan before your work week starts.", "weeklyWhen", ["Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}
+        ${remindCard("remindDaily", st.remindDaily, "Daily Review Meeting", "A reminder at the end of each workday, Monday to Friday.", "dailyWhen", ["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}
         <div class="row"><button class="btn">Save settings</button></div>
       </form>`;
   };
