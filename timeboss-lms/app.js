@@ -1123,7 +1123,10 @@
     if (justSaved?.tool === tool) return celebrate(tool, justSaved.before); // stays up until the member navigates away
     const t = TOOLS[tool], dk = me().id + "|" + tool, draft = sample ? null : S.drafts[dk];
     const history = sample ? [] : runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
-    const streakN = sample ? SAMPLE[tool].n : tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
+    // Your streak, in the same card used on profiles and team pages
+    const streakCard = `<div class="card stat">${cardHead(tool, "Your Streak")}${sample
+      ? `<div class="streak-num"><b>${SAMPLE[tool].n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool, true)}<small>${tool === "weekly" ? "Last 7 weeks" : "Last 10 workdays"}</small>`
+      : streakStat(tool, me().id)}</div>`;
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
@@ -1133,14 +1136,13 @@
     if (!draft) {
       let lastPhase = "";
       return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.</p></div></header>
-        <div class="feed-wrap"><div>
-          <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${sample ? sampleChain(tool, true) : chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
+        <div class="feed-wrap"><div class="feed-main">
           ${t.during ? `<div class="card"><h3>During the Day, Monday to Friday: Work Your Calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
-          <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
+          <div class="card"><ol class="steps-preview">${t.steps.map((s, i) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li value="${i + 1}"><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           ${sample ? "" : socialProof(tool)}
           <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run Your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the Celebration</a></div></div>
           ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as Markdown</button></details>`).join("")}` : ""}
-        </div><aside class="side">${aiPanel}</aside></div>`;
+        </div><div class="feed-glb">${streakCard}</div><aside class="side">${aiPanel}</aside></div>`;
     }
     const s = t.steps[draft.step], last = draft.step === t.steps.length - 1;
     const field = (f) => {
@@ -1152,7 +1154,7 @@
     return `<header class="page-head"><div><span class="eyebrow">${t.title} · ${s.phase} · step ${draft.step + 1} of ${t.steps.length}</span><h1>${esc(s.title)}</h1></div>
         <div class="timer" id="timer" data-start="${draft.startedAt}" data-budget="${t.mins}">--:--</div></header>
       <div class="stepper">${t.steps.map((x, i) => `<span class="${i < draft.step ? "done" : i === draft.step ? "cur" : ""}" title="${esc(x.phase)}: ${esc(x.title)}"></span>`).join("")}</div>
-      <div class="feed-wrap"><div>
+      <div class="feed-wrap"><div class="feed-main">
         <form class="card tool-step" data-form="tool-step" data-tool="${tool}">
           <p class="guide">${esc(s.guide)}</p>
           ${s.fields.map(field).join("")}

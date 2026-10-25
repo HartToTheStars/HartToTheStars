@@ -164,7 +164,7 @@ output { color: var(--teal); font-weight: 900; }
 
 
 /* feed */
-.feed-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 310px; grid-template-areas: "main glb" "main side"; column-gap: 22px; align-items: start; }
+.feed-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 310px; grid-template-rows: auto 1fr; grid-template-areas: "main glb" "main side"; column-gap: 22px; align-items: start; }
 .feed-main { grid-area: main; min-width: 0; }
 .feed-glb { grid-area: glb; }
 .side { grid-area: side; }
