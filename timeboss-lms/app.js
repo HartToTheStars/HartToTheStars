@@ -843,7 +843,7 @@
     };
     return `<div class="card lb-card"><h3>Streak Leaderboard</h3>
       <div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${board("drm", "day", "Daily Review Meeting")}</div>
-      <small class="muted">Weeks in a row with a Weekly Planning Meeting, and workdays in a row with a Daily Review Meeting. ${hasHabits() ? "People join the leaderboard when they enroll in Master Your Week." : "You'll join the leaderboard when you enroll in Master Your Week."}</small></div>`;
+      ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div>`;
   }
 
   // You vs. the team across the three phases, with your next step
