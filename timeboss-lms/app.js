@@ -641,7 +641,7 @@
         <div class="card stat">${cardHead("daily", "Habits")}<span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
           : `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
-      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Join the Master Your Week Cohort to unlock the Habits tools.", "habits-lock", { compact: true })}
+      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Join the Master Your Week Cohort to unlock Habits and Streaks.", "habits-lock", { compact: true })}
 
       <div class="grid two">
         <div class="card prompt-card">
