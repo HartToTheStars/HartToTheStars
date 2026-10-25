@@ -516,8 +516,9 @@ body.modal-open { overflow: hidden; }
 .content-top { display: flex; justify-content: flex-end; padding: 16px clamp(16px, 3vw, 48px) 0; max-width: 1200px; }
 .content-top + main { padding-top: 8px; }
 .pm { position: relative; }
-.pm-btn { display: flex; align-items: center; gap: 6px; background: none; padding: 2px 4px 2px 2px; border-radius: 100px; color: var(--heading); }
-.pm-btn:hover { background: var(--paper); }
+/* The profile button is one outlined box around the picture, its numbers, and the arrow */
+.pm-btn { display: flex; align-items: center; gap: 8px; padding: 6px 10px 5px 8px; border-radius: 16px; color: var(--heading); background: var(--card); border: 1px solid var(--line); -webkit-tap-highlight-color: transparent; }
+.pm-btn:hover, .pm-btn[aria-expanded="true"] { border-color: var(--line-strong); background: #fff; }
 .pm-chev { width: 16px; height: 16px; }
 .pav.pav-menu-av { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
 .pav.pav-menu-av .pbs { gap: 2px; }
@@ -633,8 +634,8 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .content-top { display: none; }
   .content-top + main { padding-top: 28px; }
   .topbar .pm { margin-left: auto; }
-  .topbar .pm-btn { color: #fff; }
-  .topbar .pm-btn:hover { background: rgba(255, 255, 255, .1); }
+  .topbar .pm-btn { color: #fff; background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); }
+  .topbar .pm-btn:hover, .topbar .pm-btn[aria-expanded="true"] { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .28); }
   .topbar .avatar { --gap: var(--navy); }
   .pm-menu { width: min(280px, calc(100vw - 32px)); }
   .remind-card { grid-template-columns: 1fr; }
