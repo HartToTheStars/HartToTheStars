@@ -549,10 +549,11 @@ table.team td.t-name .avatar { flex: none; }
 .avg-key { position: static; display: inline-block; vertical-align: middle; transform: none; margin-right: 4px; }
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
 /* Team space sub menu: Activity | Manage (company) */
-.subnav { display: flex; gap: 22px; margin: -6px 0 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.subnav a { padding: 10px 2px 12px; font-weight: 700; font-size: 15px; color: var(--muted); text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; margin-bottom: -1px; }
-.subnav a.on { color: var(--heading); border-bottom-color: var(--teal); }
-@media (hover: hover) { .subnav a:not(.on):hover { color: var(--heading); } }
+.subnav { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; margin: -6px 0 22px; background: #fff; border: 1px solid var(--line); border-radius: 999px; max-width: 100%; }
+.subnav a { padding: 9px 20px; border: 0; border-radius: 999px; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.subnav a.on { background: var(--navy); color: #fff; }
+@media (hover: hover) { .subnav a:not(.on):hover { color: var(--heading); background: var(--paper); } }
+@media (max-width: 760px) { .subnav { display: flex; width: 100%; } .subnav a { flex: 1 1 auto; padding: 10px 14px; } }
 .roster-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .roster-head h3 { margin: 0; }
 .roster-tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
@@ -635,6 +636,10 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .phase-body .bar { max-width: 420px; margin-bottom: 18px; }
 .phase-body .row { gap: 10px; }
 .prompt-cta { align-items: center; gap: 14px; margin-top: 4px; }
+/* Space under the question matches the card's bottom padding */
+.prompt-card > h3 { margin-bottom: 0; }
+.prompt-card > .prompt-cta { margin-top: 24px; }
+@media (max-width: 760px) { .prompt-card > .prompt-cta { margin-top: 20px; } }
 .prompt-cta .muted { font-size: 14px; }
 /* Private team space marker under the company name */
 .private-team { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 6px 14px 6px 11px; border-radius: 100px; background: var(--teal-soft); color: var(--teal); font-size: 14px; font-weight: 600; }
