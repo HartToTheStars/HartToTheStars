@@ -163,15 +163,16 @@ output { color: var(--teal); font-weight: 900; }
 .note-main { min-width: 0; flex: 1; overflow-wrap: anywhere; }
 .note-actions { display: flex; gap: 2px; margin: 2px 0 -4px -9px; }
 .note-act { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 4px 9px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: 600 13px/1 var(--font-body); font-variant-numeric: lining-nums tabular-nums; cursor: pointer; }
-.note-act:hover { background: var(--paper); color: var(--heading); }
+@media (hover: hover) { .note-act:hover { background: var(--paper); color: var(--heading); } }
 .note-act.liked { color: var(--danger); }
 .note-replies { margin-left: 32px; padding-left: 12px; border-left: 2px solid var(--line); }
 .note-replies .note { padding: 6px 0; }
 .note-reply-form { margin: 6px 0 2px; }
-.note.target { animation: note-target 2.4s ease-out; border-radius: 10px; }
-@keyframes note-target { 0%, 40% { background: var(--teal-soft); box-shadow: 0 0 0 6px var(--teal-soft); } 100% { background: transparent; box-shadow: 0 0 0 6px transparent; } }
+/* Highlight for the comment a notification opened: inside the comment's own box, so it never covers the replies below */
+.note.target { margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 10px; animation: note-target 2.4s ease-out forwards; }
+@keyframes note-target { 0%, 40% { background: var(--teal-soft); } 100% { background: transparent; } }
 .replies .note.target { animation-name: note-target-dark; }
-@keyframes note-target-dark { 0%, 40% { background: rgba(159, 194, 208, .16); box-shadow: 0 0 0 6px rgba(159, 194, 208, .16); } 100% { background: transparent; box-shadow: 0 0 0 6px transparent; } }
+@keyframes note-target-dark { 0%, 40% { background: rgba(159, 194, 208, .16); } 100% { background: transparent; } }
 .post-time, .post-count { color: inherit; text-decoration: none; }
 .post-time:hover, .post-count:hover { text-decoration: underline; }
 .view-all { display: inline-block; padding: 6px 0 4px; font-size: 14px; font-weight: 700; }
@@ -399,7 +400,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .replies .note-thread { padding: 3px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
 .replies .reply { color: rgba(255, 255, 255, .85); }
 .replies .note-act { color: rgba(255, 255, 255, .55); }
-.replies .note-act:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+@media (hover: hover) { .replies .note-act:hover { background: rgba(255, 255, 255, .08); color: #fff; } }
 .replies .note-act.liked { color: #f2a59c; }
 .replies .note-replies { border-left-color: rgba(255, 255, 255, .14); }
 .note.fresh { animation: reply-in .5s ease-out; }

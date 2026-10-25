@@ -706,7 +706,7 @@
       </aside></div>`;
   };
   // Post and prompt detail pages; a notification passes the comment to scroll to and highlight
-  let scrollTarget = null;
+  let scrollTarget = null, scrolledFor = null; // scroll and highlight once per arrival, not on every re-render (like, reply)
   V.post = (id, noteId) => {
     const p = S.posts.find((x) => x.id === id);
     if (!p) return notFound();
@@ -1138,11 +1138,13 @@
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
       <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}`;
     document.body.classList.toggle("modal-open", !!ranModal);
-    if (scrollTarget) {
+    if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
-      scrollTarget = null;
+      scrolledFor = location.hash;
       if (el) requestAnimationFrame(() => { el.scrollIntoView({ block: "center" }); el.classList.add("target"); });
     }
+    scrollTarget = null;
+    freshNote = 0; // a new comment animates in once, not again on the next re-render
     tickTimer();
     countUp();
   }
@@ -1173,7 +1175,7 @@
     host.appendChild(box);
     setTimeout(() => box.remove(), 3200);
   }
-  window.addEventListener("hashchange", () => { ranModal = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ranModal) { ranModal = null; render(); } });
 
   let timerInt;
