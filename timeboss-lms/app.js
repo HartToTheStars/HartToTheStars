@@ -644,7 +644,7 @@
       <div class="grid two">
         <div class="card prompt-card">
           ${cardHead("community", "Community", "#/community")}
-          <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small>
+          <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span>
           <h3>${esc(p.q)}</h3>
           <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
           <a class="btn accent sm" href="#/community">Answer in Community</a>
