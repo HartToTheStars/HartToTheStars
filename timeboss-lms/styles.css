@@ -470,6 +470,9 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .act-snip { color: var(--muted); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .act-when { font-size: 13px; color: var(--muted); text-decoration: none; }
 .team-activity .btn { margin-top: 10px; }
+.act-group { cursor: pointer; border-radius: 10px; }
+@media (hover: hover) { .act-group:hover { background: var(--paper); } }
+.act-group .act-main p::after { content: " · See who"; color: var(--teal); font-weight: 600; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .card-head h3 { margin: 0; font-size: 20px; }
 .seg { display: flex; width: 100%; border: 1px solid var(--line-strong); border-radius: 100px; padding: 2px; margin-bottom: 8px; }

@@ -522,12 +522,13 @@
   }
   function ranModalView() {
     if (!ranModal) return "";
-    const { tool } = ranModal, p = proofScope(tool), u = me(), scope = u.companyId ? ranModal.scope : "all";
-    const list = scope === "team" ? p.all.filter((x) => x.u.companyId === u.companyId) : p.all;
+    // A fixed list (a grouped Latest Activity line) or who ran a meeting this period, with team/everyone tabs
+    const { tool } = ranModal, fixed = ranModal.list, p = fixed ? null : proofScope(tool), u = me(), scope = !fixed && u.companyId ? ranModal.scope : "all";
+    const list = fixed || (scope === "team" ? p.all.filter((x) => x.u.companyId === u.companyId) : p.all);
     return `<div class="modal-backdrop" data-action="close-modal"></div>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ran-title">
-        <div class="modal-head"><h2 id="ran-title">Ran their ${TOOLS[tool].title} ${periodLabel(tool)}</h2><button class="ghost sm" data-action="close-modal" aria-label="Close">Close</button></div>
-        ${u.companyId ? `<div class="seg"><button class="${scope === "team" ? "on" : ""}" data-action="ran-scope" data-id="team">${esc(company(u.companyId).name)} (${p.all.filter((x) => x.u.companyId === u.companyId).length})</button><button class="${scope === "all" ? "on" : ""}" data-action="ran-scope" data-id="all">Everyone (${p.all.length})</button></div>` : ""}
+        <div class="modal-head"><h2 id="ran-title">${fixed ? esc(ranModal.title) : `Ran their ${TOOLS[tool].title} ${periodLabel(tool)}`}</h2><button class="ghost sm" data-action="close-modal" aria-label="Close">Close</button></div>
+        ${!fixed && u.companyId ? `<div class="seg"><button class="${scope === "team" ? "on" : ""}" data-action="ran-scope" data-id="team">${esc(company(u.companyId).name)} (${p.all.filter((x) => x.u.companyId === u.companyId).length})</button><button class="${scope === "all" ? "on" : ""}" data-action="ran-scope" data-id="all">Everyone (${p.all.length})</button></div>` : ""}
         <ul class="ran-list">${list.map((x) => `<li>${profileAvatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)} · ${esc(company(x.u.companyId).name)} · ${ago(x.ts)}</small></div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
       </div>`;
   }
@@ -876,11 +877,11 @@
   const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
   // Latest Activity: what the team did in the last two weeks (posts, comments, prompt answers,
   // finished phases and courses, and habit runs grouped per meeting per day)
-  let actLimit = 20;
+  let actLimit = 20, actGroups = {};
   function teamActivity(cid) {
     const c = company(cid), team = teamOf(cid), ids = new Set(team.map((m) => m.id)), since = Date.now() - 14 * DAY, items = [];
     const name = (m) => `<a class="act-name" href="#/people/${m.id}">${esc(m.name)}</a>`;
-    const add = (ts, who, html, href, snippet = "") => ts >= since && items.push({ ts, who, html, href, snippet });
+    const add = (ts, who, html, href, snippet = "", group = "") => ts >= since && items.push({ ts, who, html, href, snippet, group });
     S.posts.forEach((p) => {
       if (ids.has(p.authorId)) add(p.ts, [user(p.authorId)], `${name(user(p.authorId))} posted in the Community`, `#/post/${p.id}`, p.body);
       p.comments.forEach((cm) => {
@@ -911,16 +912,18 @@
     S.toolRuns.forEach((r) => {
       const m = ids.has(r.userId) && user(r.userId);
       if (!m || !visibleTo(m) || r.ts < since) return;
-      const g = (groups[r.tool + dateKey(new Date(r.ts))] ||= { tool: r.tool, ts: 0, who: [] });
+      const day = dateKey(new Date(r.ts)), g = (groups[r.tool + day] ||= { tool: r.tool, day, ts: 0, who: [], runs: [] });
       g.ts = Math.max(g.ts, r.ts);
-      if (!g.who.includes(m)) g.who.push(m);
+      if (!g.who.includes(m)) { g.who.push(m); g.runs.push({ u: m, ts: r.ts }); }
     });
-    Object.values(groups).forEach((g) => {
+    actGroups = {};
+    Object.entries(groups).forEach(([key, g]) => {
       const t = TOOLS[g.tool].title;
-      add(g.ts, g.who, g.who.length === 1 ? `${name(g.who[0])} completed their ${t}` : `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`);
+      if (g.who.length > 1) actGroups[key] = { tool: g.tool, title: `Completed their ${t} · ${longDate(new Date(g.day + "T12:00"))}`, list: g.runs.sort((a, b) => b.ts - a.ts) };
+      add(g.ts, g.who, g.who.length === 1 ? `${name(g.who[0])} completed their ${t}` : `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`, "", g.who.length > 1 ? key : "");
     });
     items.sort((a, b) => b.ts - a.ts);
-    const row = (it) => `<li class="act">${it.who.length > 1 ? avatarStack(it.who.map((u) => ({ u })), 4) : `<a href="#/people/${it.who[0].id}" class="act-av" aria-hidden="true" tabindex="-1">${avatar(it.who[0], "md")}</a>`}
+    const row = (it) => `<li class="act ${it.group ? "act-group" : ""}"${it.group ? ` data-action="show-group" data-id="${it.group}" role="button" tabindex="0" aria-label="See who completed it"` : ""}>${it.who.length > 1 ? avatarStack(it.who.map((u) => ({ u })), 4) : `<a href="#/people/${it.who[0].id}" class="act-av" aria-hidden="true" tabindex="-1">${avatar(it.who[0], "md")}</a>`}
       <div class="act-main"><p>${it.html}</p>${it.snippet ? `<a class="act-snip" href="${it.href}">${esc(it.snippet)}</a>` : ""}<a class="act-when" href="${it.href}">${ago(it.ts)}</a></div></li>`;
     return `<div class="card team-activity">${cardHead("company", `Latest Activity at ${esc(c.name)}`)}
       ${items.length ? `<ul class="act-list">${items.slice(0, actLimit).map(row).join("")}</ul>${items.length > actLimit ? `<button class="btn ghost sm" data-action="more-activity">Show More Activity</button>` : ""}` : `<p class="muted">No activity in the last two weeks.</p>`}</div>`;
@@ -1356,6 +1359,7 @@
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
+      "show-group": () => { const g = actGroups[id]; if (g) { ranModal = g; render(); document.querySelector(".modal .ghost")?.focus(); } },
       phase: () => { phaseSel = +id === phaseOf() ? null : +id; render(); },
       "emoji-menu": () => { const f = el.closest("form"); f.querySelector(".picker-emoji") ? f.querySelector(".picker").remove() : openPicker(f, "emoji"); },
       "gif-menu": () => { const f = el.closest("form"); f.querySelector(".picker-gif") ? f.querySelector(".picker").remove() : openPicker(f, "gif"); },
@@ -1448,6 +1452,8 @@
       if (c) { c.textContent = `${t.value.length.toLocaleString()} / ${max.toLocaleString()}`; c.classList.toggle("near", t.value.length >= max * 0.9); }
     }
   });
+  // Rows that act as buttons open with Enter or Space too
+  document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches?.('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); } });
   // Writing tools (image, emoji, GIF) show while a writing box is in use
   document.addEventListener("focusin", (e) => e.target.closest?.(".compose")?.classList.add("active"));
   document.addEventListener("mousedown", (e) => { if (e.target.closest(".compose-tools, .picker")) e.preventDefault(); }); // keep the cursor in the text box
