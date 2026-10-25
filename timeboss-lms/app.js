@@ -679,7 +679,7 @@
       const p = courseProgress(u.id, x);
       return `<a class="card course" href="${courseHref(x)}"><div class="row between"><span class="tag">${kindTag(x)}</span><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
     };
-    const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span>${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}</span>${n === ph ? `<small>You are here</small>` : ""}</h2>${body}</section>`;
+    const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span><span class="level-title">${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}${n === ph ? `<small>You are here</small>` : ""}</span></span></h2>${body}</section>`;
     return `
       <header class="page-head"><div><h1>Courses</h1><p class="muted">Three steps. Each one unlocks the next.</p></div></header>
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
