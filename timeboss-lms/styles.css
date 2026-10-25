@@ -118,6 +118,9 @@ output { color: var(--teal); font-weight: 900; }
 .avatar.ring-p1 { box-shadow: 0 0 0 2px var(--gap, var(--card)), 0 0 0 4px #d3c6b6; }
 .avatar.ring-p2 { box-shadow: 0 0 0 2px var(--gap, var(--card)), 0 0 0 4px var(--teal-2); }
 .avatar.ring-p3 { box-shadow: 0 0 0 2px var(--gap, var(--card)), 0 0 0 4px var(--teal); }
+.avatar.ring-coach { box-shadow: 0 0 0 2px var(--gap, var(--card)), 0 0 0 4px var(--navy); }
+.avatar.sm.ring-coach { box-shadow: 0 0 0 1.5px var(--gap, var(--card)), 0 0 0 3px var(--navy); }
+.topbar .avatar.ring-coach, .sidebar .avatar.ring-coach, .prompt-card .avatar.ring-coach { box-shadow: 0 0 0 2px var(--navy), 0 0 0 4px rgba(255, 255, 255, .7); }
 .avatar.sm[class*="ring-p"] { box-shadow: 0 0 0 1.5px var(--gap, var(--card)), 0 0 0 3px var(--ring, #d3c6b6); }
 .avatar.sm.ring-p2 { --ring: var(--teal-2); }
 .avatar.sm.ring-p3 { --ring: var(--teal); }
@@ -533,7 +536,7 @@ body.modal-open { overflow: hidden; }
 .pm-btn { display: flex; align-items: center; gap: 8px; padding: 12px 8px 8px; /* extra top: the avatar ring draws 4px outside the picture */ border-radius: 16px; color: var(--heading); background: var(--card); border: 1px solid var(--line); -webkit-tap-highlight-color: transparent; }
 .pm-btn:hover, .pm-btn[aria-expanded="true"] { border-color: var(--line-strong); background: #fff; }
 .pm-chev { width: 16px; height: 16px; }
-.pav.pav-menu-av { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
+.pav.pav-menu-av { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; width: auto; }
 .pav.pav-menu-av .pbs { gap: 2px; }
 .topbar .pb.wpm { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .55); }
 .pm-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 260px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 22px 48px -18px rgba(14, 27, 46, .35); padding: 8px; display: grid; }
@@ -547,10 +550,11 @@ body.modal-open { overflow: hidden; }
 .avatar.md { width: 40px; height: 40px; font-size: 13px; }
 .avatar.lgp { width: 48px; height: 48px; font-size: 16px; }
 /* Profile picture with three badges beneath it: phase (left), Weekly Planning Meeting streak (middle, set a little lower), Daily Review Meeting streak (right) */
-.pav { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; flex: none; align-self: flex-start; --s: 38px; --b: 18px; --bf: 10px; }
-.pav-md { --s: 40px; }
-.pav-lgp { --s: 50px; --b: 20px; --bf: 11px; }
-.pav-lg { --s: 72px; --b: 24px; --bf: 12.5px; }
+/* Fixed column width per size so names and text line up whatever the badges hold */
+.pav { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; flex: none; align-self: flex-start; --s: 38px; --b: 18px; --bf: 10px; width: var(--pw, 64px); }
+.pav-md { --s: 40px; --pw: 66px; }
+.pav-lgp { --s: 50px; --b: 20px; --bf: 11px; --pw: 74px; }
+.pav-lg { --s: 72px; --b: 24px; --bf: 12.5px; --pw: 90px; }
 .pav .avatar { display: grid; width: var(--s); height: var(--s); }
 .pav-lgp .avatar { font-size: 16px; }
 .pav-lg .avatar { font-size: 24px; }
@@ -562,6 +566,8 @@ body.modal-open { overflow: hidden; }
 .pb.phase.p3 { background: var(--teal); }
 .pb.wpm { background: var(--navy); }
 .pb.drm { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 1.5px var(--teal); }
+.pb.coach-pb { background: var(--navy); color: #fff; padding: 0 7px; font-size: calc(var(--bf) + .5px); letter-spacing: .02em; }
+.sidebar .pb.coach-pb, .prompt-card .pb.coach-pb, .topbar .pb.coach-pb { background: #fff; color: var(--navy); }
 .pb.locked { background: var(--paper); color: var(--muted); }
 .pb-lock { width: calc(var(--bf) + 1px); height: calc(var(--bf) + 1px); stroke-width: 2.4; }
 .sidebar .pb.locked, .prompt-card .pb.locked { background: #2b3a52; color: rgba(255, 255, 255, .6); }

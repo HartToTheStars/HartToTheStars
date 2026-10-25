@@ -210,7 +210,7 @@
   // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
   // "Acme Logistics · 3h ago" under a name in comments and replies; coaches show Time Boss
   const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")} · ${ago(ts)}</small>`;
-  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
+  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "ring-coach" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -249,7 +249,8 @@
     return `<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
   }
   function profileAvatar(u, size = "") {
-    if (u.role === "coach" || !u.companyId) return avatar(u, size);
+    // Coaches get the same layout, with a Coach label where members show their numbers
+    if (u.role === "coach" || !u.companyId) return `<span class="pav pav-${size || "md"}">${avatar(u, size)}<span class="pbs"><span class="pb coach-pb">Coach</span></span></span>`;
     return `<span class="pav pav-${size || "md"}">${avatar(u, size)}${profileBadges(u)}</span>`;
   }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
@@ -646,7 +647,7 @@
   function postCard(p) {
     const a = user(p.authorId), liked = p.likes.includes(me().id);
     return `<article class="card post">
-      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b>${a.role === "coach" ? '<span class="tag">Coach</span>' : ""}<small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
+      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
       <div class="post-body">${paras(p.body)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
