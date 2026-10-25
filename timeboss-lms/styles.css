@@ -47,6 +47,8 @@ small { display: block; font-size: 13px; color: var(--muted); line-height: 1.5; 
 
 /* layout */
 #app:not(.logged-out) { display: grid; grid-template-columns: 288px 1fr; min-height: 100vh; }
+/* Wide screens: the sidebar and content stay together as one centered column, like x.com */
+@media (min-width: 761px) { #app:not(.logged-out) { max-width: 1488px; margin: 0 auto; } }
 .content { display: flex; flex-direction: column; min-width: 0; }
 .topbar { display: none; }
 .sidebar { background: var(--navy); color: rgba(255, 255, 255, .7); padding: 22px 14px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
