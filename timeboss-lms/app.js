@@ -1093,13 +1093,13 @@
   function celebrate(tool, before, { preview = null } = {}) {
     const t = TOOLS[tool], id = me().id, n = preview ?? streakOf(tool, id), grew = n > before;
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
-    const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you."
-      : tool === "weekly" ? "Your week is planned. Share it with someone and protect the blocks." : "Incomplete tasks have a home. Tomorrow's plan is reviewed. You can close the laptop.";
+    // Only explain when the streak didn't move (a weekend Daily Review Meeting)
+    const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you." : "";
     const milestone = grew && (n === 1 ? "Day one of a new streak." : n % 5 === 0 ? `Milestone: ${n} ${tool === "weekly" ? "weeks" : "workdays"} in a row.` : "");
     // Play the animations only on arrival (or Replay); later re-renders, like opening the profile menu, show the finished state
     const play = celebrateFresh; celebrateFresh = false;
     return `<section class="celebrate ${play ? "" : "settled"}" aria-live="polite">
-      <h1>${t.title}</h1><p>${line}</p>
+      <h1>${t.title}</h1>${line ? `<p>${line}</p>` : ""}
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${milestone}</span>` : ""}

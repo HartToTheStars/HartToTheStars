@@ -316,6 +316,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 /* Who else ran it: below a rule at the bottom of each habit */
 .habits-proof { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .14); }
 .habits-proof:empty { display: none; }
+.celebrate h1 + .big-wrap { margin-top: 22px; }
 .celebrate .chain-label { margin: -18px 0 26px; text-align: center; } /* the chain above keeps a 28px bottom margin */
 .chain-label { display: block; margin-top: -4px; font-size: 13px; color: rgba(255, 255, 255, .6); }
 .habits-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
