@@ -826,19 +826,26 @@
   let lbSort = "drm";
   const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
+  // Top five for each meeting, plus you at the bottom with your rank when you're not in the top five
+  const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
   function leaderboard(cid) {
     const ms = teamOf(cid).filter((m) => hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
-    const other = lbSort === "drm" ? "wpm" : "drm";
-    ms.sort((a, b) => b[lbSort] - a[lbSort] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
-    const link = canManage(cid);
-    return `<div class="card"><div class="card-head"><h3>Streak leaderboard</h3>
-        </div><div class="seg"><button class="${lbSort === "drm" ? "on" : ""}" data-action="lb-sort" data-id="drm">Daily Review Meeting</button><button class="${lbSort === "wpm" ? "on" : ""}" data-action="lb-sort" data-id="wpm">Weekly Planning Meeting</button></div>
-      <ol class="lb">${ms.map((x, i) => {
-        const inner = `<span class="rank">${i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}</span><span class="num ${lbSort === "wpm" ? "hi" : ""}">${x.wpm}<small>wk</small></span><span class="num ${lbSort === "drm" ? "hi" : ""}">${x.drm}<small>day</small></span>`;
-        return `<li class="${x.m.id === me().id ? "you" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<div>${inner}</div>`}</li>`;
-      }).join("")}</ol>
+    const link = canManage(cid), meId = me().id;
+    const board = (key, unit, title) => {
+      const other = key === "drm" ? "wpm" : "drm";
+      const ranked = ms.slice().sort((a, b) => b[key] - a[key] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
+      const mine = ranked.findIndex((x) => x.m.id === meId);
+      const row = (x, i, gap = false) => {
+        const inner = `<span class="rank">${gap ? ordinal(i + 1) : i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}${x.m.id === meId ? " (you)" : ""}</span><span class="num hi">${x[key]}<small>${unit}</small></span>`;
+        return `<li class="${x.m.id === meId ? "you" : ""} ${gap ? "lb-me" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<div>${inner}</div>`}</li>`;
+      };
+      return `<div class="lb-col">${cardHead(key === "wpm" ? "weekly" : "daily", title)}<ol class="lb">${ranked.slice(0, 5).map((x, i) => row(x, i)).join("")}${mine >= 5 ? `<li class="lb-gap" aria-hidden="true">⋯</li>${row(ranked[mine], mine, true)}` : ""}</ol></div>`;
+    };
+    return `<div class="card lb-card"><h3>Streak Leaderboard</h3>
+      <div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${board("drm", "day", "Daily Review Meeting")}</div>
       <small class="muted">Weeks in a row with a Weekly Planning Meeting, and workdays in a row with a Daily Review Meeting. ${hasHabits() ? "People join the leaderboard when they enroll in Master Your Week." : "You'll join the leaderboard when you enroll in Master Your Week."}</small></div>`;
   }
+
   // You vs. the team across the three phases, with your next step
   function vsTeam(u, all) {
     const lessons = (kinds) => SEED.courses.filter((c) => kinds.includes(c.kind)).flatMap((c) => c.lessons.map((l) => l.id));
@@ -930,8 +937,8 @@
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
       <div class="team-grid">
-        <aside class="tg-side">${vsTeam(u, team)}${leaderboard(cid)}</aside>
-        <div class="tg-act">${teamActivity(cid)}</div>
+        <aside class="tg-side">${vsTeam(u, team)}</aside>
+        <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
       </div>
       ${canManage(cid) ? roster(cid) : ""}`;
   }
