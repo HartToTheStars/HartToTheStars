@@ -450,6 +450,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .vs-bar { position: relative; overflow: visible; margin-top: 8px; }
 .vs-bar .avg-fill { background: var(--teal-2); }
 .vs-bar i, .avg-key { position: absolute; top: -4px; width: 3px; height: 14px; background: var(--navy); border-radius: 2px; transform: translateX(-1px); }
+.vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
 .avg-key { position: static; display: inline-block; vertical-align: middle; transform: none; margin-right: 4px; }
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
 table.team { width: 100%; border-collapse: collapse; font-size: 14px; }

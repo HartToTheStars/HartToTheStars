@@ -789,7 +789,7 @@
       const avg = avgOf(all, (m) => courseProgress(m.id, courseById(WORKSHOP)).pct), you = courseProgress(u.id, courseById(WORKSHOP)).pct;
       return `<div class="card"><h3>You vs. the team average</h3>
         <div class="vs"><div class="row between"><b>Unlock Your Week Workshop</b><span><b>${you}%</b> <span class="muted">vs ${Math.round(avg)}%</span></span></div>
-          <div class="bar vs-bar"><span style="width:${you}%"></span><i style="left:${avg}%" title="Team average"></i></div></div>
+          <div class="bar vs-bar"><span style="width:${you}%" data-tip="You: ${you}% of the workshop done"></span><i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of the workshop done" aria-label="Team average: ${Math.round(avg)}%"></i></div></div>
         <small class="muted">Habit streaks start when you enroll in Master Your Week. ${team.length} of ${all.length} teammates have.</small></div>`;
     }
     const maxW = Math.max(1, ...team.map((m) => wpmStreak(m.id))), maxD = Math.max(1, ...team.map((m) => drmStreak(m.id)));
@@ -804,7 +804,7 @@
         const avg = avgOf(team, (m) => f(m.id)), you = u ? f(u.id) : null;
         const show = (v) => (unit === "%" ? Math.round(v) : Math.round(v * 10) / 10) + unit;
         return `<div class="vs"><div class="row between"><b>${label}</b><span>${u ? `<b>${show(you)}</b> <span class="muted">vs ${show(avg)}</span>` : `<b>${show(avg)}</b>`}</span></div>
-          <div class="bar vs-bar">${u ? `<span style="width:${Math.min(100, (you / max) * 100)}%"></span>` : `<span class="avg-fill" style="width:${Math.min(100, (avg / max) * 100)}%"></span>`}${u ? `<i style="left:${Math.min(100, (avg / max) * 100)}%" title="Team average"></i>` : ""}</div></div>`;
+          <div class="bar vs-bar">${u ? `<span style="width:${Math.min(100, (you / max) * 100)}%" data-tip="You: ${show(you)}"></span>` : `<span class="avg-fill" style="width:${Math.min(100, (avg / max) * 100)}%" data-tip="Team average: ${show(avg)}"></span>`}${u ? `<i style="left:${Math.min(100, (avg / max) * 100)}%" data-tip="Team average: ${show(avg)}" aria-label="Team average: ${show(avg)}"></i>` : ""}</div></div>`;
       }).join("")}
       ${u ? `<small class="muted"><i class="avg-key"></i> marks the team average across the ${team.length} people who've started Master Your Week.</small>` : ""}</div>`;
   }
