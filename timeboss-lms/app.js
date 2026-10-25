@@ -619,13 +619,13 @@
       ${cardHead(tool, t.title, `#/tools/${tool}`)}
       <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
       ${chain(tool, id, tool === "weekly" ? 7 : 10)}${chainLabel(tool)}
-      ${socialProof(tool, { compact: true })}
       <div class="habits-foot">
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
           : tool === "daily" && !isWorkday(new Date()) ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Next one Monday, end of day</small>`
           : `<a class="btn sm" href="#/tools/${tool}">Run Now</a><small>${t.when}</small>`}
-      </div></div>`;
+      </div>
+      <div class="habits-proof">${socialProof(tool, { compact: true })}</div></div>`;
   }
 
 

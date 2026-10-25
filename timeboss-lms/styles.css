@@ -306,6 +306,9 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .habits-count { display: flex; align-items: baseline; gap: 10px; }
 .habits-count b { font-family: var(--font-head); font-size: clamp(56px, 6vw, 80px); font-weight: 800; line-height: .9; letter-spacing: -.03em; color: #fff; font-variant-numeric: lining-nums; }
 .habits-count span { color: var(--teal-2); font-size: 15px; }
+/* Who else ran it: below a rule at the bottom of each habit */
+.habits-proof { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .14); }
+.habits-proof:empty { display: none; }
 .chain-label { display: block; margin-top: -4px; font-size: 13px; color: rgba(255, 255, 255, .6); }
 .habits-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
 .habits-foot small { color: rgba(255, 255, 255, .55); }
