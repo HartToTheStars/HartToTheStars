@@ -640,7 +640,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .locked-card .myw { text-align: left; margin: 18px 0 0; }
 .phase-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 100px; background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
 .phase-pill.p2 { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
-.pill-pre { display: none; }
 .phase-pill { white-space: nowrap; }
 .phase-pill.p3 { background: var(--teal); color: #fff; border-color: transparent; }
 .course .series { margin: -2px 0 8px; color: var(--teal); font-weight: 600; }
@@ -883,8 +882,6 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .stat .chain { gap: 2px; }
   .stat .pip { width: 9px; height: 9px; border-width: 1.5px; }
   .stat .pip.on + .pip.on::before { width: 2px; }
-  table.team .pill-pre { display: inline; }
-  table.team .pill-sub { display: none; }
   table.team tr { gap: 8px 12px; padding: 12px 2px; }
   table.team tfoot tr { border-top: 2px solid var(--line-strong); border-bottom: 0; }
   table.team tfoot td { border-top: 0; }
