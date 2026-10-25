@@ -407,7 +407,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .char-count.near { color: #b0612a; }
 .comment-form { margin-top: 8px; }
 .post-box .compose-actions { margin-bottom: 0; }
-.reply-form { margin-bottom: 6px; }
+.reply-form { margin: 24px 0 18px; } /* room around the answer box on the prompt card */
 .reply-form textarea { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: #fff; resize: none; overflow: hidden; line-height: 1.5; min-height: 66px; max-height: 320px; }
 .reply-form textarea:focus { overflow-y: auto; }
 .reply-form textarea::placeholder { color: rgba(255, 255, 255, .5); }
