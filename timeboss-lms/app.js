@@ -227,14 +227,14 @@
   // Habits (Weekly Planning + Daily Review Meetings, streaks) and Events open once someone starts Master Your Week (enrolls)
   const enrolled = (u = me()) => phaseOf(u) === 3 || (phaseOf(u) === 2 && !!u.mywEnrolled);
   const hasHabits = enrolled;
-  // Profile picture with three badges on its rim: phase (bottom left), Weekly Planning Meeting streak (bottom), Daily Review Meeting streak (right)
+  // Profile picture with three badges beneath it: phase (left), Weekly Planning Meeting streak (middle), Daily Review Meeting streak (right)
   function profileAvatar(u, size = "") {
     if (u.role === "coach" || !u.companyId) return avatar(u, size);
     const ph = phaseOf(u), on = hasHabits(u), shown = on && visibleTo(u);
     const why = !on ? "starts in Master Your Week" : "private";
     const b = (pos, n, label, cls = "") => `<span class="pb pb-${pos} ${cls}" title="${label}">${n}</span>`;
     const lock = icon("lock", "ic pb-lock");
-    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
+    return `<span class="pav pav-${size || "md"}">${avatar(u, size)}<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span></span>`;
   }
   const phaseLabel = (u) => (u.role === "coach" ? "Coach" : phaseOf(u) === 2 ? (enrolled(u) ? "Master Your Week, in the cohort" : "Master Your Week, ready to enroll") : PHASES[phaseOf(u) - 1].name);
   const nextLessonIn = (u, courses) => { for (const c of courses) { const l = c.lessons.find((x) => !done(u.id)[x.id]); if (l) return { c, l }; } return null; };
