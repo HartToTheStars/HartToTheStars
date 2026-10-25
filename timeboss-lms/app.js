@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v5"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v6"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -126,6 +126,9 @@
     });
     const members = users.filter((u) => u.role !== "coach");
     const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };
+    // Comments and prompt replies: a few likes each (or l from data.js) and any seeded replies (r)
+    const seedNote = (id, a, b, ts, l, r = []) => ({ id, authorId: a, body: b, ts, likes: likers(l ?? Math.floor(rng(uidKey(id))() * 6), uidKey(id + "l"), a),
+      replies: r.map((x, k) => seedNote(`${id}-r${k}`, x.a, x.b, now - x.h * 3600e3, x.l)) });
 
     // Generated meeting history: a Markov chain per user so streaks look like real habits
     const toolRuns = [];
@@ -170,17 +173,20 @@
     const promptReplies = {};
     for (let i = 0; i < 4; i++) {
       const d = new Date(now - i * DAY);
-      promptReplies[dateKey(d)] = promptFor(d).replies.map((x, j) => ({ authorId: x.a, body: x.b, ts: i === 0 ? now - (j + 1) * 5400e3 : at(d, 9 + j * 2) }));
+      const k = dateKey(d);
+      promptReplies[k] = promptFor(d).replies.map((x, j) => seedNote(`${k}-r${j}`, x.a, x.b, i === 0 ? now - (j + 1) * 5400e3 : at(d, 9 + j * 2)));
     }
 
     return {
       sessionUserId: null,
+      createdAt: now,
+      notifSeen: {}, // userId -> ts of the last visit to Notifications
       companies: [...SEED.companies, ...SEED.communityFill.companies],
       users,
       posts: SEED.posts.map((p) => ({ id: p.id, authorId: p.authorId, body: p.body, ts: now - p.h * 3600e3, likes: likers(p.likes, uidKey(p.id), p.authorId),
-        comments: p.comments.map((c) => ({ authorId: c.a, body: c.b, ts: now - c.h * 3600e3 })) })),
+        comments: p.comments.map((c, j) => seedNote(`${p.id}-c${j}`, c.a, c.b, now - c.h * 3600e3, c.l, c.r)) })),
       progress,
-      promptReplies, // dateKey -> [{authorId, ts, body}]
+      promptReplies, // dateKey -> [{id, authorId, ts, body, likes, replies}]
       rsvps: {}, // eventId -> [userId]
       toolRuns, // {id, userId, tool, ts, answers}
       drafts: {}, // userId|tool -> {step, answers, startedAt}
@@ -205,7 +211,7 @@
     ["Asia/Tokyo", "Tokyo"], ["Australia/Sydney", "Sydney"], ["Pacific/Auckland", "Auckland"],
   ];
   const zoneLabel = (z) => (TIME_ZONES.find((x) => x[0] === z)?.[1] || z.replace(/_/g, " ").split("/").pop());
-  const DEFAULT_SETTINGS = { private: false, remindWeekly: true, weeklyWhen: "Friday 8:00 AM", remindDaily: true, dailyWhen: "4:30 PM", timeZone: deviceZone };
+  const DEFAULT_SETTINGS = { private: false, remindWeekly: true, weeklyWhen: "Friday 8:00 AM", remindDaily: true, dailyWhen: "4:30 PM", digest: true, digestWhen: "7:00 AM", timeZone: deviceZone };
   const settingsOf = (u) => ({ ...DEFAULT_SETTINGS, private: !!u.private, ...(u.settings || {}) });
   // Private members' habits and streaks are visible only to themselves, their team leaders, and coaches
   const visibleTo = (u) => !settingsOf(u).private || u.id === me().id || isCoach() || (me().role === "admin" && me().companyId === u.companyId);
@@ -354,6 +360,9 @@
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    reply: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   };
   // Card header that mirrors the menu: icon, title, divider. Links to that page when there is one.
@@ -641,29 +650,43 @@
   }
 
   // community: pinned daily prompt, then the feed
-  let freshReply = 0; // ts of the reply just posted, so it can animate in once
-  function pinnedPrompt() {
-    const p = promptFor(), replies = (S.promptReplies[dateKey()] || []).slice().sort((a, b) => b.ts - a.ts);
-    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${profileAvatar(a, "md")}<div><b>${esc(a.name)}</b>${whereWhen(a, r.ts)}<div>${esc(r.body)}</div></div></div>`; };
+  let freshNote = 0; // ts of the comment or reply just posted, so it can animate in once
+  let replyTo = null; // {id, name}: the thread whose reply box is open
+  // A comment (or prompt reply) with Like and Reply, its replies indented under it, one level deep
+  function note(n, cls, dark, parent = null) {
+    const a = user(n.authorId), liked = n.likes.includes(me().id), top = parent || n, first = esc(a.name.split(" ")[0]);
+    const body = `<div class="note ${cls} ${n.ts === freshNote ? "fresh" : ""}" id="n-${n.id}">${profileAvatar(a, parent ? "sm" : "md")}<div class="note-main"><b>${esc(a.name)}</b>${whereWhen(a, n.ts)}<div>${esc(n.body)}</div>
+      <div class="note-actions"><button class="note-act ${liked ? "liked" : ""}" data-action="like-note" data-id="${n.id}" aria-pressed="${liked}" aria-label="${liked ? "Unlike" : "Like"}">${liked ? "♥" : "♡"} ${n.likes.length || "Like"}</button><button class="note-act" data-action="reply-note" data-id="${top.id}" data-name="${first}">Reply</button></div></div></div>`;
+    if (parent) return body;
+    const open = replyTo?.id === n.id, kids = n.replies.map((r) => note(r, cls, dark, n)).join("");
+    return `<div class="note-thread">${body}${kids || open ? `<div class="note-replies">${kids}${open ? composeBox({ form: "note-reply", attrs: `data-id="${n.id}"`, rows: 1, placeholder: `Reply to ${replyTo.name}...`, button: "Reply", cls: `note-reply-form ${dark ? "reply-form" : ""}`, btnCls: dark ? "accent" : "" }) : ""}</div>` : ""}</div>`;
+  }
+  const allNotes = () => [...S.posts.flatMap((p) => p.comments), ...Object.values(S.promptReplies).flat()].flatMap((n) => [n, ...n.replies]);
+  // The daily prompt: pinned on Community for today, or on its own page (all replies) from Previous Prompts and notifications
+  function pinnedPrompt(k = dateKey(), all = false) {
+    const d = new Date(k + "T12:00"), today = k === dateKey(), p = promptFor(d), replies = (S.promptReplies[k] || []).slice().sort((a, b) => b.ts - a.ts);
+    const reply = (r) => note(r, "reply", true), shown = all ? replies.length : 3;
     return `<section class="card prompt-card pinned">
-      <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
+      <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} ${today ? "Today's Prompt" : "Daily Prompt"}</span><small class="prompt-date">${longDate(d)}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
-      ${composeBox({ form: "reply", rows: 2, placeholder: "Your answer...", button: "Reply", cls: "reply-form", btnCls: "accent" })}
-      <div class="replies">${replies.slice(0, 3).map(reply).join("")}
-        ${replies.length > 3 ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(3).map(reply).join("")}</details>` : ""}</div>
+      ${today ? composeBox({ form: "reply", rows: 2, placeholder: "Your answer...", button: "Reply", cls: "reply-form", btnCls: "accent" }) : ""}
+      <div class="replies">${replies.slice(0, shown).map(reply).join("")}
+        ${replies.length > shown ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(shown).map(reply).join("")}</details>` : ""}</div>
     </section>`;
   }
-  function postCard(p) {
-    const a = user(p.authorId), liked = p.likes.includes(me().id);
-    return `<article class="card post">
-      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · ${ago(p.ts)}</small></div></div>
+  function postCard(p, full = false) {
+    const a = user(p.authorId), liked = p.likes.includes(me().id), href = `#/post/${p.id}`;
+    const shown = full ? p.comments : p.comments.slice(-2);
+    return `<article class="card post" id="post-${p.id}">
+      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · <a class="post-time" href="${href}">${ago(p.ts)}</a></small></div></div>
       <div class="post-body">${paras(p.body)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
-        <span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>
+        ${full ? `<span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>` : `<a class="muted sm post-count" href="${href}">${plural(p.comments.length, "comment", "comments")}</a>`}
       </div>
       <div class="comments">
-        ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${profileAvatar(ca, "md")}<div><b>${esc(ca.name)}</b>${whereWhen(ca, c.ts)}<div>${esc(c.body)}</div></div></div>`; }).join("")}
+        ${shown.length < p.comments.length ? `<a class="view-all" href="${href}">View All ${p.comments.length} Comments</a>` : ""}
+        ${shown.map((c) => note(c, "comment", false)).join("")}
         ${composeBox({ form: "comment", attrs: `data-id="${p.id}"`, rows: 1, placeholder: "Write a comment...", button: "Comment", cls: "comment-form" })}
       </div>
     </article>`;
@@ -675,12 +698,65 @@
       <div class="feed-wrap"><div>
         ${pinnedPrompt()}
         ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, a question, or what's working...", button: "Post", cls: "card post-box" })}
-        ${posts.map(postCard).join("")}
+        ${posts.map((p) => postCard(p)).join("")}
       </div>
       <aside class="side">${mywCta()}
         <div class="card"><h3>Previous prompts</h3>
-          <ul class="list">${past.map((p) => `<li><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></li>`).join("")}</ul></div>
+          <ul class="list">${past.map((p) => `<li><a class="past-prompt" href="#/prompt/${p.k}"><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></a></li>`).join("")}</ul></div>
       </aside></div>`;
+  };
+  // Post and prompt detail pages; a notification passes the comment to scroll to and highlight
+  let scrollTarget = null;
+  V.post = (id, noteId) => {
+    const p = S.posts.find((x) => x.id === id);
+    if (!p) return notFound();
+    scrollTarget = noteId ? "n-" + noteId : null;
+    return `<div class="detail"><a class="back" href="#" data-action="back">← Back</a>${postCard(p, true)}</div>`;
+  };
+  V.prompt = (k, noteId) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k || "")) return notFound();
+    scrollTarget = noteId ? "n-" + noteId : null;
+    return `<div class="detail"><a class="back" href="#" data-action="back">← Back</a>${pinnedPrompt(k, true)}</div>`;
+  };
+
+  // ---------- notifications: likes, comments, and replies on my posts, comments, and prompt answers ----------
+  // Seeded likes have no time, so each gets a stable one within two days of the item
+  const likeAt = (x, uid) => x.likeTs?.[uid] ?? x.ts + rng(uidKey(x.id + uid))() * Math.max(0, Math.min(2 * DAY, S.createdAt - x.ts));
+  function notifications(u = me()) {
+    const out = [];
+    const likes = (x, what, href) => {
+      const ids = x.likes.filter((id) => id !== u.id).map((id) => [likeAt(x, id), id]).sort((a, b) => b[0] - a[0]);
+      if (ids.length) out.push({ kind: "like", who: ids.map((i) => i[1]), ts: ids[0][0], text: `liked ${what}`, snippet: x.body, href });
+    };
+    const answer = (n, href, what) => { // replies under one of my comments or answers, and likes on everything I wrote
+      if (n.authorId === u.id) {
+        likes(n, `your ${what}`, href(n));
+        n.replies.filter((r) => r.authorId !== u.id).forEach((r) => out.push({ kind: "reply", who: [r.authorId], ts: r.ts, text: `replied to your ${what}`, snippet: r.body, href: href(r) }));
+      }
+      n.replies.forEach((r) => r.authorId === u.id && likes(r, "your reply", href(r)));
+    };
+    S.posts.forEach((p) => {
+      const href = (n) => `#/post/${p.id}${n ? "/" + n.id : ""}`;
+      if (p.authorId === u.id) {
+        likes(p, "your post", href());
+        p.comments.filter((c) => c.authorId !== u.id).forEach((c) => out.push({ kind: "reply", who: [c.authorId], ts: c.ts, text: "commented on your post", snippet: c.body, href: href(c) }));
+      }
+      p.comments.forEach((c) => answer(c, href, "comment"));
+    });
+    Object.entries(S.promptReplies).forEach(([k, list]) => list.forEach((n) => answer(n, (x) => `#/prompt/${k}/${x.id}`, "answer")));
+    return out.sort((a, b) => b.ts - a.ts);
+  }
+  const seenAt = () => S.notifSeen?.[me().id] ?? S.createdAt - 12 * 3600e3;
+  const unreadCount = () => notifications().filter((n) => n.ts > seenAt()).length;
+  const bell = () => { const n = unreadCount(); return `<a class="bell" href="#/notifications" aria-label="Notifications${n ? `, ${n} unread` : ""}">${icon("bell")}${n ? `<span class="bell-n">${n > 9 ? "9+" : n}</span>` : ""}</a>`; };
+  V.notifications = () => {
+    const list = notifications(), seen = seenAt();
+    (S.notifSeen ||= {})[me().id] = Date.now(); save();
+    const who = (ids) => { const names = ids.map((id) => `<b>${esc(user(id).name)}</b>`); return ids.length === 1 ? names[0] : ids.length === 2 ? `${names[0]} and ${names[1]}` : `${names[0]} and ${ids.length - 1} others`; };
+    const row = (n) => `<a class="notif ${n.ts > seen ? "unread" : ""}" href="${n.href}"><span class="notif-av">${avatar(user(n.who[0]), "md")}<span class="notif-ic ${n.kind}">${icon(n.kind === "like" ? "heart" : "reply")}</span></span>
+      <span class="notif-main"><span class="notif-text">${who(n.who)} ${n.text}</span><span class="notif-snip">${esc(n.snippet)}</span><small class="muted">${ago(n.ts)}</small></span>${n.ts > seen ? `<span class="notif-dot" aria-label="Unread"></span>` : ""}</a>`;
+    return `<header class="page-head"><div><h1>Notifications</h1><p class="muted">Likes, comments, and replies on your posts and comments.</p></div></header>
+      ${list.length ? `<div class="card notif-list">${list.map(row).join("")}</div>` : `<div class="card empty"><p>No notifications yet. When someone likes or replies to your posts and comments, it shows up here.</p><a class="btn sm" href="#/community">Go to Community</a></div>`}`;
   };
 
   // team space (company): leaderboard for everyone, member detail for leaders and coaches
@@ -1024,16 +1100,17 @@
     // One card per reminder: the on/off checkbox and its send time live together
     const remindCard = (k, on, title, desc, whenK, list, when) => `<div class="remind-card"><label class="remind-head"><input type="checkbox" name="${k}" value="1" ${on ? "checked" : ""}><span><b>${title}</b><small>${desc}</small></span></label>
       <label class="remind-time"><span>Send at</span><select name="${whenK}">${opt(list, when)}</select></label></div>`;
-    return `<header class="page-head"><div><h1>Settings</h1><p class="muted">Your activity and email reminders.</p></div></header>
+    return `<header class="page-head"><div><h1>Settings</h1><p class="muted">Your activity and emails.</p></div></header>
       <form class="card settings-form" data-form="settings">
         <h3>Activity</h3>
         <label class="check-row"><input type="radio" name="visibility" value="public" ${st.private ? "" : "checked"}><span><b>Public</b><small>Your streaks and meeting completions show on the leaderboard, in who-ran-it lists, and under your profile.</small></span></label>
         <label class="check-row"><input type="radio" name="visibility" value="private" ${st.private ? "checked" : ""}><span><b>Private</b><small>Only you, your team leaders, and Time Boss coaches see your streaks and meetings. Your posts stay visible.</small></span></label>
-        <h3 class="settings-gap">Email reminders</h3>
-        <p class="muted sm">Sent to ${esc(u.email)}.${habitsOn ? "" : " Reminders start when you enroll in Master Your Week."}</p>
+        <h3 class="settings-gap">Emails</h3>
+        <p class="muted sm">Sent to ${esc(u.email)}.${habitsOn ? "" : " Habit reminders start when you enroll in Master Your Week."}</p>
         <label class="tz-field">Time zone<select name="timeZone">${[...(TIME_ZONES.some((x) => x[0] === st.timeZone) ? [] : [[st.timeZone, zoneLabel(st.timeZone)]]), ...TIME_ZONES].map(([z, n]) => `<option value="${esc(z)}" ${z === st.timeZone ? "selected" : ""}>${esc(n)}${z === deviceZone ? " (this device)" : ""}</option>`).join("")}</select><small class="muted">Reminder times below are in this time zone.</small></label>
         ${remindCard("remindWeekly", st.remindWeekly, "Weekly Planning Meeting", "A reminder to plan before your work week starts.", "weeklyWhen", ["Friday 8:00 AM", "Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}
         ${remindCard("remindDaily", st.remindDaily, "Daily Review Meeting", "A reminder at the end of each workday, Monday to Friday.", "dailyWhen", ["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}
+        ${remindCard("digest", st.digest, "Daily Notifications", "One email a day with all your notifications: likes, comments, and replies on your posts and comments. Skipped on days with nothing new.", "digestWhen", ["6:00 AM", "7:00 AM", "8:00 AM", "12:00 PM", "5:00 PM", "8:00 PM"], st.digestWhen)}
         <div class="row"><button class="btn">Save Settings</button></div>
       </form>`;
   };
@@ -1057,9 +1134,15 @@
     let [, view, a, b] = location.hash.split("/");
     if (!view || !V[view]) { location.hash = "#/home"; return; }
     root.className = "";
-    root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a>${profileMenu()}</div>
-      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top">${profileMenu()}</div><main id="main">${V[view](a, b)}</main>${footer()}</div>${ranModalView()}`;
+    const main = V[view](a, b); // first, so a page that marks notifications read updates the bell
+    root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
+      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}`;
     document.body.classList.toggle("modal-open", !!ranModal);
+    if (scrollTarget) {
+      const el = document.getElementById(scrollTarget);
+      scrollTarget = null;
+      if (el) requestAnimationFrame(() => { el.scrollIntoView({ block: "center" }); el.classList.add("target"); });
+    }
     tickTimer();
     countUp();
   }
@@ -1113,6 +1196,12 @@
     TOOLS[tool].steps[d.step].fields.forEach((f) => { d.answers[f.k] = f.type === "check" ? (fd.has(f.k) ? "Yes" : "") : fd.get(f.k) ?? ""; });
   }
 
+  // Likes keep their time so notifications can sort them
+  function toggleLike(x) {
+    const u = me().id, i = x.likes.indexOf(u);
+    if (i < 0) { x.likes.push(u); (x.likeTs ||= {})[u] = Date.now(); } else { x.likes.splice(i, 1); delete x.likeTs?.[u]; }
+    save(); render();
+  }
   document.addEventListener("click", (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
@@ -1122,7 +1211,9 @@
       logout: () => { pmOpen = false; S.sessionUserId = null; document.body.classList.remove("menu-open"); save(); render(); },
       reset: () => { if (confirm("Reset all demo data?")) { S = freshState(); save(); render(); } },
       menu: () => document.body.classList.toggle("menu-open"),
-      like: () => { const p = S.posts.find((x) => x.id === id), i = p.likes.indexOf(me().id); i < 0 ? p.likes.push(me().id) : p.likes.splice(i, 1); save(); render(); },
+      like: () => toggleLike(S.posts.find((x) => x.id === id)),
+      "like-note": () => toggleLike(allNotes().find((x) => x.id === id)),
+      "reply-note": () => { replyTo = { id, name: el.dataset.name }; render(); const t = document.querySelector(".note-reply-form textarea"); t?.focus({ preventScroll: true }); t?.closest("form")?.scrollIntoView({ block: "center" }); },
       "lb-sort": () => { lbSort = id; render(); },
       back: () => (history.length > 1 ? history.back() : (location.hash = "#/community")),
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
@@ -1162,8 +1253,10 @@
     e.preventDefault();
     const v = readForm(f);
     if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 3000), likes: [], comments: [] });
-    if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim().slice(0, 1000) });
-    if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim().slice(0, 1000) }); }
+    const newNote = () => ({ id: uid(), authorId: me().id, ts: (freshNote = Date.now()), body: v.body.trim().slice(0, 1000), likes: [], replies: [] });
+    if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push(newNote());
+    if (kind === "reply") (S.promptReplies[dateKey()] ||= []).push(newNote());
+    if (kind === "note-reply") { const { replies, ...r } = newNote(); allNotes().find((n) => n.id === f.dataset.id).replies.push(r); replyTo = null; }
     if (kind === "profile") {
       const u = me();
       u.name = v.name.trim() || u.name; u.title = v.title.trim();
@@ -1171,7 +1264,7 @@
     }
     if (kind === "settings") {
       const u = me();
-      u.settings = { private: v.visibility === "private", remindWeekly: !!v.remindWeekly, weeklyWhen: v.weeklyWhen, remindDaily: !!v.remindDaily, dailyWhen: v.dailyWhen, timeZone: v.timeZone };
+      u.settings = { private: v.visibility === "private", remindWeekly: !!v.remindWeekly, weeklyWhen: v.weeklyWhen, remindDaily: !!v.remindDaily, dailyWhen: v.dailyWhen, digest: !!v.digest, digestWhen: v.digestWhen, timeZone: v.timeZone };
       // Production: these drive the reminder emails and who can see this member's activity
       toast("Settings saved");
     }

@@ -39,7 +39,7 @@ Each person gets a random background color from `avatarColors` in `data.js`, sto
 ## Community features
 
 - **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View All. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
-- **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; time zone, defaulting to the device; email reminders for the Weekly Planning Meeting, default Friday 8:00 AM, and the Daily Review Meeting, default 4:30 PM). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
+- **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; time zone, defaulting to the device; email reminders for the Weekly Planning Meeting, default Friday 8:00 AM, and the Daily Review Meeting, default 4:30 PM; plus a Daily Notifications email, default on at 7:00 AM, that bundles all of the day's notifications). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
 
 ## Notes for the production build
 
@@ -47,4 +47,6 @@ Each person gets a random background color from `avatarColors` in `data.js`, sto
 - **Office hours** are booked through the Calendly inline embed in `data.js` (`officeHours.calendlyUrl`), prefilled with the member's name and email. Calendly sends its own confirmation and invite.
 - **Team detail** (roster, per-member drill-in) is visible to company admins (team leaders) and Time Boss coaches only. The streak leaderboard is visible to everyone on the team.
 - **Reminder emails** follow each member's Settings (on/off and time). The prototype stores the choice only.
+- **Daily Notifications email:** one email a day at the member's chosen time listing every notification since the last one (likes, comments, and replies on their posts, comments, and prompt answers). Skip the send when there's nothing new. The prototype stores the choice only.
+- **Comments:** comments and daily prompt answers can be liked and replied to. Replies are one level deep and appear indented under the comment.
 - Posts live only in the Community. Company spaces show habits, the leaderboard, and team progress, not a feed.
