@@ -403,50 +403,37 @@
         <button class="ghost sm" data-action="logout" title="Switch user">Switch</button></div>`;
   }
 
-  // The one "next step" card, same look everywhere (sidebar, community). Content follows the member's phase.
-  function mywCta() {
-    const u = me(), ph = phaseOf(u), c = SEED.cohort;
+  // Your Next Step: one set of content for Home, the sidebar, and the Community side column. Follows the member's phase.
+  function nextStep(u = me()) {
+    const ph = phaseOf(u), c = SEED.cohort;
     if (ph === 1) {
       const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
-      return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 1 of 3 · ${p.n} of ${p.total} lessons done</span>
-        <h3>Unlock Your Week Workshop</h3><p>Finish the workshop to unlock the Master Your Week Cohort.</p>
-        <a class="btn accent sm" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a></div>`;
+      return { h: "Complete the Unlock Your Week Workshop", p: `${p.n} of ${p.total} lessons done. Up next: ${esc(nx.l.title)} (${nx.l.mins} min). Finishing the workshop unlocks the Master Your Week Cohort.`,
+        extra: bar(p.pct), btns: [{ href: `#/learn/${WORKSHOP}/${nx.l.id}`, label: "Complete Workshop" }] };
     }
-    if (ph === 2 && enrolled(u)) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · week ${c.currentWeek} of ${c.weeks}</span>
-      <h3>You're in ${esc(c.name)}</h3><p>Group Coaching Cohort. Keep your Weekly Planning Meeting and Daily Review Meeting going between sessions.</p>
-      <a class="btn accent sm" href="#/cohort">View Cohort</a></div>`;
-    if (ph === 2) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
-      <h3>${esc(c.name)} Cohort</h3><p>${c.weeks} weeks, live with a Time Boss coach. ${c.seatsLeft} seats left.</p>
-      <button class="btn accent sm" data-action="enroll">Enroll in Cohort</button></div>`;
-    const mc = masterclassEvents()[0], going = rsvpd(mc.id);
-    return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Next masterclass · ${fmtDate(mc.start, { weekday: "short", month: "short", day: "numeric" })}</span>
-      <h3>${esc(mc.title.replace("Masterclass: ", ""))}</h3><p>${esc(mc.desc)}</p>
-      ${going ? `<a class="btn accent sm" href="#/events">✓ You're Going</a>` : `<button class="btn accent sm" data-action="rsvp" data-id="${mc.id}">RSVP for Masterclass</button>`}</div>`;
+    if (ph === 2 && enrolled(u)) return { h: "You're in the Master Your Week Cohort", p: `Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.`,
+      btns: [{ href: "#/tools/weekly", label: "Run Weekly Planning Meeting" }, { href: "#/cohort", label: "View Cohort" }] };
+    if (ph === 2) return { h: "Enroll in the Master Your Week Cohort", p: `${c.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks.`,
+      extra: `<dl class="cohort-facts"><div><dt>Next Cohort</dt><dd>Starts ${longDate(new Date(c.startsOn + "T12:00"))}</dd></div><div><dt>Seats Available</dt><dd>${c.seatsLeft}</dd></div></dl>`,
+      btns: [{ action: "enroll", label: "Enroll in Cohort" }, { href: "#/cohort", label: "About the Cohort" }] };
+    const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
+    const rsvpBtn = (e, label) => (rsvpd(e.id) ? { href: "#/events", label: `✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}` } : { action: "rsvp", id: e.id, label });
+    return { h: "Maximize Your Week", p: `Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}`,
+      btns: [nx ? { href: `#/learn/${nx.c.id}/${nx.l.id}`, label: "Watch Next Course" } : { href: "#/learn", label: "Browse Courses" }, rsvpBtn(mc, "RSVP for Next Masterclass"), rsvpBtn(wp, "RSVP for Weekly Planning Meeting")] };
+  }
+  const stepBtn = (b, cls) => (b.href ? `<a class="btn ${cls}" href="${b.href}">${b.label}</a>` : `<button class="btn ${cls}" data-action="${b.action}"${b.id ? ` data-id="${b.id}"` : ""}>${b.label}</button>`);
+  // Compact card (sidebar, Community): same content as Home, first action only
+  function mywCta() {
+    const n = nextStep();
+    return `<div class="myw"><span class="myw-head">Your Next Step</span><h3>${n.h}</h3><p>${n.p}</p>${n.extra || ""}${stepBtn(n.btns[0], "accent sm")}</div>`;
   }
 
   // Home: where you are in the three phases, and the next step
   function phaseCard() {
-    const u = me(), ph = phaseOf(u), c = SEED.cohort;
+    const u = me(), ph = phaseOf(u);
     const track = `<ol class="phase-track" role="list">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : "after"}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</li>`).join("")}</ol>`;
-    let body;
-    if (ph === 1) {
-      const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
-      body = `<h2>Complete the Unlock Your Week Workshop</h2><p>${p.n} of ${p.total} lessons done. Up next: ${esc(nx.l.title)} (${nx.l.mins} min). Finishing the workshop unlocks the Master Your Week Cohort.</p>
-        ${bar(p.pct)}<div class="row"><a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a></div>`;
-    } else if (ph === 2 && enrolled(u)) {
-      body = `<h2>You're in the Master Your Week Cohort</h2><p>Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.</p>
-        <div class="row"><a class="btn" href="#/tools/weekly">Run Weekly Planning Meeting</a><a class="btn ghost" href="#/cohort">View Cohort</a></div>`;
-    } else if (ph === 2) {
-      body = `<h2>Enroll in the Master Your Week Cohort</h2><p>${c.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks.</p>
-        <dl class="cohort-facts"><div><dt>Next Cohort</dt><dd>Starts ${longDate(new Date(c.startsOn + "T12:00"))}</dd></div><div><dt>Seats Available</dt><dd>${c.seatsLeft}</dd></div></dl>
-        <div class="row"><button class="btn" data-action="enroll">Enroll in Cohort</button><a class="btn ghost" href="#/cohort">About the Cohort</a></div>`;
-    } else {
-      const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
-      const rsvpBtn = (e, label) => rsvpd(e.id) ? `<a class="btn ghost" href="#/events">✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}</a>` : `<button class="btn ghost" data-action="rsvp" data-id="${e.id}">${label}</button>`;
-      body = `<h2>Maximize Your Week</h2><p>Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}</p>
-        <div class="row">${nx ? `<a class="btn" href="#/learn/${nx.c.id}/${nx.l.id}">Watch Next Course</a>` : `<a class="btn" href="#/learn">Browse Courses</a>`}
-        ${rsvpBtn(mc, "RSVP for Next Masterclass")}${rsvpBtn(wp, "RSVP for Weekly Planning Meeting")}</div>`;
-    }
+    const n = nextStep(u);
+    const body = `<h2>${n.h}</h2><p>${n.p}</p>${n.extra || ""}<div class="row">${n.btns.map((x, i) => stepBtn(x, i ? "ghost" : "")).join("")}</div>`;
     return `<section class="card phase-card" aria-label="Your phase">${track}<div class="phase-body myw"><span class="myw-head">Your Next Step</span>${body}</div></section>`;
   }
 

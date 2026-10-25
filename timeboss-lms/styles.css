@@ -352,12 +352,15 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .myw .bar span { background: #fff; }
 .myw .row { position: relative; z-index: 1; }
 .sidebar .myw .myw-head { font-size: 17px; padding-bottom: 8px; margin-bottom: 10px; }
-.myw .myw-when { color: rgba(255, 255, 255, .78); font-size: 13px; font-weight: 600; }
 .myw h3 { color: #fff; font-size: 24px; margin: 2px 0 4px; }
 .myw p { color: rgba(255, 255, 255, .85); font-size: 14px; margin-bottom: 14px; }
 .sidebar .myw { margin: auto 0 0; padding: 16px; }
 .sidebar .myw h3 { font-size: 19px; }
 .sidebar .myw p { font-size: 12.5px; }
+.myw:not(.phase-body) .cohort-facts { gap: 8px 20px; margin-bottom: 14px; }
+.myw:not(.phase-body) .cohort-facts dt { font-size: 11.5px; }
+.myw:not(.phase-body) .cohort-facts dd { font-size: 14px; }
+.myw:not(.phase-body) .bar { margin-bottom: 14px; }
 .grid > .myw { margin: 0; justify-content: center; }
 
 /* footer (mirrors timeboss.us) */
