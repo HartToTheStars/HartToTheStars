@@ -883,7 +883,7 @@
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
       ${level(2, `<div class="card level-cohort"><div><h3>${esc(c.name)} Cohort</h3><p class="muted">${c.weeks} weeks, live with a Time Boss coach. Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled · week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete ✓</span>`}</div>
-        <p class="muted level-note">${ph === 3 ? "What the cohort covered, open for review any time." : "The cohort covers these live. They open here for review once you complete it."}</p>
+        ${ph === 3 ? `<p class="muted level-note">What the cohort covered, open for review any time.</p>` : ""}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "cohort").map(tile).join("")}</div>`)}
       ${level(3, `${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete the Master Your Week Cohort: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
