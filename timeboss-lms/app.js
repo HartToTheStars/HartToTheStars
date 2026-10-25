@@ -1196,7 +1196,7 @@
 
   V.profile = () => {
     const u = me();
-    return `<header class="page-head"><div><h1>Profile</h1><p class="muted">How you appear to your team and the community.</p></div></header>
+    return `<header class="page-head"><div><h1>Profile</h1><p class="muted">How you appear to your team and the community. <a href="#/people/${u.id}">View Public Profile</a></p></div></header>
       <form class="card profile-form" data-form="profile">
         <div class="photo-row">${avatar(u, "xl")}<div class="stack">
           <label class="btn ghost sm file-btn">Upload Photo<input type="file" name="photoFile" accept="image/*" data-action-change="photo"></label>
