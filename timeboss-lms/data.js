@@ -235,6 +235,16 @@ window.TB_SEED = {
         { id: "pr1", title: "AI as your chief of staff", mins: 6, body: ["Give your AI your goals, calendar, and constraints. Let it challenge your plan."], action: "Copy the Weekly Planning system prompt into your AI and run it once." },
         { id: "pr2", title: "Prompt patterns that work", mins: 8, body: ["Role, context, task, format. Ask it to ask you questions first."], action: "Rewrite one prompt you use often with role/context/task/format." },
       ] },
+    { id: "team", kind: "mini", title: "Integrating as a Team", blurb: "Run the Time Boss habits together so the whole team plans, protects, and reviews the same way.",
+      lessons: [
+        { id: "tm1", title: "One weekly rhythm for the team", mins: 8, body: ["Hold your Weekly Planning Meetings at the same time each week, then share plans in one place so everyone sees what the week is for."], action: "Pick your team's planning time and channel for sharing plans." },
+        { id: "tm2", title: "Protecting each other's time", mins: 7, body: ["Agree on Whirlwind blocks and quiet hours, and use the Parking Lot instead of walk-up interruptions."], action: "Agree on one team rule that protects focused time." },
+      ] },
+    { id: "assistant", kind: "mini", title: "Your Assistant + Time Boss", blurb: "Bring your executive or personal assistant into your Weekly Planning and Daily Review Meetings.",
+      lessons: [
+        { id: "as1", title: "What to hand off", mins: 7, body: ["Your assistant can own the calendar mechanics: blocking Whirlwind, moving One-time Tasks, and guarding your peak hours."], action: "List three calendar jobs your assistant can take this week." },
+        { id: "as2", title: "A 10-minute weekly sync", mins: 6, body: ["Walk through next week's plan together after your Weekly Planning Meeting so your assistant can protect it."], action: "Book a recurring 10-minute sync with your assistant." },
+      ] },
     { id: "quarterly", kind: "mini", title: "Quarterly Goals", blurb: "Set 3 outcomes per quarter and connect every week to them.",
       lessons: [
         { id: "qg1", title: "Choosing three", mins: 7, body: ["More than three goals means none of them are goals. Pick the three that make everything else easier."], action: "Write your 3 quarterly outcomes." },

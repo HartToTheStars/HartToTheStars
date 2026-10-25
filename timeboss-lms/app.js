@@ -43,6 +43,7 @@
       title: "Weekly Planning Meeting",
       mins: 45,
       when: "Prior to the beginning of your work week",
+      sub: "1 hour, prior to the beginning of your work week.", // page subtitle
       prompt: window.TB_PROMPTS.weekly,
       steps: [
         { phase: "Reflect", title: "Reflect on your week", guide: "In consideration of your Highest Sustainable Pace, what should you keep doing, start doing, and/or stop doing?",
@@ -68,7 +69,7 @@
       title: "Daily Review Meeting",
       mins: 15,
       when: "End of your workday · 15 minutes",
-      sub: "15 minutes at the end of your workday.", // page subtitle
+      sub: "15 minutes, at the end of your work day.", // page subtitle
       prompt: window.TB_PROMPTS.daily,
       steps: [
         { phase: "Reflect", title: "Reflect on your day", guide: "What worked? What didn't work? What needs course correction?",
@@ -651,12 +652,7 @@
 
       ${phaseCard()}
       ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
-
-      <div class="grid two">
-        <div class="card stat">${cardHead("daily", "Habits")}<span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
-        ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
-          : `<div class="card stat">${cardHead("learn", "Courses", "#/learn")}<span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
-      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Join the Master Your Week Cohort to unlock Habits and Streaks.", "habits-lock", { compact: true })}
+` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Join the Master Your Week Cohort to unlock Habits and Streaks.", "habits-lock", { compact: true })}
 
       <div class="grid two">
         <div class="card prompt-card">
@@ -772,7 +768,7 @@
   V.community = () => {
     const posts = S.posts.slice().sort((a, b) => b.ts - a.ts);
     const past = [1, 2, 3].map((i) => { const d = new Date(Date.now() - i * DAY); return { d, k: dateKey(d), q: promptFor(d).q }; });
-    return `
+    return `<header class="page-head"><div><h1>Community</h1></div></header>
       <div class="feed-wrap"><div class="feed-glb">${globalLeaderboard()}</div><div class="feed-main">
         ${pinnedPrompt()}
         ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, ask a question, or start a discussion...", button: "Post", cls: "card post-box" })}
@@ -842,7 +838,6 @@
   const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
   // Top five for each meeting, plus you at the bottom with your rank when you're not in the top five
-  const ordinal = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
   // Two streak boards (Weekly Planning, Daily Review): top five each, plus you with your rank when you're lower
   function streakBoards(ms, { link = false, showCompany = false } = {}) {
     const meId = me().id;
@@ -851,7 +846,7 @@
       const ranked = ms.slice().sort((a, b) => b[key] - a[key] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
       const mine = ranked.findIndex((x) => x.m.id === meId);
       const row = (x, i, gap = false) => {
-        const inner = `<span class="rank">${gap ? ordinal(i + 1) : i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}${x.m.id === meId ? " (you)" : ""}${showCompany ? `<small>${esc(company(x.m.companyId)?.name || "")}</small>` : ""}</span><span class="num hi">${x[key]}<small>${unit}</small></span>`;
+        const inner = `<span class="rank">${i + 1}</span>${avatar(x.m, "sm")}<span class="grow">${esc(x.m.name)}${x.m.id === meId ? " (you)" : ""}${showCompany ? `<small>${esc(company(x.m.companyId)?.name || "")}</small>` : ""}</span><span class="num hi">${x[key]}<small>${unit}</small></span>`;
         return `<li class="${x.m.id === meId ? "you" : ""} ${gap ? "lb-me" : ""}">${link ? `<a href="${memberHref(x.m)}">${inner}</a>` : `<a href="#/people/${x.m.id}">${inner}</a>`}</li>`;
       };
       return `<div class="lb-col">${cardHead(key === "wpm" ? "weekly" : "daily", title)}<ol class="lb">${ranked.slice(0, 5).map((x, i) => row(x, i)).join("")}${mine >= 5 ? `<li class="lb-gap" aria-hidden="true">⋯</li>${row(ranked[mine], mine, true)}` : ""}</ol></div>`;
@@ -860,7 +855,7 @@
   }
   const streakRows = (people) => people.filter((m) => m.role !== "coach" && m.companyId && hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
   function leaderboard(cid) {
-    return `<div class="card lb-card"><h3>Streak Leaderboard</h3>${streakBoards(streakRows(teamOf(cid)), { link: canManage(cid) })}
+    return `<div class="card lb-card"><div class="lb-title"><h3>Habits Leaderboard</h3><span class="muted">${esc(company(cid).name)} Only</span></div>${streakBoards(streakRows(teamOf(cid)), { link: canManage(cid) })}
       ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div>`;
   }
   // Everyone in the community; on phones it sits collapsed at the top of Community
@@ -868,7 +863,7 @@
   function globalLeaderboard() {
     const ms = streakRows(S.users);
     return `<div class="card lb-card glb ${glbOpen ? "open" : ""}">
-      <button class="glb-toggle" data-action="glb-toggle" aria-expanded="${glbOpen}"><span class="glb-title"><h3>Community Streak Leaderboard</h3><span class="muted">${ms.length} Time Bosses across the community</span></span>${icon("chev", "ic glb-chev")}</button>
+      <button class="glb-toggle" data-action="glb-toggle" aria-expanded="${glbOpen}"><span class="glb-title"><h3>Habits Leaderboard</h3><span class="muted">All Community Members</span></span>${icon("chev", "ic glb-chev")}</button>
       <div class="glb-body">${streakBoards(ms, { showCompany: true })}
       ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div></div>`;
   }
@@ -1122,7 +1117,7 @@
   // office hours: Calendly inline embed, prefilled with the member's name and email
   V["office-hours"] = () => {
     const u = me(), q = new URLSearchParams({ embed_type: "Inline", hide_gdpr_banner: "1", background_color: "fefcf8", text_color: "15253c", primary_color: "3c768d", name: u.name, email: u.email });
-    return `<header class="page-head"><div><h1>Micro office hours</h1><p class="muted">${SEED.officeHours.mins} minutes with a Time Boss coach. Bring one specific question.</p></div></header>
+    return `<header class="page-head"><div><h1>Micro Office Hours</h1><p class="muted">${SEED.officeHours.mins} Minutes with a Time Boss Coach. Get help on any challenge related to time.</p></div></header>
       <div class="card calendly"><iframe src="${esc(SEED.officeHours.calendlyUrl)}?${esc(q.toString())}" title="Book micro office hours" loading="lazy"></iframe></div>
       <p class="muted sm">Booking runs through Calendly, which sends your confirmation and calendar invite. <a href="${esc(SEED.officeHours.calendlyUrl)}" target="_blank" rel="noopener">Open in a new tab</a></p>`;
   };
