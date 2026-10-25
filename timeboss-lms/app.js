@@ -1099,7 +1099,7 @@
     // Play the animations only on arrival (or Replay); later re-renders, like opening the profile menu, show the finished state
     const play = celebrateFresh; celebrateFresh = false;
     return `<section class="celebrate ${play ? "" : "settled"}" aria-live="polite">
-      <h1>${t.title} done</h1><p>${line}</p>
+      <h1>${t.title}</h1><p>${line}</p>
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
