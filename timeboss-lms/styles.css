@@ -165,8 +165,9 @@ output { color: var(--teal); font-weight: 900; }
 .note-act { display: inline-flex; align-items: center; gap: 5px; min-height: 34px; padding: 4px 9px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: 600 13px/1 var(--font-body); font-variant-numeric: lining-nums tabular-nums; cursor: pointer; }
 @media (hover: hover) { .note-act:hover { background: var(--paper); color: var(--heading); } }
 .note-act.liked { color: var(--danger); }
-.note-replies { margin-left: 32px; padding-left: 12px; border-left: 2px solid var(--line); }
+.note-replies { margin-left: 44px; }
 .note-replies .note { padding: 6px 0; }
+.note-replies .note:last-child { padding-bottom: 8px; }
 .note-reply-form { margin: 6px 0 2px; }
 /* Highlight for the comment a notification opened: inside the comment's own box, so it never covers the replies below */
 .note.target { margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 10px; animation: note-target 2.4s ease-out forwards; }
@@ -397,12 +398,12 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .reply-form textarea::placeholder { color: rgba(255, 255, 255, .5); }
 .reply-form .char-count { color: rgba(255, 255, 255, .5); }
 .reply-form .char-count.near { color: #f3c98b; }
-.replies .note-thread { padding: 3px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+/* Equal space on both sides of each divider: Reply text to the line, and the line to the next avatar ring */
+.replies .note-thread { padding: 9px 0 1px; border-top: 1px solid rgba(255, 255, 255, .08); }
 .replies .reply { color: rgba(255, 255, 255, .85); }
 .replies .note-act { color: rgba(255, 255, 255, .55); }
 @media (hover: hover) { .replies .note-act:hover { background: rgba(255, 255, 255, .08); color: #fff; } }
 .replies .note-act.liked { color: #f2a59c; }
-.replies .note-replies { border-left-color: rgba(255, 255, 255, .14); }
 .note.fresh { animation: reply-in .5s ease-out; }
 @keyframes reply-in { from { opacity: 0; transform: translateY(-6px); background: rgba(159, 194, 208, .15); } }
 .replies b { color: #fff; }
