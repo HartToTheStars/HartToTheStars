@@ -371,6 +371,7 @@
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
     smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/>',
+    medal: '<circle cx="12" cy="9" r="6"/><path d="M8.5 14.2 7 22l5-3 5 3-1.5-7.8"/>',
     chev: '<path d="m6 9 6 6 6-6"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     heart: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
@@ -1095,14 +1096,14 @@
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
     // Only explain when the streak didn't move (a weekend Daily Review Meeting)
     const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you." : "";
-    const milestone = grew && (n === 1 ? "Day one of a new streak." : n % 5 === 0 ? `Milestone: ${n} ${tool === "weekly" ? "weeks" : "workdays"} in a row.` : "");
+    const milestone = grew && (n === 1 ? "Day One of a New Streak" : n % 5 === 0 ? `${n}-${tool === "weekly" ? "Week" : "Day"} Streak Milestone` : "");
     // Play the animations only on arrival (or Replay); later re-renders, like opening the profile menu, show the finished state
     const play = celebrateFresh; celebrateFresh = false;
     return `<section class="celebrate ${play ? "" : "settled"}" aria-live="polite">
       <h1>${t.title}</h1>${line ? `<p>${line}</p>` : ""}
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
-      ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
+      ${milestone ? `<span class="milestone">${icon("medal")}<span>${milestone}</span></span>` : ""}
       ${preview == null ? chain(tool, id, tool === "weekly" ? 7 : 10, { fresh: grew }) : previewChain(tool, n)}${chainLabel(tool)}
       <div class="row"><a class="btn accent" href="#/home">Back to Home</a><a class="btn ghost" href="#/community">Share a Win in Community</a></div>
     </section>`;

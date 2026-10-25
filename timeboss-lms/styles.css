@@ -357,7 +357,9 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .celebrate .big-wrap { position: relative; display: inline-block; }
 .celebrate .plus-one { position: absolute; top: 4px; right: -44px; font-family: var(--font-body); font-size: 22px; font-weight: 800; color: var(--navy); background: var(--teal-2); border-radius: 100px; padding: 4px 10px; opacity: 0; animation: plus-pop 1.4s cubic-bezier(.2, 1.4, .4, 1) .95s forwards; }
 @keyframes plus-pop { 0% { opacity: 0; transform: translateY(14px) scale(.4); } 30% { opacity: 1; transform: translateY(-6px) scale(1.1); } 60%, 100% { opacity: 1; transform: translateY(0) scale(1); } }
-.celebrate .milestone { display: inline-block; margin: -12px 0 22px; font-weight: 700; color: var(--navy); background: #fff; padding: 6px 14px; border-radius: 100px; animation: plus-pop 1s ease-out 1.3s both; }
+/* A badge, not a button: outlined, small caps-free label with a medal */
+.celebrate .milestone { display: inline-flex; align-items: center; gap: 7px; margin: -10px 0 22px; padding: 5px 12px 5px 8px; border: 1.5px solid var(--teal-2); border-radius: 8px; background: rgba(159, 194, 208, .12); color: var(--teal-2); font: 700 13px/1.2 var(--font-body); letter-spacing: .01em; animation: plus-pop 1s ease-out 1.3s both; }
+.celebrate .milestone .ic { width: 17px; height: 17px; stroke-width: 2; }
 .confetti { position: absolute; left: 50%; top: 42%; width: 0; height: 0; pointer-events: none; z-index: 2; }
 .confetti i { position: absolute; left: 0; top: 0; opacity: 0; animation: confetti-burst 2.6s cubic-bezier(.15, .7, .3, 1) var(--d) forwards; }
 @keyframes confetti-burst {
