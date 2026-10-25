@@ -189,7 +189,17 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
   const me = () => S.users.find((u) => u.id === S.sessionUserId);
-  const DEFAULT_SETTINGS = { private: false, remindWeekly: true, weeklyWhen: "Sunday 5:00 PM", remindDaily: true, dailyWhen: "4:30 PM" };
+  // Time zone defaults to the device's; reminder times are in that zone
+  const deviceZone = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Los_Angeles"; } catch { return "America/Los_Angeles"; } })();
+  const TIME_ZONES = [
+    ["America/New_York", "Eastern Time"], ["America/Chicago", "Central Time"], ["America/Denver", "Mountain Time"], ["America/Phoenix", "Arizona"],
+    ["America/Los_Angeles", "Pacific Time"], ["America/Anchorage", "Alaska"], ["Pacific/Honolulu", "Hawaii"], ["America/Toronto", "Toronto"],
+    ["America/Mexico_City", "Mexico City"], ["America/Sao_Paulo", "São Paulo"], ["Europe/London", "London"], ["Europe/Berlin", "Berlin, Paris, Madrid"],
+    ["Africa/Johannesburg", "Johannesburg"], ["Asia/Dubai", "Dubai"], ["Asia/Kolkata", "India"], ["Asia/Singapore", "Singapore"],
+    ["Asia/Tokyo", "Tokyo"], ["Australia/Sydney", "Sydney"], ["Pacific/Auckland", "Auckland"],
+  ];
+  const zoneLabel = (z) => (TIME_ZONES.find((x) => x[0] === z)?.[1] || z.replace(/_/g, " ").split("/").pop());
+  const DEFAULT_SETTINGS = { private: false, remindWeekly: true, weeklyWhen: "Friday 8:00 AM", remindDaily: true, dailyWhen: "4:30 PM", timeZone: deviceZone };
   const settingsOf = (u) => ({ ...DEFAULT_SETTINGS, private: !!u.private, ...(u.settings || {}) });
   // Private members' habits and streaks are visible only to themselves, their team leaders, and coaches
   const visibleTo = (u) => !settingsOf(u).private || u.id === me().id || isCoach() || (me().role === "admin" && me().companyId === u.companyId);
@@ -971,7 +981,8 @@
         <label class="check-row"><input type="radio" name="visibility" value="private" ${st.private ? "checked" : ""}><span><b>Private</b><small>Only you, your team leaders, and Time Boss coaches see your streaks and meetings. Your posts stay visible.</small></span></label>
         <h3 class="settings-gap">Email reminders</h3>
         <p class="muted sm">Sent to ${esc(u.email)}.${habitsOn ? "" : " Reminders start when you enroll in Master Your Week."}</p>
-        ${remindCard("remindWeekly", st.remindWeekly, "Weekly Planning Meeting", "A reminder to plan before your work week starts.", "weeklyWhen", ["Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}
+        <label class="tz-field">Time zone<select name="timeZone">${[...(TIME_ZONES.some((x) => x[0] === st.timeZone) ? [] : [[st.timeZone, zoneLabel(st.timeZone)]]), ...TIME_ZONES].map(([z, n]) => `<option value="${esc(z)}" ${z === st.timeZone ? "selected" : ""}>${esc(n)}${z === deviceZone ? " (this device)" : ""}</option>`).join("")}</select><small class="muted">Reminder times below are in this time zone.</small></label>
+        ${remindCard("remindWeekly", st.remindWeekly, "Weekly Planning Meeting", "A reminder to plan before your work week starts.", "weeklyWhen", ["Friday 8:00 AM", "Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}
         ${remindCard("remindDaily", st.remindDaily, "Daily Review Meeting", "A reminder at the end of each workday, Monday to Friday.", "dailyWhen", ["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}
         <div class="row"><button class="btn">Save settings</button></div>
       </form>`;
@@ -1109,7 +1120,7 @@
     }
     if (kind === "settings") {
       const u = me();
-      u.settings = { private: v.visibility === "private", remindWeekly: !!v.remindWeekly, weeklyWhen: v.weeklyWhen, remindDaily: !!v.remindDaily, dailyWhen: v.dailyWhen };
+      u.settings = { private: v.visibility === "private", remindWeekly: !!v.remindWeekly, weeklyWhen: v.weeklyWhen, remindDaily: !!v.remindDaily, dailyWhen: v.dailyWhen, timeZone: v.timeZone };
       // Production: these drive the reminder emails and who can see this member's activity
       toast("Settings saved");
     }

@@ -35,7 +35,7 @@ Open `#/preview/weekly` or `#/preview/daily` (add a number for a streak, e.g. `#
 ## Community features
 
 - **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View all. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
-- **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; email reminders for the Weekly Planning Meeting and Daily Review Meeting with a time for each). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
+- **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; time zone, defaulting to the device; email reminders for the Weekly Planning Meeting, default Friday 8:00 AM, and the Daily Review Meeting, default 4:30 PM). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
 
 ## Notes for the production build
 

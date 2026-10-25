@@ -567,7 +567,10 @@ body.modal-open { overflow: hidden; }
 .settings-form .check-row small { display: block; margin-top: 2px; }
 .settings-form .check-row b { color: var(--heading); }
 .settings-form .row { margin-top: 18px; }
-.remind-card { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 10px; }
+.remind-card { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 16px; }
+.tz-field { margin: 4px 0 18px; display: grid; gap: 6px; max-width: 360px; }
+.tz-field select { margin: 0; }
+.tz-field small { font-weight: 400; }
 .remind-card:has(input:checked) { border-color: var(--teal); background: var(--teal-soft); }
 .remind-head { display: flex; gap: 12px; align-items: flex-start; margin: 0; font-weight: 500; cursor: pointer; }
 .remind-head input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--teal); flex: none; }
