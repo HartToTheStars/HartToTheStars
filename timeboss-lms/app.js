@@ -439,12 +439,25 @@
   }
 
   // Home: where you are in the three phases, and the next step
+  // What the blue panel says for a phase you tapped: review what you finished, or what's coming
+  function phaseInfo(n, u = me()) {
+    const ph = phaseOf(u);
+    if (n === ph) return { head: "Your Next Step", ...nextStep(u) };
+    if (n < ph) return n === 1
+      ? { head: "Completed", h: "You completed Unlock Your Week", p: "The workshop stays open for review any time: the core ideas behind your Weekly Planning Meeting and Daily Review Meeting.", btns: [{ href: courseHref(courseById(WORKSHOP)), label: "Review the Workshop" }] }
+      : { head: "Completed", h: "You completed Master Your Week", p: "The cohort sessions are open for review: Dealing with Diversions, the four Solving the Root Cause sessions, and Your Highest Sustainable Pace.", btns: [{ href: "#/learn", label: "Review Cohort Sessions" }] };
+    return n === 2
+      ? { head: "Coming Up", h: "Master Your Week: Group Coaching Cohort", p: `${SEED.cohort.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks. It unlocks when you finish the Unlock Your Week Workshop.`, btns: [{ href: "#/cohort", label: "About the Cohort" }] }
+      : { head: "Coming Up", h: "Maximize Your Week: Continuing Education", p: "Mini courses, a monthly masterclass, and live Weekly Planning Meetings. It unlocks when you complete the Master Your Week Cohort.", btns: [{ href: "#/learn", label: "See What's Included" }] };
+  }
+  // Home: where you are in the three phases, and the next step. Tap a phase to see it in the blue panel.
+  let phaseSel = null;
   function phaseCard() {
-    const u = me(), ph = phaseOf(u);
-    const track = `<ol class="phase-track" role="list">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : "after"}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</li>`).join("")}</ol>`;
-    const n = nextStep(u);
+    const u = me(), ph = phaseOf(u), sel = phaseSel || ph;
+    const track = `<ol class="phase-track" role="list">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : "ahead"} ${p.n === sel ? "selected" : ""} ${p.n > sel ? "below" : ""}"><button class="phase-btn" data-action="phase" data-id="${p.n}" aria-pressed="${p.n === sel}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</button></li>`).join("")}</ol>`;
+    const n = phaseInfo(sel, u);
     const body = `<h2>${n.h}</h2><p>${n.p}</p>${n.extra || ""}<div class="row">${n.btns.map((x, i) => stepBtn(x, i ? "ghost" : "")).join("")}</div>`;
-    return `<section class="card phase-card" aria-label="Your phase">${track}<div class="phase-body myw"><span class="myw-head">Your Next Step</span>${body}</div></section>`;
+    return `<section class="card phase-card" aria-label="Your phases"><div class="phase-title">${icon("learn")}<span>Phases</span></div>${track}<div class="phase-body myw"><span class="myw-head">${n.head}</span>${body}</div></section>`;
   }
 
   const SOCIAL = {
@@ -1281,7 +1294,7 @@
     const from = "#" + (e.oldURL.split("#")[1] || "");
     if (goingBack) goingBack = false; else if (from !== "#") visited.push(from);
   });
-  window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { phaseSel = null; scrolledFor = null; ranModal = null; photoFor = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && (ranModal || photoFor)) { ranModal = null; photoFor = null; render(); } });
   // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
   const tip = Object.assign(document.createElement("div"), { className: "tip", hidden: true });
@@ -1344,6 +1357,7 @@
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
       "more-activity": () => { actLimit += 20; render(); },
+      phase: () => { phaseSel = +id === phaseOf() ? null : +id; render(); },
       "emoji-menu": () => { const f = el.closest("form"); f.querySelector(".picker-emoji") ? f.querySelector(".picker").remove() : openPicker(f, "emoji"); },
       "gif-menu": () => { const f = el.closest("form"); f.querySelector(".picker-gif") ? f.querySelector(".picker").remove() : openPicker(f, "gif"); },
       "remove-att": () => setAttachment(el.closest("form"), null),
