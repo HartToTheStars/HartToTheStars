@@ -1206,7 +1206,7 @@
     return `<a class="back" href="#" data-action="back">← Back</a>
       <section class="card pp-hero"><button class="pp-photo" data-action="photo" data-id="${p.id}" aria-label="View ${esc(p.name)}'s photo larger">${avatar(p, "xl")}</button>
         <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? ` · ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : " · Time Boss"}</p>
-        ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${esc(phaseLabel(p))}</span>`}
+        ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${PHASES[phaseOf(p) - 1].name}</span>`}
         ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
       </section>
       ${habits}${courses}`;
