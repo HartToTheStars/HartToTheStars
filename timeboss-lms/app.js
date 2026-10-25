@@ -550,9 +550,9 @@
 
   // ---------- locked previews ----------
   // Example habit data shown behind the lock so members can see what they're working toward
-  const SAMPLE = { weekly: { n: 6, len: 7, on: [0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
+  const SAMPLE = { weekly: { n: 6, len: 10, on: [1, 1, 0, 0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
   const sampleChain = (tool, light = false) => `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${SAMPLE[tool].on.map((x) => `<span class="pip ${x ? "on" : ""}"></span>`).join("")}</div>`;
-  const chainLabel = (tool) => `<small class="chain-label">${tool === "weekly" ? "Last 7 weeks" : "Last 10 workdays"}</small>`;
+  const chainLabel = (tool) => `<small class="chain-label">${tool === "weekly" ? "Last 10 weeks" : "Last 10 workdays"}</small>`;
   const sampleHalf = (tool) => {
     const n = SAMPLE[tool].n;
     return `<div class="habits-half">${cardHead(tool, TOOLS[tool].title)}
@@ -605,7 +605,7 @@
   // Habit chain: one pip per workday (Daily Review Meeting) or planned week (Weekly Planning Meeting), oldest to newest
   // A streak on a light card: the number with its unit beside it, then the recent weeks or workdays as pips, labeled
   function streakStat(tool, id) {
-    const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id), len = tool === "weekly" ? 7 : 10;
+    const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id), len = 10;
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : n === 1 ? "workday in a row" : "workdays in a row";
     return `<div class="streak-num"><b>${n}</b><span>${unit}</span></div>${chain(tool, id, len, { light: true })}<small>Last ${len} ${tool === "weekly" ? "weeks" : "workdays"}</small>`;
   }
@@ -632,7 +632,7 @@
     return `<div class="habits-half">
       ${cardHead(tool, t.title, `#/tools/${tool}`)}
       <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
-      ${chain(tool, id, tool === "weekly" ? 7 : 10)}${chainLabel(tool)}
+      ${chain(tool, id, 10)}${chainLabel(tool)}
       <div class="habits-foot">
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
@@ -1139,12 +1139,12 @@
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${icon("medal")}<span>${milestone}</span></span>` : ""}
-      ${preview == null ? chain(tool, id, tool === "weekly" ? 7 : 10, { fresh: grew }) : previewChain(tool, n)}${chainLabel(tool)}
+      ${preview == null ? chain(tool, id, 10, { fresh: grew }) : previewChain(tool, n)}${chainLabel(tool)}
       <div class="row"><a class="btn accent" href="#/home">Back to Home</a><a class="btn ghost" href="#/community">Share a Win in Community</a></div>
     </section>`;
   }
   // A full chain ending in the new pip, for previews
-  const previewChain = (tool, n) => { const len = tool === "weekly" ? 7 : 10; return `<div class="chain" aria-hidden="true">${Array.from({ length: len }, (_, i) => `<span class="pip ${i >= len - n ? "on" : ""} ${i === len - 1 ? "new" : ""}"></span>`).join("")}</div>`; };
+  const previewChain = (tool, n) => { const len = 10; return `<div class="chain" aria-hidden="true">${Array.from({ length: len }, (_, i) => `<span class="pip ${i >= len - n ? "on" : ""} ${i === len - 1 ? "new" : ""}"></span>`).join("")}</div>`; };
 
   // Preview the completion celebration without saving anything: #/preview/weekly, #/preview/daily, add /10 for a milestone
   V.preview = (tool = "weekly", count) => {
@@ -1162,7 +1162,7 @@
     const history = sample ? [] : runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
     // Your streak, in the same card used on profiles and team pages
     const streakCard = `<div class="card stat">${cardHead(tool, "Your Streak")}${sample
-      ? `<div class="streak-num"><b>${SAMPLE[tool].n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool, true)}<small>${tool === "weekly" ? "Last 7 weeks" : "Last 10 workdays"}</small>`
+      ? `<div class="streak-num"><b>${SAMPLE[tool].n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool, true)}<small>${tool === "weekly" ? "Last 10 weeks" : "Last 10 workdays"}</small>`
       : streakStat(tool, me().id)}</div>`;
     const aiPanel = `<div class="card ai"><h4>Run This in Your AI Tool of Choice</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
