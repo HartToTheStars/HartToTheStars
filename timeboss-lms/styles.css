@@ -421,16 +421,29 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .demo-link { color: rgba(255, 255, 255, .55); text-decoration: underline; text-underline-offset: 3px; margin-top: 18px; }
 
 /* Habits locked until Master Your Week */
-.locked-habits { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; }
-.locked-habits h3 { color: #fff; font-size: clamp(22px, 2.4vw, 28px); margin: 6px 0 6px; }
-.locked-habits p { color: rgba(255, 255, 255, .7); max-width: 56ch; margin: 0; }
-.locked-habits .ic.lock.big { color: var(--teal-2); width: 28px; height: 28px; margin: 0; }
-.habits-preview .pip { width: 22px; height: 22px; }
 nav a.locked { color: rgba(255, 255, 255, .45); }
 nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
 .nav-lock { margin-left: auto; width: 14px; height: 14px; color: rgba(255, 255, 255, .4); }
 .level-sub { font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Locked features: a dimmed example of the real thing with the lock message on top */
+.locked-wrap { position: relative; margin-bottom: 18px; }
+.locked-preview { filter: blur(1.5px) saturate(.7); opacity: .55; pointer-events: none; user-select: none; }
+.locked-preview .habits { margin-bottom: 0; }
+.locked-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; }
+.locked-msg { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-hover); padding: 24px 26px; max-width: 460px; text-align: center; }
+.locked-msg h2 { font-size: clamp(21px, 2.3vw, 26px); margin: 10px 0 8px; }
+.locked-msg p { font-size: 15px; margin-bottom: 16px; }
+.locked-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--teal); background: var(--teal-soft); padding: 4px 12px; border-radius: 100px; }
+.habits-lock .locked-preview { filter: blur(.6px) saturate(.8); opacity: .8; }
+.habits-lock .locked-preview .habits { padding-bottom: 96px; }
+.habits-lock .locked-overlay { place-items: end center; padding: 0 20px 22px; }
+.habits-lock .locked-msg { display: flex; align-items: center; gap: 16px; text-align: left; max-width: none; padding: 14px 16px 14px 20px; flex-wrap: wrap; justify-content: center; }
+.habits-lock .locked-msg h2 { font-size: 19px; margin: 0; }
+.habits-lock .locked-msg .btn { flex: none; }
+.locked-wrap.page .locked-preview { max-height: 760px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.locked-wrap.page .locked-overlay { place-items: start center; padding-top: 140px; }
 
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 80px); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 100px; font-weight: 700; border-bottom: 3px solid var(--teal); transition: transform .25s, opacity .25s; opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
@@ -454,8 +467,10 @@ nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
   main { padding: 24px 16px 48px; }
   .team-grid { grid-template-columns: 1fr; }
   .phase-track { grid-template-columns: 1fr; }
-  .locked-habits { grid-template-columns: 1fr; }
-  .habits-preview { display: none; }
+  .locked-wrap.page .locked-overlay { padding-top: 90px; }
+  .habits-lock .locked-overlay { padding-bottom: 16px; }
+  .habits-lock .locked-preview .habits { padding-bottom: 215px; }
+  .habits-lock .locked-msg { text-align: center; }
   .phase-track li + li { border-left: 0; border-top: 1px solid var(--line); }
   .habits { grid-template-columns: 1fr; }
   .habits { padding: 24px 22px; }

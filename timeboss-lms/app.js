@@ -393,6 +393,28 @@
       <div class="footer-social">${Object.entries(SOCIAL).map(([n, [href, path]]) => `<a href="${href}" aria-label="${n}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></a>`).join("")}</div>
     </footer>`;
 
+  // ---------- locked previews ----------
+  // Example habit data shown behind the lock so members can see what they're working toward
+  const SAMPLE = { weekly: { n: 6, len: 8, on: [0, 0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
+  const sampleChain = (tool, light = false) => `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${SAMPLE[tool].on.map((x) => `<span class="pip ${x ? "on" : ""}"></span>`).join("")}</div>`;
+  const sampleHalf = (tool) => {
+    const n = SAMPLE[tool].n;
+    return `<div class="habits-half"><span class="habits-name">${TOOLS[tool].title}</span>
+      <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}</div>`;
+  };
+  // Real-looking preview, dimmed and inert, with the lock message on top
+  function lockedOver(preview, title, cls = "", { compact = false } = {}) {
+    const nx = nextLessonIn(me(), [courseById(WORKSHOP)]), ph = phaseOf();
+    return `<div class="locked-wrap ${cls}">
+      <div class="locked-preview" aria-hidden="true" inert>${preview}</div>
+      <div class="locked-overlay"><div class="locked-msg" role="note">
+        <span class="locked-badge">${icon("lock", "ic lock")} Example</span>
+        <h2>${esc(title)}</h2>
+        ${compact ? "" : `<p class="muted">Your Weekly Planning Meeting, Daily Review Meeting, habit streaks, and live events open when you enroll in Master Your Week, the Group Coaching Cohort.${ph === 1 ? " Finish the Unlock Your Week Workshop first." : ""}</p>`}
+        ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
+      </div></div></div>`;
+  }
+
   // ---------- views ----------
   const V = {};
 
@@ -478,11 +500,7 @@
         <div class="card stat"><span class="muted">Past month completion</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         ${phaseOf(u) < 3 ? (() => { const w = courseProgress(u.id, courseById(WORKSHOP)); return `<div class="card stat"><span class="muted">Workshop progress</span><b>${w.pct}%</b>${bar(w.pct)}<small>${w.n} of ${w.total} lessons</small></div>`; })()
           : `<div class="card stat"><span class="muted">Course progress</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>`}
-      </div>` : `<section class="habits locked-habits" aria-label="Your habits">
-        <div>${icon("lock", "ic lock big")}<h3>Your habits start when you join Master Your Week</h3>
-        <p>The Weekly Planning Meeting and the Daily Review Meeting, with streaks you can see grow. They open when you enroll in the Group Coaching Cohort, along with live events.</p></div>
-        <div class="habits-preview" aria-hidden="true"><div class="chain"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip now"></span></div></div>
-      </section>`}
+      </div>` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Your habits start when you join Master Your Week", "habits-lock", { compact: true })}
 
       <div class="grid two">
         <div class="card prompt-card">
@@ -705,8 +723,8 @@
   }
 
   // events
-  V.events = () => {
-    if (!hasHabits()) return lockedFeature("Events & RSVP");
+  V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "Live events open when you join Master Your Week", "page"));
+  function eventsPage() {
     const ev = (e) => {
       const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
       const on = rsvpd(e.id);
@@ -718,7 +736,7 @@
     return `<header class="page-head"><div><h1>Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
       <h2 class="section">Monthly masterclass</h2>${masterclassEvents().map(ev).join("")}
       <h2 class="section">Weekly Planning Meeting (live, group)</h2><p class="muted">Plan next week alongside other Time Bosses. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map(ev).join("")}`;
-  };
+  }
 
   // office hours: Calendly inline embed, prefilled with the member's name and email
   V["office-hours"] = () => {
@@ -743,11 +761,11 @@
       <div class="row"><a class="btn accent" href="#/home">Back to home</a><a class="btn ghost" href="#/community">Share a win in Community</a></div>
     </section>`;
   }
-  function toolView(tool) {
+  function toolView(tool, { sample = false } = {}) {
     if (justSaved?.tool === tool) { const html = celebrate(tool, justSaved.before); justSaved = null; return html; }
-    const t = TOOLS[tool], dk = me().id + "|" + tool, draft = S.drafts[dk];
-    const history = runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
-    const streakN = tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
+    const t = TOOLS[tool], dk = me().id + "|" + tool, draft = sample ? null : S.drafts[dk];
+    const history = sample ? [] : runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
+    const streakN = sample ? SAMPLE[tool].n : tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <details><summary>Preview prompt</summary><pre>${esc(t.prompt)}</pre></details>
@@ -758,7 +776,7 @@
       let lastPhase = "";
       return `<header class="page-head"><div><h1>${t.title}</h1><p class="muted">${t.when}. ${t.steps.length} steps in three parts: Reflect, Decide, Commit.</p></div></header>
         <div class="feed-wrap"><div>
-          <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
+          <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${sample ? sampleChain(tool, true) : chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
           ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
           <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           <button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button></div>
@@ -787,13 +805,8 @@
         </form>
       </div><aside class="side">${aiPanel}</aside></div>`;
   }
-  V.tools = (tool) => (!TOOLS[tool] ? notFound() : hasHabits() ? toolView(tool) : lockedFeature(TOOLS[tool].title));
-  function lockedFeature(name) {
-    const nx = nextLessonIn(me(), [courseById(WORKSHOP)]), ph = phaseOf();
-    return `<div class="card locked-card">${icon("lock", "ic lock big")}<h2>${esc(name)} opens when you join Master Your Week</h2>
-      <p class="muted">Your Weekly Planning Meeting, Daily Review Meeting, habit streaks, and live events all open when you enroll in Master Your Week, the Group Coaching Cohort.${ph === 1 ? " Finish the Unlock Your Week Workshop first." : ""}</p>
-      ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}</div>`;
-  }
+  V.tools = (tool) => (!TOOLS[tool] ? notFound() : hasHabits() ? toolView(tool)
+    : lockedOver(toolView(tool, { sample: true }), `Your ${TOOLS[tool].title} opens when you join Master Your Week`, "page"));
 
   V.cohort = () => {
     const c = SEED.cohort;
