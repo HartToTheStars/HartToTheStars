@@ -763,7 +763,7 @@
         ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, ask a question, or start a discussion...", button: "Post", cls: "card post-box" })}
         ${posts.map((p) => postCard(p)).join("")}
       </div>
-      <aside class="side">${mywCta()}
+      <aside class="side">
         <div class="card"><h3>Previous prompts</h3>
           <ul class="list">${past.map((p) => `<li><a class="past-prompt" href="#/prompt/${p.k}"><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></a></li>`).join("")}</ul></div>
       </aside></div>`;
