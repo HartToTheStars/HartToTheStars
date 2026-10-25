@@ -254,11 +254,15 @@
   // Profile picture with three badges beneath it: phase (left), Weekly Planning Meeting streak (middle), Daily Review Meeting streak (right)
   function profileBadges(u) {
     if (u.role === "coach" || !u.companyId) return "";
-    const ph = phaseOf(u), on = hasHabits(u), shown = on && visibleTo(u);
-    const why = !on ? "starts in Master Your Week" : "private";
-    const b = (pos, n, label, cls = "") => `<span class="pb pb-${pos} ${cls}" title="${label}">${n}</span>`;
-    const lock = icon("lock", "ic pb-lock");
-    return `<span class="pbs">${b("l", ph, `Phase ${ph}: ${esc(phaseLabel(u))}`, `phase p${ph}`)}${b("c", shown ? wpmStreak(u.id) : lock, `Weekly Planning Meeting streak: ${shown ? `${wpmStreak(u.id)} weeks in a row` : why}`, shown ? "wpm" : "locked")}${b("r", shown ? drmStreak(u.id) : lock, `Daily Review Meeting streak: ${shown ? `${drmStreak(u.id)} workdays in a row` : why}`, shown ? "drm" : "locked")}</span>`;
+    const ph = phaseOf(u), on = hasHabits(u), shown = on && visibleTo(u), isMe = u.id === me().id, first = esc(u.name.split(" ")[0]);
+    // Help text for each number, shown on hover on desktop (see the tooltip handler)
+    const streakTip = (meeting, n) => !on ? (isMe ? `Locked. Start Master Your Week to unlock Streaks.` : `Locked. Streaks unlock when ${first} starts Master Your Week.`)
+      : !shown ? `${first} keeps their activity private.`
+      : n === 0 ? (isMe ? `Complete a ${meeting} to start a streak.` : `No ${meeting} streak right now.`)
+      : `${n} ${meeting}${n === 1 ? "" : "s"} completed in a row.`;
+    const b = (pos, n, tip, cls = "") => `<span class="pb pb-${pos} ${cls}" data-tip="${tip}" aria-label="${tip}">${n}</span>`;
+    const lock = icon("lock", "ic pb-lock"), w = shown ? wpmStreak(u.id) : 0, d = shown ? drmStreak(u.id) : 0;
+    return `<span class="pbs">${b("l", ph, `Phase ${ph} - ${PHASES[ph - 1].name}`, `phase p${ph}`)}${b("c", shown ? w : lock, streakTip("Weekly Planning Meeting", w), shown ? "wpm" : "locked")}${b("r", shown ? d : lock, streakTip("Daily Review Meeting", d), shown ? "drm" : "locked")}</span>`;
   }
   function profileAvatar(u, size = "", { link = true } = {}) {
     // Coaches get the same layout, with a Coach label where members show their numbers
@@ -1164,6 +1168,22 @@
   }
   window.addEventListener("hashchange", () => { scrolledFor = null; ranModal = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ranModal) { ranModal = null; render(); } });
+  // Hover help text for anything with data-tip (the numbers under profile pictures), on devices with a mouse
+  const tip = Object.assign(document.createElement("div"), { className: "tip", hidden: true });
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  const hideTip = () => { tip.hidden = true; };
+  document.addEventListener("mouseover", (e) => {
+    const el = e.target.closest?.("[data-tip]");
+    if (!el || !matchMedia("(hover: hover)").matches) return hideTip();
+    tip.textContent = el.dataset.tip;
+    tip.hidden = false;
+    const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), above = r.top - t.height - 8 >= 8;
+    tip.style.left = `${Math.max(8, Math.min(innerWidth - t.width - 8, r.left + r.width / 2 - t.width / 2))}px`;
+    tip.style.top = `${above ? r.top - t.height - 8 : r.bottom + 8}px`;
+  });
+  document.addEventListener("scroll", hideTip, true);
+  document.addEventListener("click", hideTip, true);
 
   let timerInt;
   function tickTimer() {

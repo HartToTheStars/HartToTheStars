@@ -621,6 +621,8 @@ body.modal-open { overflow: hidden; }
 .pbs { display: flex; align-items: flex-start; gap: 3px; }
 .pb { display: inline-grid; place-items: center; min-width: var(--b); height: var(--b); padding: 0 4px; box-sizing: border-box; border-radius: 100px; font-size: var(--bf); font-weight: 800; line-height: 1; font-family: var(--font-body); font-variant-numeric: lining-nums tabular-nums; color: #fff; background: var(--navy); }
 .pb-c { margin-top: 4px; }
+.tip { position: fixed; z-index: 100; max-width: 240px; padding: 7px 10px; border-radius: 8px; background: var(--navy); color: #fff; font: 500 13px/1.35 var(--font-body); box-shadow: 0 10px 24px -10px rgba(14, 27, 46, .45); pointer-events: none; }
+.tip[hidden] { display: none; }
 .pb.phase.p1 { background: #ece3d8; color: var(--heading); }
 .pb.phase.p2 { background: var(--teal-2); color: var(--navy); }
 .pb.phase.p3 { background: var(--teal); }
