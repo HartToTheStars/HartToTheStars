@@ -49,6 +49,14 @@ small { display: block; font-size: 13px; color: var(--muted); line-height: 1.5; 
 #app:not(.logged-out) { display: grid; grid-template-columns: 288px 1fr; min-height: 100vh; }
 /* Wide screens: the sidebar and content stay together as one centered column, like x.com */
 @media (min-width: 761px) { #app:not(.logged-out) { max-width: 1488px; margin: 0 auto; } }
+/* Past that width, paint the gap left of the sidebar navy so the sidebar reaches the screen edge */
+@media (min-width: 1489px) {
+  body:has(#app:not(.logged-out)) { background: linear-gradient(to right, var(--navy) calc((100% - 1488px) / 2 + 1px), var(--bg) 0); }
+  /* and carry the footer band to the right edge */
+  html { overflow-x: clip; }
+  .site-footer { position: relative; }
+  .site-footer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 100%; width: calc((100vw - 1488px) / 2); background: var(--navy-deep); }
+}
 .content { display: flex; flex-direction: column; min-width: 0; }
 .topbar { display: none; }
 .sidebar { background: var(--navy); color: rgba(255, 255, 255, .7); padding: 22px 14px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
