@@ -384,7 +384,7 @@
   // Use the real logo only once it has loaded; otherwise show the wordmark (no flicker on re-render)
   let logoOk = false;
   // Skip the re-render while a celebration is playing so it isn't cut short; the logo appears on the next render
-  Object.assign(new Image(), { onload: () => { logoOk = true; if (!document.querySelector(".celebrate:not(.settled)")) render(); }, src: LOGO });
+  Object.assign(new Image(), { onload: () => { logoOk = true; if (!document.querySelector(".celebrate:not(.settled)")) render(); else setTimeout(render, 3500); }, src: LOGO }); // during a celebration, swap the logo in once it settles
   const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b>${sub ? `<small>${sub}</small>` : ""}</div></div>`;
   const logo = (sub) => (logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss">${sub ? `<small class="brand-sub">${sub}</small>` : ""}` : wordmark(sub));
 
@@ -1102,12 +1102,12 @@
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
-      ${preview == null ? chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew }) : previewChain(tool, n)}
+      ${preview == null ? chain(tool, id, tool === "weekly" ? 7 : 10, { fresh: grew }) : previewChain(tool, n)}${chainLabel(tool)}
       <div class="row"><a class="btn accent" href="#/home">Back to Home</a><a class="btn ghost" href="#/community">Share a Win in Community</a></div>
     </section>`;
   }
   // A full chain ending in the new pip, for previews
-  const previewChain = (tool, n) => { const len = tool === "weekly" ? 8 : 10; return `<div class="chain" aria-hidden="true">${Array.from({ length: len }, (_, i) => `<span class="pip ${i >= len - n ? "on" : ""} ${i === len - 1 ? "new" : ""}"></span>`).join("")}</div>`; };
+  const previewChain = (tool, n) => { const len = tool === "weekly" ? 7 : 10; return `<div class="chain" aria-hidden="true">${Array.from({ length: len }, (_, i) => `<span class="pip ${i >= len - n ? "on" : ""} ${i === len - 1 ? "new" : ""}"></span>`).join("")}</div>`; };
 
   // Preview the completion celebration without saving anything: #/preview/weekly, #/preview/daily, add /10 for a milestone
   V.preview = (tool = "weekly", count) => {
