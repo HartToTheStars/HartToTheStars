@@ -315,7 +315,7 @@
     const link = (href, label, ic, locked = false) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""} ${locked ? "locked" : ""}">${icon(ic)}<span>${label}</span>${locked ? icon("lock", "ic lock nav-lock") : ""}</a>`;
     const lockH = !hasHabits(u);
     return `
-      <div class="brand-wrap">${logo("Community")}</div>
+      <div class="brand-wrap">${logo()}</div>
       <nav>
         ${link("#/home", "Home", "home")}
         ${link("#/community", "Community", "community")}
