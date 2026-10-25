@@ -561,7 +561,7 @@ nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
 .locked-preview { filter: blur(1.5px) saturate(.7); opacity: .55; pointer-events: none; user-select: none; }
 .locked-preview .habits { margin-bottom: 0; }
 .locked-overlay { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; }
-.locked-msg { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-hover); padding: 24px 26px; max-width: 460px; text-align: center; }
+.locked-msg { background: var(--card); border: 1.5px solid #b9aa97; border-radius: var(--radius); box-shadow: var(--shadow-hover); padding: 24px 26px; max-width: 460px; text-align: center; }
 .locked-msg h2 { font-size: clamp(21px, 2.3vw, 26px); margin: 10px 0 8px; }
 .locked-msg p { font-size: 15px; margin-bottom: 16px; }
 .locked-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--teal); background: var(--teal-soft); padding: 4px 12px; border-radius: 100px; }
