@@ -230,9 +230,10 @@
   const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")} · ${ago(ts)}</small>`;
   const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "ring-coach" : `ring-p${phaseOf(u)}`}" style="background:${u.color || (u.companyId ? company(u.companyId)?.color : "#5e8497")}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
-  function toast(msg) {
+  // Short confirmation card: a bold line, plus an optional detail line under it
+  function toast(msg, detail = "") {
     const el = document.getElementById("toast");
-    el.textContent = msg;
+    el.innerHTML = `${icon("check", "ic toast-ic")}<span><b>${esc(msg)}</b>${detail ? `<small>${esc(detail)}</small>` : ""}</span>`;
     el.classList.add("show");
     clearTimeout(toast.t);
     toast.t = setTimeout(() => el.classList.remove("show"), 2600);
@@ -360,6 +361,7 @@
 
   // Line icons in the timeboss.us style (feather-like, teal stroke)
   const ICON = {
+    check: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.6L16 9.5"/>',
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
     community: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.4 0 4 1.6 4.5 4"/>',
     company: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/>',
@@ -1454,7 +1456,7 @@
       rsvp: () => {
         const l = (S.rsvps[id] ||= []), i = l.indexOf(me().id);
         // Production: RSVP emails the member a calendar invite (.ics / Google Calendar API) and removes it on cancel
-        if (i < 0) { l.push(me().id); toast(`You're in. Calendar invite sent to ${me().email}`); } else { l.splice(i, 1); toast("RSVP cancelled. Calendar invite withdrawn."); }
+        if (i < 0) { l.push(me().id); toast("You're going.", `Calendar invite sent to ${me().email}`); } else { l.splice(i, 1); toast("RSVP cancelled.", "Calendar invite withdrawn."); }
         save(); render();
       },
       "start-tool": () => { S.drafts[me().id + "|" + tool] = { step: 0, answers: {}, startedAt: Date.now() }; save(); render(); },
