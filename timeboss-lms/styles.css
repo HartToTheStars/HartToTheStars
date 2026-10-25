@@ -504,6 +504,9 @@ body.lightbox-open { overflow: hidden; }
 .act-av { flex: none; }
 .act-main { min-width: 0; display: grid; gap: 2px; font-size: 15px; }
 .act-main p { margin: 0; color: var(--ink); }
+/* Team members table: picture and name on one line with a clear gap */
+table.team td.t-name a { display: inline-flex; align-items: center; gap: 10px; }
+table.team td.t-name .avatar { flex: none; }
 .act-name { color: var(--heading); font-weight: 700; text-decoration: none; }
 .act-name:hover { text-decoration: underline; }
 .act-snip { color: var(--muted); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
