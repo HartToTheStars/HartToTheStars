@@ -266,9 +266,10 @@
       : !shown ? `${first} keeps their activity private.`
       : n === 0 ? (isMe ? `Complete a ${meeting} to start a streak.` : `No ${meeting} streak right now.`)
       : `${n} ${meeting}${n === 1 ? "" : "s"} completed in a row.`;
-    const b = (pos, n, tip, cls = "") => `<span class="pb pb-${pos} ${cls}" data-tip="${tip}" aria-label="${tip}">${n}</span>`;
+    const b = (pos, n, tip, cls = "") => `<span class="pb pb-${pos} ${cls}${String(n).length > 2 ? " pb-3" : ""}" data-tip="${tip}" aria-label="${tip}">${n}</span>`;
     const lock = icon("lock", "ic pb-lock"), w = shown ? wpmStreak(u.id) : 0, d = shown ? drmStreak(u.id) : 0;
-    return `<span class="pbs">${b("l", ph, `Phase ${ph} - ${PHASES[ph - 1].name}`, `phase p${ph}`)}${b("c", shown ? w : lock, streakTip("Weekly Planning Meeting", w), shown ? "wpm" : "locked")}${b("r", shown ? d : lock, streakTip("Daily Review Meeting", d), shown ? "drm" : "locked")}</span>`;
+    // Weekly streak, daily streak, then phase: the phase badge is the only one that changes color
+    return `<span class="pbs">${b("l", shown ? w : lock, streakTip("Weekly Planning Meeting", w), shown ? "wpm" : "locked")}${b("c", shown ? d : lock, streakTip("Daily Review Meeting", d), shown ? "drm" : "locked")}${b("r", ph, `Phase ${ph} - ${PHASES[ph - 1].name}`, `phase p${ph}`)}</span>`;
   }
   function profileAvatar(u, size = "", { link = true } = {}) {
     // Coaches get the same layout, with a Coach label where members show their numbers
