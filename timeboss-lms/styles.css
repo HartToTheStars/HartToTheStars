@@ -530,7 +530,7 @@ body.modal-open { overflow: hidden; }
 .content-top + main { padding-top: 8px; }
 .pm { position: relative; }
 /* The profile button is one outlined box around the picture, its numbers, and the arrow */
-.pm-btn { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 16px; color: var(--heading); background: var(--card); border: 1px solid var(--line); -webkit-tap-highlight-color: transparent; }
+.pm-btn { display: flex; align-items: center; gap: 8px; padding: 12px 8px 8px; /* extra top: the avatar ring draws 4px outside the picture */ border-radius: 16px; color: var(--heading); background: var(--card); border: 1px solid var(--line); -webkit-tap-highlight-color: transparent; }
 .pm-btn:hover, .pm-btn[aria-expanded="true"] { border-color: var(--line-strong); background: #fff; }
 .pm-chev { width: 16px; height: 16px; }
 .pav.pav-menu-av { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
