@@ -409,7 +409,7 @@
     if (ph === 1) {
       const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
       return { h: "Complete the Unlock Your Week Workshop", p: `${p.n} of ${p.total} lessons done. Up next: ${esc(nx.l.title)} (${nx.l.mins} min). Finishing the workshop unlocks the Master Your Week Cohort.`,
-        extra: bar(p.pct), btns: [{ href: `#/learn/${WORKSHOP}/${nx.l.id}`, label: "Complete Workshop" }] };
+        extra: bar(p.pct), btns: [{ href: `#/learn/${WORKSHOP}/${nx.l.id}`, label: "Open Workshop" }] };
     }
     if (ph === 2 && enrolled(u)) return { h: "You're in the Master Your Week Cohort", p: `Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.`,
       btns: [{ href: "#/tools/weekly", label: "Run Weekly Planning Meeting" }, { href: "#/cohort", label: "View Cohort" }] };
@@ -520,7 +520,7 @@
         <h2>${esc(title)}</h2>
         ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} people in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
         ${compact ? "" : `<p class="muted">${ph === 1 ? "First, finish the Unlock Your Week Workshop." : "Habits and Events unlock when you enroll."}</p>`}
-        ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
+        ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Open Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
       </div></div></div>`;
   }
 
