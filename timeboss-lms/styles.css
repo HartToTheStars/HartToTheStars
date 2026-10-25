@@ -559,6 +559,13 @@ body.modal-open { overflow: hidden; }
 .remind-row select { margin-top: 0; }
 .settings-form .row { margin-top: 18px; }
 
+/* Celebration preview */
+.preview-bar { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; max-width: 720px; margin: 0 auto 18px; }
+.preview-bar b { color: var(--heading); display: block; }
+.preview-bar .row { gap: 6px; }
+.preview-bar .btn.ghost.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.preview-link { font-size: 14px; font-weight: 600; color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
+
 #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 80px); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 100px; font-weight: 700; border-bottom: 3px solid var(--teal); transition: transform .25s, opacity .25s; opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100% - 32px); }
 #toast.show { transform: translate(-50%, 0); opacity: 1; }
 

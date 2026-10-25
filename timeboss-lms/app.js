@@ -834,8 +834,8 @@
   // tools
   let justSaved = null; // {tool, before}: shows the completion moment once, right after a meeting is saved
   const streakOf = (tool, id) => (tool === "weekly" ? wpmStreak(id) : drmStreak(id));
-  function celebrate(tool, before) {
-    const t = TOOLS[tool], id = me().id, n = streakOf(tool, id), grew = n > before;
+  function celebrate(tool, before, { preview = null } = {}) {
+    const t = TOOLS[tool], id = me().id, n = preview ?? streakOf(tool, id), grew = n > before;
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
     const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you."
       : tool === "weekly" ? "Your week is planned. Share it with someone and protect the blocks." : "Incomplete tasks have a home. Tomorrow's plan is reviewed. You can close the laptop.";
@@ -845,10 +845,23 @@
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
-      ${chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew })}
+      ${preview == null ? chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew }) : previewChain(tool, n)}
       <div class="row"><a class="btn accent" href="#/home">Back to home</a><a class="btn ghost" href="#/community">Share a win in Community</a></div>
     </section>`;
   }
+  // A full chain ending in the new pip, for previews
+  const previewChain = (tool, n) => { const len = tool === "weekly" ? 8 : 10; return `<div class="chain" aria-hidden="true">${Array.from({ length: len }, (_, i) => `<span class="pip ${i >= len - n ? "on" : ""} ${i === len - 1 ? "new" : ""}"></span>`).join("")}</div>`; };
+
+  // Preview the completion celebration without saving anything: #/preview/weekly, #/preview/daily, add /10 for a milestone
+  V.preview = (tool = "weekly", count) => {
+    if (!TOOLS[tool]) tool = "weekly";
+    const n = Math.max(1, Math.min(999, parseInt(count, 10) || (tool === "weekly" ? 4 : 7)));
+    const link = (t, c, label) => `<a class="btn ghost sm ${t === tool && (c ?? "") === (count ?? "") ? "on" : ""}" href="#/preview/${t}${c ? `/${c}` : ""}">${label}</a>`;
+    return `<div class="preview-bar card"><div><b>Celebration preview</b><small class="muted">Nothing is saved. This is what members see after finishing a meeting.</small></div>
+        <div class="row">${link("weekly", null, "Weekly Planning Meeting")}${link("daily", null, "Daily Review Meeting")}${link(tool, "10", "Milestone (10)")}${link(tool, "1", "Day one")}
+        <button class="btn sm" data-action="replay">Replay</button></div></div>
+      ${celebrate(tool, n - 1, { preview: n })}`;
+  };
   function toolView(tool, { sample = false } = {}) {
     if (justSaved?.tool === tool) { const html = celebrate(tool, justSaved.before); justSaved = null; return html; }
     const t = TOOLS[tool], dk = me().id + "|" + tool, draft = sample ? null : S.drafts[dk];
@@ -868,7 +881,7 @@
           ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
           <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           ${sample ? "" : socialProof(tool)}
-          <button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button></div>
+          <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the celebration</a></div></div>
           ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as markdown</button></details>`).join("")}` : ""}
         </div><aside class="side">${aiPanel}</aside></div>`;
     }
@@ -1042,6 +1055,7 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
+      replay: () => render(),
       "pm-toggle": () => { pmOpen = !pmOpen; render(); },
       "remove-photo": () => { delete me().photo; save(); render(); toast("Photo removed"); },
       // Production: Enroll goes to checkout (SEED.cohort.url) and marks the member enrolled on payment
