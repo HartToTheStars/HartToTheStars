@@ -417,7 +417,7 @@
         <div class="row"><a class="btn" href="#/tools/weekly">Run Weekly Planning Meeting</a><a class="btn ghost" href="#/cohort">View cohort</a></div>`;
     } else if (ph === 2) {
       body = `<h2>Enroll in the Master Your Week Cohort</h2><p>You finished the workshop. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}: ${c.weeks} weeks, live with a Time Boss coach, ${c.seatsLeft} seats left. Enrolling opens your habits: the Weekly Planning Meeting, the Daily Review Meeting, and live events.</p>
-        <div class="row"><button class="btn" data-action="enroll">Enroll in Cohort</button><a class="btn ghost" href="#/cohort">About the cohort</a></div>`;
+        <div class="row"><button class="btn" data-action="enroll">Enroll in Cohort</button><a class="btn ghost" href="#/cohort">About the Cohort</a></div>`;
     } else {
       const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
       const rsvpBtn = (e, label) => rsvpd(e.id) ? `<a class="btn ghost" href="#/events">✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}</a>` : `<button class="btn ghost" data-action="rsvp" data-id="${e.id}">${label}</button>`;
@@ -581,7 +581,6 @@
 
   V.home = () => {
     const u = me(), op = overallProgress(u.id), p = promptFor(), ms = monthStats(u.id);
-    const upcoming = allEvents().filter((e) => rsvpd(e.id)).sort((a, b) => a.start - b.start).slice(0, 3);
     return `
       <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}</h1>
 </div></header>
@@ -603,15 +602,24 @@
           <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
           <a class="btn accent sm" href="#/community">Answer in Community</a>
         </div>
-        <div class="card">
-          ${cardHead("events", "Upcoming Events", "#/events")}
-          <h3>On your calendar</h3>
-          ${!hasHabits(u) ? `<p class="muted">You unlock live events when you join the Master Your Week group coaching cohort. Office hours with a coach are open now.</p>` : upcoming.length ? `<ul class="list">${upcoming.map((e) => `<li><b>${esc(e.title)}</b><small>${fmtDate(e.start)} · ${fmtTime(e.start)}</small></li>`).join("")}</ul>`
-            : `<p class="muted">Nothing booked yet.</p>`}
-          <div class="row">${hasHabits(u) ? `<a class="btn ghost sm" href="#/events">See events</a>` : ""}<a class="btn ghost sm" href="#/office-hours">Book office hours</a></div>
+        <div class="card office-card">
+          ${cardHead("office", "Office Hours", "#/office-hours")}
+          <h3>15 minutes with a Time Boss coach</h3>
+          <p class="muted">Bring one specific question. Open in every phase.</p>
+          <a class="btn ghost sm" href="#/office-hours">Book office hours</a>
         </div>
-      </div>`;
+      </div>
+      ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "You unlock live events when you join the Master Your Week group coaching cohort", "events-lock", { compact: true })}`;
   };
+  // Home: the next live events with RSVP right there
+  function eventsCard({ sample = false } = {}) {
+    const list = allEvents().sort((a, b) => a.start - b.start).slice(0, 3);
+    const row = (e) => `<li class="ev-row"><span class="date-chip sm"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></span>
+      <div class="ev-main"><b>${esc(e.title)}</b><small>${fmtDate(e.start, { weekday: "short" })} · ${fmtTime(e.start)} · ${e.mins} min</small></div>
+      ${!sample && rsvpd(e.id) ? `<a class="btn ghost sm" href="#/events">✓ Going</a>` : `<button class="btn sm" ${sample ? "" : `data-action="rsvp" data-id="${e.id}"`}>RSVP</button>`}</li>`;
+    return `<div class="card events-card">${cardHead("events", "Upcoming Events", "#/events")}<ul class="ev-list">${list.map(row).join("")}</ul>
+      <a class="link-all" href="#/events">See all events</a></div>`;
+  }
 
   // community: pinned daily prompt, then the feed
   let freshReply = 0; // ts of the reply just posted, so it can animate in once
