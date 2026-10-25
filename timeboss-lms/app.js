@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v3"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v4"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -109,6 +109,15 @@
       const c = SEED.companies.find((x) => x.id === u.companyId);
       return { ...u, mywDone: u.phase === 3, mywEnrolled: u.phase === 3 || !!u.enrolled, email: u.email || `${u.name.split(" ")[0].toLowerCase()}@${c ? c.domain : "timeboss.us"}` };
     });
+    // Community fill: members at other companies, mostly past the cohort, so community-wide counts look real
+    const F = SEED.communityFill, fr = rng(4242);
+    F.companies.forEach((c) => {
+      for (let i = 0; i < F.perCompany; i++) {
+        const first = pick(fr, F.firstNames), last = pick(fr, F.lastNames), phase = fr() < 0.8 ? 3 : 2;
+        users.push({ id: `u_${c.id}${i}`, name: `${first} ${last}`, title: pick(fr, F.titles), companyId: c.id, role: "member", phase, enrolled: phase === 2, habit: 0.5 + fr() * 0.45,
+          mywDone: phase === 3, mywEnrolled: true, fill: true, email: `${first.toLowerCase()}@${c.domain}` });
+      }
+    });
     const members = users.filter((u) => u.role !== "coach");
     const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };
 
@@ -120,18 +129,23 @@
       const r = rng(uidKey(u.id)), base = u.habit ?? 0.35 + r() * 0.6;
       const weeksBack = u.phase === 3 ? 10 : SEED.cohort.currentWeek - 1;
       let prev = true;
-      for (let i = u.phase === 3 ? 60 : weeksBack * 7 + 5; i >= 1; i--) {
+      const drmHour = 14 + Math.floor(r() * 4); // each person has a usual end-of-day time
+      for (let i = u.phase === 3 ? 60 : weeksBack * 7 + 5; i >= 0; i--) {
         const d = startOfDay(now - i * DAY);
         if (!isWorkday(d)) continue;
         prev = r() < (prev ? Math.min(0.96, base + 0.05) : Math.max(0.15, base - 0.15));
-        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "daily", ts: at(d, 16, 30 + Math.floor(r() * 40)), answers: answersFor("daily", r) });
+        const ts = at(d, drmHour, Math.floor(r() * 60));
+        if (prev && ts < now) toolRuns.push({ id: uid(), userId: u.id, tool: "daily", ts, answers: answersFor("daily", r) });
       }
+      // Each person plans at a habitual time: Friday afternoon, Saturday morning, Sunday evening, or Monday early
+      const slot = pick(r, [[-3, 15], [-2, 9], [-1, 17], [0, 7]]);
       prev = true;
-      for (let w = weeksBack; w >= 0; w--) {
-        const sun = mondayOf(now - w * 7 * DAY);
-        sun.setDate(sun.getDate() - 1);
+      for (let k = weeksBack; k >= -1; k--) {
+        const target = mondayOf(now); target.setDate(target.getDate() - 7 * k + slot[0]);
+        const ts = at(target, slot[1], Math.floor(r() * 50));
+        if (ts > now) continue;
         prev = r() < (prev ? Math.min(0.94, base + 0.02) : Math.max(0.2, base - 0.2));
-        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "weekly", ts: at(sun, 17, Math.floor(r() * 50)), answers: answersFor("weekly", r) });
+        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "weekly", ts, answers: answersFor("weekly", r) });
       }
     });
 
@@ -155,7 +169,7 @@
 
     return {
       sessionUserId: null,
-      companies: SEED.companies.slice(),
+      companies: [...SEED.companies, ...SEED.communityFill.companies],
       users,
       posts: SEED.posts.map((p) => ({ id: p.id, authorId: p.authorId, body: p.body, ts: now - p.h * 3600e3, likes: likers(p.likes, uidKey(p.id), p.authorId),
         comments: p.comments.map((c) => ({ authorId: c.a, body: c.b, ts: now - c.h * 3600e3 })) })),
@@ -175,12 +189,16 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 
   const me = () => S.users.find((u) => u.id === S.sessionUserId);
+  const DEFAULT_SETTINGS = { private: false, remindWeekly: true, weeklyWhen: "Sunday 5:00 PM", remindDaily: true, dailyWhen: "4:30 PM" };
+  const settingsOf = (u) => ({ ...DEFAULT_SETTINGS, private: !!u.private, ...(u.settings || {}) });
+  // Private members' habits and streaks are visible only to themselves, their team leaders, and coaches
+  const visibleTo = (u) => !settingsOf(u).private || u.id === me().id || isCoach() || (me().role === "admin" && me().companyId === u.companyId);
   const user = (id) => S.users.find((u) => u.id === id) || { name: "Unknown", id };
   const company = (id) => S.companies.find((c) => c.id === id);
   const isCoach = (u = me()) => u && u.role === "coach";
   const teamOf = (cid) => S.users.filter((u) => u.companyId === cid);
   // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
-  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.role === "coach" || !u.companyId ? "" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}">${esc(initials(u.name))}</span>`;
+  const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -213,6 +231,7 @@
   function statusChips(u, { dark = false } = {}) {
     if (u.role === "coach" || !u.companyId) return "";
     const ph = phaseOf(u), on = hasHabits(u);
+    if (on && !visibleTo(u)) return `<span class="chips ${dark ? "dark" : ""}"><span class="chip phase p${ph}" title="Phase ${ph}: ${esc(phaseLabel(u))}">${ph}</span><span class="chip locked" title="Activity is private">${icon("lock", "ic chip-ic")} Private</span></span>`;
     const streak = (ic, n, label) => `<span class="chip ${on ? "" : "locked"}" title="${label}${on ? `: ${n} in a row` : ": starts in Master Your Week"}">${icon(ic, "ic chip-ic")}${on ? n : icon("lock", "ic chip-ic")}</span>`;
     return `<span class="chips ${dark ? "dark" : ""}"><span class="chip phase p${ph}" title="Phase ${ph}: ${esc(phaseLabel(u))}">${ph}</span>${streak("weekly", wpmStreak(u.id), "Weekly Planning Meeting streak")}${streak("daily", drmStreak(u.id), "Daily Review Meeting streak")}</span>`;
   }
@@ -403,6 +422,58 @@
       <div class="footer-social">${Object.entries(SOCIAL).map(([n, [href, path]]) => `<a href="${href}" aria-label="${n}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></a>`).join("")}</div>
     </footer>`;
 
+  // ---------- who ran it (social proof) ----------
+  // Daily Review Meeting counts today once anyone has run it, otherwise the last workday
+  function drmDay() {
+    const t = startOfDay(Date.now());
+    if (isWorkday(t) && S.toolRuns.some((r) => r.tool === "daily" && dateKey(new Date(r.ts)) === dateKey(t))) return t;
+    return prevWorkday(t);
+  }
+  function periodLabel(tool) {
+    if (tool === "weekly") return plannedWeek(Date.now()) === dateKey(mondayOf(Date.now())) ? "this week" : "for next week";
+    const d = drmDay(), today = startOfDay(Date.now()), yest = startOfDay(Date.now() - DAY);
+    return dateKey(d) === dateKey(today) ? "today" : dateKey(d) === dateKey(yest) ? "yesterday" : `on ${d.toLocaleDateString("en-US", { weekday: "long" })}`;
+  }
+  // Everyone who ran the meeting in the current period, newest first
+  function ranList(tool) {
+    const wk = plannedWeek(Date.now()), day = dateKey(drmDay()), latest = {};
+    S.toolRuns.forEach((r) => {
+      if (r.tool !== tool || (tool === "weekly" ? plannedWeek(r.ts) !== wk : dateKey(new Date(r.ts)) !== day)) return;
+      if (!latest[r.userId] || latest[r.userId] < r.ts) latest[r.userId] = r.ts;
+    });
+    return Object.entries(latest).map(([id, ts]) => ({ u: user(id), ts })).filter((x) => x.u.companyId && visibleTo(x.u)).sort((a, b) => b.ts - a.ts);
+  }
+  // Lead with your own team when at least three teammates ran it; otherwise the whole community
+  function proofScope(tool) {
+    const all = ranList(tool), u = me(), others = all.filter((x) => x.u.id !== u.id);
+    const team = u.companyId ? others.filter((x) => x.u.companyId === u.companyId) : [];
+    const useTeam = team.length >= 3;
+    return { all, others, team, list: useTeam ? team : others, where: useTeam ? `at ${company(u.companyId).name}` : "in the community", scope: useTeam ? "team" : "all", iRan: all.some((x) => x.u.id === u.id) };
+  }
+  const avatarStack = (list, n = 5) => `<span class="stack">${list.slice(0, n).map((x) => avatar(x.u, "sm")).join("")}${list.length > n ? `<span class="stack-more">+${list.length - n}</span>` : ""}</span>`;
+  function socialProof(tool, { compact = false } = {}) {
+    const p = proofScope(tool), n = p.list.length;
+    if (!n) return "";
+    const period = periodLabel(tool), planned = period === "for next week" ? "next week" : "this week";
+    const did = tool === "weekly" ? `already planned ${planned}` : `already run their Daily Review Meeting ${period}`;
+    const text = p.iRan ? (tool === "weekly" ? `You and ${n} other${n === 1 ? "" : "s"} ${p.where} have planned ${planned}.` : `You and ${n} other${n === 1 ? "" : "s"} ${p.where} ran it ${period}.`)
+      : `Join ${n} Time Boss${n === 1 ? "" : "es"} ${p.where} who've ${compact && tool === "daily" ? `run theirs ${period}` : did}.`;
+    return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)}</span>
+      <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View all</button></div>`;
+  }
+  let ranModal = null; // {tool, scope}
+  function ranModalView() {
+    if (!ranModal) return "";
+    const { tool } = ranModal, p = proofScope(tool), u = me(), scope = u.companyId ? ranModal.scope : "all";
+    const list = scope === "team" ? p.all.filter((x) => x.u.companyId === u.companyId) : p.all;
+    return `<div class="modal-backdrop" data-action="close-modal"></div>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ran-title">
+        <div class="modal-head"><h2 id="ran-title">Ran their ${TOOLS[tool].title} ${periodLabel(tool)}</h2><button class="ghost sm" data-action="close-modal" aria-label="Close">Close</button></div>
+        ${u.companyId ? `<div class="seg"><button class="${scope === "team" ? "on" : ""}" data-action="ran-scope" data-id="team">${esc(company(u.companyId).name)} (${p.all.filter((x) => x.u.companyId === u.companyId).length})</button><button class="${scope === "all" ? "on" : ""}" data-action="ran-scope" data-id="all">Everyone (${p.all.length})</button></div>` : ""}
+        <ul class="ran-list">${list.map((x) => `<li>${avatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)} · ${esc(company(x.u.companyId).name)} · ${ago(x.ts)}</small>${statusChips(x.u)}</div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
+      </div>`;
+  }
+
   // ---------- locked previews ----------
   // Example habit data shown behind the lock so members can see what they're working toward
   const SAMPLE = { weekly: { n: 6, len: 8, on: [0, 0, 1, 1, 1, 1, 1, 1] }, daily: { n: 12, len: 10, on: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1] } };
@@ -413,13 +484,15 @@
       <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}</div>`;
   };
   // Real-looking preview, dimmed and inert, with the lock message on top
-  function lockedOver(preview, title, cls = "", { compact = false } = {}) {
+  function lockedOver(preview, title, cls = "", { compact = false, proofTool = null } = {}) {
+    const ran = proofTool ? ranList(proofTool) : [];
     const nx = nextLessonIn(me(), [courseById(WORKSHOP)]), ph = phaseOf();
     return `<div class="locked-wrap ${cls}">
       <div class="locked-preview" aria-hidden="true" inert>${preview}</div>
       <div class="locked-overlay"><div class="locked-msg" role="note">
         <span class="locked-badge">${icon("lock", "ic lock")} Example</span>
         <h2>${esc(title)}</h2>
+        ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} people in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
         ${compact ? "" : `<p class="muted">Your Weekly Planning Meeting, Daily Review Meeting, habit streaks, and live events open when you enroll in Master Your Week, the Group Coaching Cohort.${ph === 1 ? " Finish the Unlock Your Week Workshop first." : ""}</p>`}
         ${ph === 1 && nx ? `<a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a>` : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
       </div></div></div>`;
@@ -446,7 +519,7 @@
             <input name="name" placeholder="Your name" required>
             <input name="email" type="email" placeholder="Work email" required>
             <input name="title" placeholder="Your title">
-            <select name="companyId">${S.companies.map((c) => `<option value="${c.id}">${esc(c.name)} (code: ${c.id.toUpperCase()})</option>`).join("")}<option value="__new">+ New company</option></select>
+            <select name="companyId">${S.companies.filter((c) => !c.background).map((c) => `<option value="${c.id}">${esc(c.name)} (code: ${c.id.toUpperCase()})</option>`).join("")}<option value="__new">+ New company</option></select>
             <input name="newCompany" placeholder="New company name (if creating)">
             <button class="btn">Join</button>
           </form></details>
@@ -479,6 +552,7 @@
       <span class="habits-name">${t.title}</span>
       <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
       ${chain(tool, id, tool === "weekly" ? 8 : 10)}
+      ${socialProof(tool, { compact: true })}
       <div class="habits-foot">
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
@@ -577,7 +651,7 @@
   const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
   function leaderboard(cid) {
-    const ms = teamOf(cid).filter((m) => hasHabits(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
+    const ms = teamOf(cid).filter((m) => hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
     const other = lbSort === "drm" ? "wpm" : "drm";
     ms.sort((a, b) => b[lbSort] - a[lbSort] || b[other] - a[other] || a.m.name.localeCompare(b.m.name));
     const link = canManage(cid);
@@ -672,7 +746,7 @@
     if (mid) return memberView(mid);
     if (cid && company(cid)) return teamView(cid);
     return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across teams.</p></div></header>
-      <div class="grid three">${S.companies.map((c) => {
+      <div class="grid three">${S.companies.filter((c) => !c.background).map((c) => {
         const ms = teamOf(c.id), avg = Math.round(avgOf(ms, (m) => monthStats(m.id).all));
         return `<a class="card company-tile" href="#/companies/${c.id}" style="border-top:4px solid ${c.color}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "member", "members")}</p>${bar(avg)}<small>${avg}% past month Weekly Planning Meeting and Daily Review Meeting completion</small></a>`;
       }).join("")}</div>`;
@@ -792,6 +866,7 @@
           <div class="card tool-intro"><div><b>Current streak: ${plural(streakN, tool === "weekly" ? "week" : "workday", tool === "weekly" ? "weeks" : "workdays")}</b></div>${sample ? sampleChain(tool, true) : chain(tool, me().id, tool === "weekly" ? 8 : 10, { light: true })}</div>
           ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
           <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
+          ${sample ? "" : socialProof(tool)}
           <button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button></div>
           ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as markdown</button></details>`).join("")}` : ""}
         </div><aside class="side">${aiPanel}</aside></div>`;
@@ -819,7 +894,7 @@
       </div><aside class="side">${aiPanel}</aside></div>`;
   }
   V.tools = (tool) => (!TOOLS[tool] ? notFound() : hasHabits() ? toolView(tool)
-    : lockedOver(toolView(tool, { sample: true }), `Your ${TOOLS[tool].title} opens when you join Master Your Week`, "page"));
+    : lockedOver(toolView(tool, { sample: true }), `Your ${TOOLS[tool].title} opens when you join Master Your Week`, "page", { proofTool: tool }));
 
   V.cohort = () => {
     const c = SEED.cohort;
@@ -838,6 +913,58 @@
 
   const notFound = () => `<div class="card"><h2>Not found</h2><a href="#/home">Go home</a></div>`;
 
+  // ---------- profile menu (top right) ----------
+  let pmOpen = false;
+  function profileMenu() {
+    const u = me();
+    return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${avatar(u)}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      ${pmOpen ? `<div class="pm-menu" role="menu"><div class="pm-who">${avatar(u)}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
+        <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch user</button></div>` : ""}</div>`;
+  }
+
+  V.profile = () => {
+    const u = me(), c = company(u.companyId);
+    return `<header class="page-head"><div><h1>Profile</h1><p class="muted">How you appear to your team and the community.</p></div></header>
+      <form class="card profile-form" data-form="profile">
+        <div class="photo-row">${avatar(u, "xl")}<div class="stack">
+          <label class="btn ghost sm file-btn">Upload photo<input type="file" name="photoFile" accept="image/*" data-action-change="photo"></label>
+          ${u.photo ? `<button type="button" class="link" data-action="remove-photo">Remove photo</button>` : `<small class="muted">JPG or PNG. Square photos look best.</small>`}</div></div>
+        <label>Name<input name="name" value="${esc(u.name)}" required></label>
+        <label>Role<input name="title" value="${esc(u.title)}" placeholder="e.g. VP Operations"></label>
+        <p class="muted sm">${c ? `${esc(c.name)} · ` : ""}${esc(u.email)}${u.role !== "member" ? ` · ${esc(u.role)}` : ""}${u.companyId ? ` · Phase ${phaseOf(u)}: ${esc(phaseLabel(u))}` : ""}</p>
+        <div class="row"><button class="btn">Save profile</button></div>
+      </form>`;
+  };
+  V.settings = () => {
+    const u = me(), st = settingsOf(u), habitsOn = hasHabits(u) || isCoach();
+    const opt = (list, v) => list.map((x) => `<option ${x === v ? "selected" : ""}>${x}</option>`).join("");
+    return `<header class="page-head"><div><h1>Settings</h1><p class="muted">Your activity and email reminders.</p></div></header>
+      <form class="card settings-form" data-form="settings">
+        <h3>Activity</h3>
+        <label class="check-row"><input type="radio" name="visibility" value="public" ${st.private ? "" : "checked"}><span><b>Public</b><small>Your streaks and meeting completions show on the leaderboard, in who-ran-it lists, and under your profile.</small></span></label>
+        <label class="check-row"><input type="radio" name="visibility" value="private" ${st.private ? "checked" : ""}><span><b>Private</b><small>Only you, your team leaders, and Time Boss coaches see your streaks and meetings. Your posts stay visible.</small></span></label>
+        <h3 class="settings-gap">Email reminders</h3>
+        <p class="muted sm">Sent to ${esc(u.email)}.${habitsOn ? "" : " Reminders start when you enroll in Master Your Week."}</p>
+        <div class="remind-row"><label class="check-row"><input type="checkbox" name="remindWeekly" value="1" ${st.remindWeekly ? "checked" : ""}><span><b>Weekly Planning Meeting</b><small>A reminder to plan before your work week starts.</small></span></label>
+          <select name="weeklyWhen" aria-label="Weekly Planning Meeting reminder time">${opt(["Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}</select></div>
+        <div class="remind-row"><label class="check-row"><input type="checkbox" name="remindDaily" value="1" ${st.remindDaily ? "checked" : ""}><span><b>Daily Review Meeting</b><small>A reminder at the end of each workday, Monday to Friday.</small></span></label>
+          <select name="dailyWhen" aria-label="Daily Review Meeting reminder time">${opt(["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}</select></div>
+        <div class="row"><button class="btn">Save settings</button></div>
+      </form>`;
+  };
+  // Shrink an uploaded photo to a small square so it fits in local storage
+  function loadPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const n = 160, cv = Object.assign(document.createElement("canvas"), { width: n, height: n }), side = Math.min(img.width, img.height);
+        cv.getContext("2d").drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, n, n);
+        URL.revokeObjectURL(url); resolve(cv.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = reject; img.src = url;
+    });
+  }
+
   // ---------- router ----------
   function render() {
     const root = document.getElementById("app");
@@ -845,8 +972,9 @@
     let [, view, a, b] = location.hash.split("/");
     if (!view || !V[view]) { location.hash = "#/home"; return; }
     root.className = "";
-    root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a></div>
-      <aside class="sidebar">${nav()}</aside><div class="content"><main id="main">${V[view](a, b)}</main>${footer()}</div>`;
+    root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a>${profileMenu()}</div>
+      <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top">${profileMenu()}</div><main id="main">${V[view](a, b)}</main>${footer()}</div>${ranModalView()}`;
+    document.body.classList.toggle("modal-open", !!ranModal);
     tickTimer();
     countUp();
   }
@@ -876,7 +1004,8 @@
     host.appendChild(box);
     setTimeout(() => box.remove(), 3200);
   }
-  window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { ranModal = null; pmOpen = false; render(); window.scrollTo(0, 0); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ranModal) { ranModal = null; render(); } });
 
   let timerInt;
   function tickTimer() {
@@ -904,11 +1033,16 @@
     const { action, id, tool } = el.dataset;
     const A = {
       login: () => { S.sessionUserId = id; save(); location.hash = "#/home"; render(); },
-      logout: () => { S.sessionUserId = null; document.body.classList.remove("menu-open"); save(); render(); },
+      logout: () => { pmOpen = false; S.sessionUserId = null; document.body.classList.remove("menu-open"); save(); render(); },
       reset: () => { if (confirm("Reset all demo data?")) { S = freshState(); save(); render(); } },
       menu: () => document.body.classList.toggle("menu-open"),
       like: () => { const p = S.posts.find((x) => x.id === id), i = p.likes.indexOf(me().id); i < 0 ? p.likes.push(me().id) : p.likes.splice(i, 1); save(); render(); },
       "lb-sort": () => { lbSort = id; render(); },
+      "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
+      "ran-scope": () => { ranModal.scope = id; render(); },
+      "close-modal": () => { ranModal = null; render(); },
+      "pm-toggle": () => { pmOpen = !pmOpen; render(); },
+      "remove-photo": () => { delete me().photo; save(); render(); toast("Photo removed"); },
       // Production: Enroll goes to checkout (SEED.cohort.url) and marks the member enrolled on payment
       enroll: () => { me().mywEnrolled = true; save(); location.hash = "#/home"; render(); toast("You're enrolled in Master Your Week. Your habits and live events are open."); },
       "complete-cohort": () => { me().mywDone = true; me().mywEnrolled = true; save(); location.hash = "#/home"; render(); toast("Master Your Week complete. Maximize Your Week is unlocked."); },
@@ -942,6 +1076,17 @@
     if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim(), likes: [], comments: [] });
     if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim() });
     if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim() }); }
+    if (kind === "profile") {
+      const u = me();
+      u.name = v.name.trim() || u.name; u.title = v.title.trim();
+      toast("Profile saved");
+    }
+    if (kind === "settings") {
+      const u = me();
+      u.settings = { private: v.visibility === "private", remindWeekly: !!v.remindWeekly, weeklyWhen: v.weeklyWhen, remindDaily: !!v.remindDaily, dailyWhen: v.dailyWhen };
+      // Production: these drive the reminder emails and who can see this member's activity
+      toast("Settings saved");
+    }
     if (kind === "join") {
       let cid = v.companyId;
       if (cid === "__new") {
@@ -966,6 +1111,14 @@
     save(); render();
   });
 
+  // Photo upload on the Profile page
+  document.addEventListener("change", async (e) => {
+    if (e.target.dataset.actionChange !== "photo" || !e.target.files[0]) return;
+    try { me().photo = await loadPhoto(e.target.files[0]); save(); render(); toast("Photo updated"); } catch { toast("That file isn't an image we can read. Try a JPG or PNG."); }
+  });
+  // Close the profile menu on a click outside it
+  document.addEventListener("click", (e) => { if (pmOpen && !e.target.closest(".pm")) { pmOpen = false; render(); } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && pmOpen) { pmOpen = false; render(); } });
   // Close the mobile tray on navigation or a tap outside it
   document.addEventListener("click", (e) => {
     if (e.target.closest(".sidebar a") || (document.body.classList.contains("menu-open") && !e.target.closest(".sidebar, .menu-btn"))) document.body.classList.remove("menu-open");

@@ -28,9 +28,15 @@ Home shows the member's phase and the next step. Demo users at each step: Sam Ok
 
 Both meetings follow the Time Boss "Checklist for Your Week" (Reflect, Decide, Commit).
 
+## Community features
+
+- **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View all. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
+- **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; email reminders for the Weekly Planning Meeting and Daily Review Meeting with a time for each). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
+
 ## Notes for the production build
 
 - **RSVP sends a calendar invite.** When a member RSVPs to an event, email them a calendar invite (.ics attachment or Google/Microsoft calendar API) at their account email, and withdraw it when they cancel. The prototype shows a toast and offers an .ics download.
 - **Office hours** are booked through the Calendly inline embed in `data.js` (`officeHours.calendlyUrl`), prefilled with the member's name and email. Calendly sends its own confirmation and invite.
 - **Team detail** (roster, per-member drill-in) is visible to company admins (team leaders) and Time Boss coaches only. The streak leaderboard is visible to everyone on the team.
+- **Reminder emails** follow each member's Settings (on/off and time). The prototype stores the choice only.
 - Posts live only in the Community. Company spaces show habits, the leaderboard, and team progress, not a feed.

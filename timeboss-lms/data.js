@@ -16,7 +16,7 @@ window.TB_SEED = {
 
     { id: "u_maria", name: "Maria Chen", title: "VP Operations", companyId: "acme", role: "admin", phase: 3, habit: 0.93 },
     { id: "u_victor", name: "Victor Hughes", title: "CEO", companyId: "acme", role: "admin", phase: 3, habit: 0.78 },
-    { id: "u_patrick", name: "Patrick Doyle", title: "CFO", companyId: "acme", role: "member", phase: 3, habit: 0.7 },
+    { id: "u_patrick", name: "Patrick Doyle", title: "CFO", companyId: "acme", role: "member", phase: 3, habit: 0.7, private: true },
     { id: "u_dev", name: "Dev Patel", title: "Dispatch Manager", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.88 },
     { id: "u_sam", name: "Sam Okafor", title: "Account Lead", companyId: "acme", role: "member", phase: 1, habit: 0.45 },
     { id: "u_priya", name: "Priya Raman", title: "Director of Finance", companyId: "acme", role: "member", phase: 3, habit: 0.96 },
@@ -48,6 +48,21 @@ window.TB_SEED = {
   ],
 
   coaches: ["u_andrew", "u_coach2"],
+
+  // Extra community members at other companies so community-wide counts ("67 Time Bosses ran theirs") look real.
+  // They post nothing and don't appear on the login screen.
+  communityFill: {
+    perCompany: 16,
+    companies: [
+      { id: "summit", name: "Summit Partners", color: "#5a6f8f", seats: 20, domain: "summitpartners.com", background: true },
+      { id: "harbor", name: "Harbor Health Group", color: "#3f7f6a", seats: 20, domain: "harborhealth.org", background: true },
+      { id: "pinecrest", name: "Pinecrest Builders", color: "#8a6a4a", seats: 20, domain: "pinecrest.build", background: true },
+      { id: "lumen", name: "Lumen Advisory", color: "#6b5b8a", seats: 20, domain: "lumenadvisory.com", background: true },
+    ],
+    firstNames: ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn", "Jamie", "Drew", "Reese", "Parker", "Elena", "Marco", "Aaliyah", "Noah", "Hana", "Omari", "Lucia", "Theo", "Ines", "Kofi", "Maya", "Felix", "Rosa", "Arjun", "Nadia", "Simon", "Yara", "Ethan", "Leila", "Mateo"],
+    lastNames: ["Brennan", "Castillo", "Duarte", "Ellison", "Faraday", "Garza", "Holloway", "Ibarra", "Jensen", "Kowalski", "Lindqvist", "Mendez", "Novak", "Okoro", "Petrov", "Quintero", "Reyes", "Sorensen", "Tanaka", "Underwood", "Vance", "Whitaker", "Yilmaz", "Zamora"],
+    titles: ["Operations Manager", "Director", "Project Lead", "Account Manager", "Controller", "Team Lead", "Program Manager", "VP Sales", "Office Manager", "Engineering Manager", "Practice Lead", "Partner"],
+  },
 
   // Office hours booking (Calendly inline embed)
   officeHours: { calendlyUrl: "https://calendly.com/d/d3mx-5nj-rrw/time-boss-micro-office-hours", mins: 15 },
