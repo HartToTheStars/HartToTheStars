@@ -342,18 +342,18 @@
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
     if (ph === 1) {
       const p = courseProgress(u.id, courseById(WORKSHOP)), nx = nextLessonIn(u, [courseById(WORKSHOP)]);
-      return `<div class="myw"><span class="myw-when">Step 1 of 3 · ${p.n} of ${p.total} lessons done</span>
+      return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 1 of 3 · ${p.n} of ${p.total} lessons done</span>
         <h3>Unlock Your Week Workshop</h3><p>Finish the workshop to unlock the Master Your Week Cohort.</p>
         <a class="btn accent sm" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a></div>`;
     }
-    if (ph === 2 && enrolled(u)) return `<div class="myw"><span class="myw-when">Step 2 of 3 · week ${c.currentWeek} of ${c.weeks}</span>
+    if (ph === 2 && enrolled(u)) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · week ${c.currentWeek} of ${c.weeks}</span>
       <h3>You're in ${esc(c.name)}</h3><p>Group Coaching Cohort. Keep your Weekly Planning Meeting and Daily Review Meeting going between sessions.</p>
       <a class="btn accent sm" href="#/cohort">View cohort</a></div>`;
-    if (ph === 2) return `<div class="myw"><span class="myw-when">Step 2 of 3 · next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
+    if (ph === 2) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
       <h3>${esc(c.name)} Cohort</h3><p>${c.weeks} weeks, live with a Time Boss coach. ${c.seatsLeft} seats left.</p>
       <button class="btn accent sm" data-action="enroll">Enroll in Cohort</button></div>`;
     const mc = masterclassEvents()[0], going = rsvpd(mc.id);
-    return `<div class="myw"><span class="myw-when">Next masterclass · ${fmtDate(mc.start, { weekday: "short", month: "short", day: "numeric" })}</span>
+    return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Next masterclass · ${fmtDate(mc.start, { weekday: "short", month: "short", day: "numeric" })}</span>
       <h3>${esc(mc.title.replace("Masterclass: ", ""))}</h3><p>${esc(mc.desc)}</p>
       ${going ? `<a class="btn accent sm" href="#/events">✓ You're going</a>` : `<button class="btn accent sm" data-action="rsvp" data-id="${mc.id}">RSVP for Masterclass</button>`}</div>`;
   }
