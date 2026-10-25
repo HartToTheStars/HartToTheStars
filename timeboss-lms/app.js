@@ -707,7 +707,7 @@
     return `
       <div class="feed-wrap"><div>
         ${pinnedPrompt()}
-        ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, a question, or what's working...", button: "Post", cls: "card post-box" })}
+        ${composeBox({ form: "post", rows: 2, max: 3000, placeholder: "Share a win, ask a question, or say what's working...", button: "Post", cls: "card post-box" })}
         ${posts.map((p) => postCard(p)).join("")}
       </div>
       <aside class="side">${mywCta()}
