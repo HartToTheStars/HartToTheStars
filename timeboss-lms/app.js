@@ -603,7 +603,7 @@
   V.home = () => {
     const u = me(), op = overallProgress(u.id), p = promptFor(), ms = monthStats(u.id);
     return `
-      <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}</h1>
+      <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}.</h1>
 </div></header>
 
       ${phaseCard()}
