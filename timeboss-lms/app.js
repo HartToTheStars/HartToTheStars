@@ -380,7 +380,7 @@
         <div class="row">${nx ? `<a class="btn" href="#/learn/${nx.c.id}/${nx.l.id}">Watch Next Course</a>` : `<a class="btn" href="#/learn">Browse courses</a>`}
         ${rsvpBtn(mc, "RSVP for Next Masterclass")}${rsvpBtn(wp, "RSVP for Weekly Planning Meeting")}</div>`;
     }
-    return `<section class="card phase-card" aria-label="Your phase">${track}<div class="phase-body">${body}</div></section>`;
+    return `<section class="card phase-card" aria-label="Your phase">${track}<div class="phase-body myw"><span class="myw-head">Your Next Step</span>${body}</div></section>`;
   }
 
   const SOCIAL = {

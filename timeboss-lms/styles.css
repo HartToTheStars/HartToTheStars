@@ -276,6 +276,17 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .myw { background: var(--teal); color: #fff; border-radius: var(--radius); padding: 22px; margin-bottom: 18px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; }
 .myw::after { content: ""; position: absolute; right: -36px; bottom: -36px; width: 120px; height: 120px; border-radius: 50%; border: 18px solid rgba(255, 255, 255, .08); }
 .myw .myw-head { align-self: stretch; font-family: var(--font-head); font-size: 20px; font-weight: 700; color: #fff; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .2); position: relative; }
+/* The Home phase card's next step uses the same teal Your Next Step panel */
+.phase-card .myw { border-radius: 0; margin: 0; padding: 22px 26px 26px; }
+.phase-card .myw h2 { color: #fff; }
+.phase-card .myw p { color: rgba(255, 255, 255, .85); font-size: 15.5px; }
+.myw .btn:not(.accent):not(.ghost) { background: #fff; color: var(--navy); }
+.myw .btn:not(.accent):not(.ghost):hover { background: var(--teal-soft); }
+.myw .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .45); background: transparent; }
+.myw .btn.ghost:hover { background: rgba(255, 255, 255, .1); }
+.myw .bar { background: rgba(255, 255, 255, .25); align-self: stretch; }
+.myw .bar span { background: #fff; }
+.myw .row { position: relative; z-index: 1; }
 .sidebar .myw .myw-head { font-size: 17px; padding-bottom: 8px; margin-bottom: 10px; }
 .myw .myw-when { color: rgba(255, 255, 255, .78); font-size: 13px; font-weight: 600; }
 .myw h3 { color: #fff; font-size: 24px; margin: 2px 0 4px; }
