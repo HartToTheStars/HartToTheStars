@@ -458,7 +458,7 @@
     const track = `<ol class="phase-track" role="list">${PHASES.map((p) => `<li class="${p.n < ph ? "done" : p.n === ph ? "current" : "ahead"} ${p.n === sel ? "selected" : ""} ${p.n > sel ? "below" : ""}"><button class="phase-btn" data-action="phase" data-id="${p.n}" aria-pressed="${p.n === sel}"><span class="phase-n">${p.n < ph ? "✓" : p.n}</span><span class="phase-name"><b>${p.name}</b><small>${p.sub}</small></span>${p.n === ph ? `<span class="sr-only">(you are here)</span>` : ""}</button></li>`).join("")}</ol>`;
     const n = phaseInfo(sel, u);
     const body = `<h2>${n.h}</h2><p>${n.p}</p>${n.extra || ""}<div class="row">${n.btns.map((x, i) => stepBtn(x, i ? "ghost" : "")).join("")}</div>`;
-    return `<section class="card phase-card" aria-label="Your phases"><div class="phase-title">${icon("learn")}<span>Phases</span></div>${track}<div class="phase-body myw"><span class="myw-head">${n.head}</span>${body}</div></section>`;
+    return `<section class="card phase-card" aria-label="Your courses"><div class="phase-title">${icon("learn")}<span>Courses</span></div>${track}<div class="phase-body myw"><span class="myw-head">${n.head}</span>${body}</div></section>`;
   }
 
   const SOCIAL = {
