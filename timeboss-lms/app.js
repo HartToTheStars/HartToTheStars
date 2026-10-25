@@ -994,16 +994,19 @@
     return `<div class="card team-activity">${cardHead("company", `Latest Activity at ${esc(c.name)}`)}
       ${items.length ? `<ul class="act-list">${items.slice(0, actLimit).map(row).join("")}</ul>${items.length > actLimit ? `<button class="btn ghost sm" data-action="more-activity">Show More Activity</button>` : ""}` : `<p class="muted">No activity in the last two weeks.</p>`}</div>`;
   }
-  function teamView(cid) {
-    const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null;
+  // Team space: Activity for everyone; team leaders and coaches also get a Manage tab with the Team Members table
+  function teamView(cid, tab = "activity") {
+    const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null, manage = canManage(cid);
+    const base = isCoach() ? `#/companies/${cid}` : "#/company";
+    if (tab === "manage" && !manage) tab = "activity";
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
-      <div class="team-grid">
+      ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}</a></nav>` : ""}
+      ${tab === "manage" ? roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
         <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
-      </div>
-      ${canManage(cid) ? roster(cid) : ""}`;
+      </div>`}`;
   }
   function memberView(id) {
     const m = S.users.find((x) => x.id === id);
@@ -1034,9 +1037,10 @@
         </div>
       </div>`;
   }
-  V.company = (mid) => (!me().companyId ? V.companies() : mid ? memberView(mid) : teamView(me().companyId));
+  V.company = (mid) => (!me().companyId ? V.companies() : mid === "manage" ? teamView(me().companyId, "manage") : mid ? memberView(mid) : teamView(me().companyId));
   V.companies = (cid, mid) => {
     if (!isCoach()) return `<div class="card">Coaches only.</div>`;
+    if (mid === "manage" && company(cid)) return teamView(cid, "manage");
     if (mid) return memberView(mid);
     if (cid && company(cid)) return teamView(cid);
     return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across teams.</p></div></header>

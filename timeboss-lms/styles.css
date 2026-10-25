@@ -545,6 +545,11 @@ table.team td.t-name .avatar { flex: none; }
 .vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
 .avg-key { position: static; display: inline-block; vertical-align: middle; transform: none; margin-right: 4px; }
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
+/* Team space sub menu: Activity | Manage (company) */
+.subnav { display: flex; gap: 22px; margin: -6px 0 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.subnav a { padding: 10px 2px 12px; font-weight: 700; font-size: 15px; color: var(--muted); text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.subnav a.on { color: var(--heading); border-bottom-color: var(--teal); }
+@media (hover: hover) { .subnav a:not(.on):hover { color: var(--heading); } }
 .roster-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .roster-head h3 { margin: 0; }
 .roster-tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
