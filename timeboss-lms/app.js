@@ -402,14 +402,14 @@
     }
     if (ph === 2 && enrolled(u)) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · week ${c.currentWeek} of ${c.weeks}</span>
       <h3>You're in ${esc(c.name)}</h3><p>Group Coaching Cohort. Keep your Weekly Planning Meeting and Daily Review Meeting going between sessions.</p>
-      <a class="btn accent sm" href="#/cohort">View cohort</a></div>`;
+      <a class="btn accent sm" href="#/cohort">View Cohort</a></div>`;
     if (ph === 2) return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Step 2 of 3 · next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}</span>
       <h3>${esc(c.name)} Cohort</h3><p>${c.weeks} weeks, live with a Time Boss coach. ${c.seatsLeft} seats left.</p>
       <button class="btn accent sm" data-action="enroll">Enroll in Cohort</button></div>`;
     const mc = masterclassEvents()[0], going = rsvpd(mc.id);
     return `<div class="myw"><span class="myw-head">Your Next Step</span><span class="myw-when">Next masterclass · ${fmtDate(mc.start, { weekday: "short", month: "short", day: "numeric" })}</span>
       <h3>${esc(mc.title.replace("Masterclass: ", ""))}</h3><p>${esc(mc.desc)}</p>
-      ${going ? `<a class="btn accent sm" href="#/events">✓ You're going</a>` : `<button class="btn accent sm" data-action="rsvp" data-id="${mc.id}">RSVP for Masterclass</button>`}</div>`;
+      ${going ? `<a class="btn accent sm" href="#/events">✓ You're Going</a>` : `<button class="btn accent sm" data-action="rsvp" data-id="${mc.id}">RSVP for Masterclass</button>`}</div>`;
   }
 
   // Home: where you are in the three phases, and the next step
@@ -423,7 +423,7 @@
         ${bar(p.pct)}<div class="row"><a class="btn" href="#/learn/${WORKSHOP}/${nx.l.id}">Complete Workshop</a></div>`;
     } else if (ph === 2 && enrolled(u)) {
       body = `<h2>You're in the Master Your Week Cohort</h2><p>Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.</p>
-        <div class="row"><a class="btn" href="#/tools/weekly">Run Weekly Planning Meeting</a><a class="btn ghost" href="#/cohort">View cohort</a></div>`;
+        <div class="row"><a class="btn" href="#/tools/weekly">Run Weekly Planning Meeting</a><a class="btn ghost" href="#/cohort">View Cohort</a></div>`;
     } else if (ph === 2) {
       body = `<h2>Enroll in the Master Your Week Cohort</h2><p>You finished the workshop. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}: ${c.weeks} weeks, live with a Time Boss coach, ${c.seatsLeft} seats left. Enrolling opens your habits: the Weekly Planning Meeting, the Daily Review Meeting, and live events.</p>
         <div class="row"><button class="btn" data-action="enroll">Enroll in Cohort</button><a class="btn ghost" href="#/cohort">About the Cohort</a></div>`;
@@ -431,7 +431,7 @@
       const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
       const rsvpBtn = (e, label) => rsvpd(e.id) ? `<a class="btn ghost" href="#/events">✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}</a>` : `<button class="btn ghost" data-action="rsvp" data-id="${e.id}">${label}</button>`;
       body = `<h2>Maximize Your Week</h2><p>Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}</p>
-        <div class="row">${nx ? `<a class="btn" href="#/learn/${nx.c.id}/${nx.l.id}">Watch Next Course</a>` : `<a class="btn" href="#/learn">Browse courses</a>`}
+        <div class="row">${nx ? `<a class="btn" href="#/learn/${nx.c.id}/${nx.l.id}">Watch Next Course</a>` : `<a class="btn" href="#/learn">Browse Courses</a>`}
         ${rsvpBtn(mc, "RSVP for Next Masterclass")}${rsvpBtn(wp, "RSVP for Weekly Planning Meeting")}</div>`;
     }
     return `<section class="card phase-card" aria-label="Your phase">${track}<div class="phase-body myw"><span class="myw-head">Your Next Step</span>${body}</div></section>`;
@@ -485,7 +485,7 @@
     const did = tool === "weekly" ? `already planned ${planned}` : `already run their Daily Review Meeting ${period}`;
     const text = p.iRan ? (tool === "weekly" ? `You and ${n} other${n === 1 ? "" : "s"} ${p.where} have planned ${planned}.` : `You and ${n} other${n === 1 ? "" : "s"} ${p.where} ran it ${period}.`)
       : `Join ${n} Time Boss${n === 1 ? "" : "es"} ${p.where} who've ${compact && tool === "daily" ? `run theirs ${period}` : did}.`;
-    return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)} <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View all</button></span></div>`;
+    return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)} <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View All</button></span></div>`;
   }
   let ranModal = null; // {tool, scope}
   function ranModalView() {
@@ -549,7 +549,7 @@
             <input name="newCompany" placeholder="New company name (if creating)">
             <button class="btn">Join</button>
           </form></details>
-        <button class="link danger" data-action="reset">Reset demo data</button>
+        <button class="link danger" data-action="reset">Reset Demo Data</button>
       </div>
     </div>`;
 
@@ -583,7 +583,7 @@
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
           : tool === "daily" && !isWorkday(new Date()) ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Next one Monday, end of day</small>`
-          : `<a class="btn sm" href="#/tools/${tool}">Run now</a><small>${t.when}</small>`}
+          : `<a class="btn sm" href="#/tools/${tool}">Run Now</a><small>${t.when}</small>`}
       </div></div>`;
   }
 
@@ -614,8 +614,8 @@
         <div class="card office-card">
           ${cardHead("office", "Office Hours", "#/office-hours")}
           <h3>15 minutes with a Time Boss coach</h3>
-          <p class="muted">Bring one specific question. Open in every phase.</p>
-          <a class="btn ghost sm" href="#/office-hours">Book office hours</a>
+          <p class="muted">Get help on any challenge related to time.</p>
+          <a class="btn ghost sm" href="#/office-hours">Book Office Hours</a>
         </div>
       </div>
       ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "You unlock live events when you join the Master Your Week group coaching cohort", "events-lock", { compact: true })}`;
@@ -627,7 +627,7 @@
       <div class="ev-main"><b>${esc(e.title)}</b><small>${fmtDate(e.start, { weekday: "short" })} · ${fmtTime(e.start)} · ${e.mins} min</small></div>
       ${!sample && rsvpd(e.id) ? `<a class="btn ghost sm" href="#/events">✓ Going</a>` : `<button class="btn sm" ${sample ? "" : `data-action="rsvp" data-id="${e.id}"`}>RSVP</button>`}</li>`;
     return `<div class="card events-card">${cardHead("events", "Upcoming Events", "#/events")}<ul class="ev-list">${list.map(row).join("")}</ul>
-      <a class="link-all" href="#/events">See all events</a></div>`;
+      <a class="link-all" href="#/events">See All Events</a></div>`;
   }
 
   // One writing box everywhere: my avatar beside a text box that grows, with a character count and the action below
@@ -834,8 +834,8 @@
         ${l.body.map((p) => `<p>${esc(p)}</p>`).join("")}
         <div class="action-box"><b>Your action</b><p>${esc(l.action)}</p></div>
         <div class="row between">
-          <button class="btn ${isDone ? "ghost" : ""}" data-action="toggle-lesson" data-id="${l.id}">${isDone ? "✓ Completed (undo)" : "Mark complete"}</button>
-          ${next ? `<a class="btn ghost" href="#/learn/${c.id}/${next.id}">Next: ${esc(next.title)}</a>` : nextSession ? `<a class="btn ghost" href="${courseHref(nextSession)}">Next: ${esc(nextSession.title)}</a>` : c.id === WORKSHOP && workshopDone(me().id) && phaseOf() === 2 && !enrolled() ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : `<a class="btn ghost" href="#/learn">Back to courses</a>`}
+          <button class="btn ${isDone ? "ghost" : ""}" data-action="toggle-lesson" data-id="${l.id}">${isDone ? "✓ Completed (Undo)" : "Mark Complete"}</button>
+          ${next ? `<a class="btn ghost" href="#/learn/${c.id}/${next.id}">Next: ${esc(next.title)}</a>` : nextSession ? `<a class="btn ghost" href="${courseHref(nextSession)}">Next: ${esc(nextSession.title)}</a>` : c.id === WORKSHOP && workshopDone(me().id) && phaseOf() === 2 && !enrolled() ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : `<a class="btn ghost" href="#/learn">Back to Courses</a>`}
         </div>
       </article>`;
   }
@@ -849,7 +849,7 @@
       return `<div class="card event"><div class="date-chip"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></div>
         <div class="event-body"><h3>${esc(e.title)}</h3><p class="muted">${fmtDate(e.start, { weekday: "long" })} · ${fmtTime(e.start)} · ${e.mins} min · with ${esc(user(e.host).name)}</p>${e.desc ? `<p>${esc(e.desc)}</p>` : ""}<small class="muted">${n} going</small></div>
         <div class="event-actions"><button class="btn ${on ? "ghost" : ""}" data-action="rsvp" data-id="${e.id}">${on ? "✓ Going" : "RSVP"}</button>
-          ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to calendar</a>` : ""}</div></div>`;
+          ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to Calendar</a>` : ""}</div></div>`;
     };
     return `<header class="page-head"><div><h1>Upcoming Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
       <h2 class="section">Monthly masterclass</h2>${masterclassEvents().map(ev).join("")}
@@ -881,7 +881,7 @@
       <span class="unit">${unit}</span>
       ${milestone ? `<span class="milestone">${milestone}</span>` : ""}
       ${preview == null ? chain(tool, id, tool === "weekly" ? 8 : 10, { fresh: grew }) : previewChain(tool, n)}
-      <div class="row"><a class="btn accent" href="#/home">Back to home</a><a class="btn ghost" href="#/community">Share a win in Community</a></div>
+      <div class="row"><a class="btn accent" href="#/home">Back to Home</a><a class="btn ghost" href="#/community">Share a Win in Community</a></div>
     </section>`;
   }
   // A full chain ending in the new pip, for previews
@@ -893,7 +893,7 @@
     const n = Math.max(1, Math.min(999, parseInt(count, 10) || (tool === "weekly" ? 4 : 7)));
     const link = (t, c, label) => `<a class="btn ghost sm ${t === tool && (c ?? "") === (count ?? "") ? "on" : ""}" href="#/preview/${t}${c ? `/${c}` : ""}">${label}</a>`;
     return `<div class="preview-bar card"><div><b>Celebration preview</b><small class="muted">Nothing is saved. This is what members see after finishing a meeting.</small></div>
-        <div class="row">${link("weekly", null, "Weekly Planning Meeting")}${link("daily", null, "Daily Review Meeting")}${link(tool, "10", "Milestone (10)")}${link(tool, "1", "Day one")}
+        <div class="row">${link("weekly", null, "Weekly Planning Meeting")}${link("daily", null, "Daily Review Meeting")}${link(tool, "10", "Milestone (10)")}${link(tool, "1", "Day One")}
         <button class="btn sm" data-action="replay">Replay</button></div></div>
       ${celebrate(tool, n - 1, { preview: n })}`;
   };
@@ -905,7 +905,7 @@
     const aiPanel = `<div class="card ai"><span class="eyebrow">Prefer your own AI?</span><h4>Run this in Claude, ChatGPT, or any assistant</h4>
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <details><summary>Preview prompt</summary><pre>${esc(t.prompt)}</pre></details>
-      <div class="row"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy system prompt</button>
+      <div class="row"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
       <a class="btn ghost sm" href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude</a><a class="btn ghost sm" href="https://chatgpt.com" target="_blank" rel="noopener">Open ChatGPT</a></div></div>`;
 
     if (!draft) {
@@ -916,8 +916,8 @@
           ${t.during ? `<div class="card"><h3>During the day, Monday to Friday: work your calendar</h3><ol class="steps-preview">${t.during.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
           <div class="card"><ol class="steps-preview">${t.steps.map((s) => { const h = s.phase !== lastPhase ? `<li class="phase-label">${s.phase}</li>` : ""; lastPhase = s.phase; return `${h}<li><b>${esc(s.title)}</b><small>${esc(s.guide)}</small></li>`; }).join("")}</ol>
           ${sample ? "" : socialProof(tool)}
-          <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the celebration</a></div></div>
-          ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as markdown</button></details>`).join("")}` : ""}
+          <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run Your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the Celebration</a></div></div>
+          ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as Markdown</button></details>`).join("")}` : ""}
         </div><aside class="side">${aiPanel}</aside></div>`;
     }
     const s = t.steps[draft.step], last = draft.step === t.steps.length - 1;
@@ -934,10 +934,10 @@
         <form class="card tool-step" data-form="tool-step" data-tool="${tool}">
           <p class="guide">${esc(s.guide)}</p>
           ${s.fields.map(field).join("")}
-          ${s.share ? `<button type="button" class="btn ghost sm share-btn" data-action="copy-draft" data-tool="${tool}">Copy my plan to share</button>` : ""}
+          ${s.share ? `<button type="button" class="btn ghost sm share-btn" data-action="copy-draft" data-tool="${tool}">Copy My Plan to Share</button>` : ""}
           <div class="row between">
             <span>${draft.step > 0 ? `<button type="button" class="ghost" data-action="tool-back" data-tool="${tool}">← Back</button>` : ""}<button type="button" class="ghost danger" data-action="tool-abandon" data-tool="${tool}">Discard</button></span>
-            <button class="btn">${last ? "Finish & save" : "Next →"}</button>
+            <button class="btn">${last ? "Finish & Save" : "Next →"}</button>
           </div>
         </form>
       </div><aside class="side">${aiPanel}</aside></div>`;
@@ -952,10 +952,10 @@
       <h1>${esc(c.name)}</h1>
       <p class="lead">Step 2 of 3. A ${c.weeks}-week live cohort that installs the Time Boss habits for good: the Weekly Planning Meeting, the Daily Review Meeting, and a pace you can actually hold.</p>
       <ul class="checks">${c.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}<li>Includes everything in this community</li></ul>
-      ${phaseOf() === 1 ? `<div class="row"><a class="btn accent" href="#/learn/${WORKSHOP}">Complete Workshop first</a><span class="muted">The cohort opens once you finish the Unlock Your Week Workshop.</span></div>`
+      ${phaseOf() === 1 ? `<div class="row"><a class="btn accent" href="#/learn/${WORKSHOP}">Complete Workshop First</a><span class="muted">The cohort opens once you finish the Unlock Your Week Workshop.</span></div>`
         : phaseOf() === 2 && !enrolled() ? `<div class="row"><button class="btn accent" data-action="enroll">Enroll in Cohort</button><span class="muted">${c.seatsLeft} seats left</span></div>`
         : phaseOf() === 2 ? `<div class="row"><a class="btn accent" href="#/tools/weekly">Run Weekly Planning Meeting</a><span class="muted">You're enrolled. Week ${c.currentWeek} of ${c.weeks}.</span></div>
-          <button class="link demo-link" data-action="complete-cohort">Demo: mark the cohort complete</button>`
+          <button class="link demo-link" data-action="complete-cohort">Demo: Mark the Cohort Complete</button>`
         : `<div class="row"><a class="btn accent" href="#/learn">Go to Maximize Your Week</a><span class="muted">${isCoach() ? "Coaches see every phase." : "You completed Master Your Week."}</span></div>`}
     </div>`;
   };
@@ -968,7 +968,7 @@
     const u = me();
     return `<div class="pm"><button class="pm-btn" data-action="pm-toggle" aria-haspopup="menu" aria-expanded="${pmOpen}" aria-label="Your profile menu">${profileAvatar(u, "menu-av")}<svg class="ic pm-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       ${pmOpen ? `<div class="pm-menu" role="menu"><div class="pm-who">${avatar(u)}<div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>
-        <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch user</button></div>` : ""}</div>`;
+        <a href="#/profile" role="menuitem">Profile</a><a href="#/settings" role="menuitem">Settings</a><button class="pm-item" role="menuitem" data-action="logout">Switch User</button></div>` : ""}</div>`;
   }
 
   V.profile = () => {
@@ -976,11 +976,11 @@
     return `<header class="page-head"><div><h1>Profile</h1><p class="muted">How you appear to your team and the community.</p></div></header>
       <form class="card profile-form" data-form="profile">
         <div class="photo-row">${avatar(u, "xl")}<div class="stack">
-          <label class="btn ghost sm file-btn">Upload photo<input type="file" name="photoFile" accept="image/*" data-action-change="photo"></label>
-          ${u.photo ? `<button type="button" class="link" data-action="remove-photo">Remove photo</button>` : `<small class="muted">JPG or PNG. Square photos look best.</small>`}</div></div>
+          <label class="btn ghost sm file-btn">Upload Photo<input type="file" name="photoFile" accept="image/*" data-action-change="photo"></label>
+          ${u.photo ? `<button type="button" class="link" data-action="remove-photo">Remove Photo</button>` : `<small class="muted">JPG or PNG. Square photos look best.</small>`}</div></div>
         <label>Name<input name="name" value="${esc(u.name)}" required></label>
         <label>Role<input name="title" value="${esc(u.title)}" placeholder="e.g. VP Operations"></label>
-        <div class="row"><button class="btn">Save profile</button></div>
+        <div class="row"><button class="btn">Save Profile</button></div>
       </form>`;
   };
   V.settings = () => {
@@ -999,7 +999,7 @@
         <label class="tz-field">Time zone<select name="timeZone">${[...(TIME_ZONES.some((x) => x[0] === st.timeZone) ? [] : [[st.timeZone, zoneLabel(st.timeZone)]]), ...TIME_ZONES].map(([z, n]) => `<option value="${esc(z)}" ${z === st.timeZone ? "selected" : ""}>${esc(n)}${z === deviceZone ? " (this device)" : ""}</option>`).join("")}</select><small class="muted">Reminder times below are in this time zone.</small></label>
         ${remindCard("remindWeekly", st.remindWeekly, "Weekly Planning Meeting", "A reminder to plan before your work week starts.", "weeklyWhen", ["Friday 8:00 AM", "Friday 3:00 PM", "Saturday 9:00 AM", "Sunday 5:00 PM", "Monday 7:00 AM"], st.weeklyWhen)}
         ${remindCard("remindDaily", st.remindDaily, "Daily Review Meeting", "A reminder at the end of each workday, Monday to Friday.", "dailyWhen", ["3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM"], st.dailyWhen)}
-        <div class="row"><button class="btn">Save settings</button></div>
+        <div class="row"><button class="btn">Save Settings</button></div>
       </form>`;
   };
   // Shrink an uploaded photo to a small square so it fits in local storage

@@ -5,7 +5,7 @@ Static, no-build, no-database LMS/community prototype. Deploys as-is to here.now
 - `index.html` / `styles.css` / `app.js`: the app (hash routing, vanilla JS)
 - `data.js`: all editable content: companies, demo users (27 at Acme), courses + lessons, daily prompts and seed replies, community posts, masterclasses, cohort CTA, office hours Calendly link, AI system prompts
 
-State lives in each browser's `localStorage`, so nothing is shared between visitors. Multi-tenancy is simulated in the client (fine for demos, not for real private data). Weekly Planning and Daily Review history for demo users is generated from each user's `habit` value in `data.js`; "Reset demo data" on the login screen regenerates it.
+State lives in each browser's `localStorage`, so nothing is shared between visitors. Multi-tenancy is simulated in the client (fine for demos, not for real private data). Weekly Planning and Daily Review history for demo users is generated from each user's `habit` value in `data.js`; "Reset Demo Data" on the login screen regenerates it.
 
 Run locally: `python3 -m http.server` in this folder.
 
@@ -14,7 +14,7 @@ Before publishing, bump the `?v=` tags on styles.css, data.js and app.js in `ind
 ## Phases
 
 1. **Unlock Your Week** (Workshop). Everyone starts here. Finishing the workshop's lessons moves the member to phase 2. Habits and Events are locked in this phase.
-2. **Master Your Week** (Group Coaching Cohort). Finishing the workshop makes a member ready to enroll. Habits (Weekly Planning Meeting, Daily Review Meeting, streaks, leaderboard) and Events open when they enroll. In the prototype, Enroll in Cohort enrolls immediately (production: checkout first), and "Demo: mark the cohort complete" on the cohort page stands in for finishing it.
+2. **Master Your Week** (Group Coaching Cohort). Finishing the workshop makes a member ready to enroll. Habits (Weekly Planning Meeting, Daily Review Meeting, streaks, leaderboard) and Events open when they enroll. In the prototype, Enroll in Cohort enrolls immediately (production: checkout first), and "Demo: Mark the Cohort Complete" on the cohort page stands in for finishing it.
    The cohort's sessions open in the app for review once the cohort is complete: Dealing with Diversions; the four Solving the Root Cause of Diversions sessions (Relationships, Environment, Systems, Yourself); and Your Highest Sustainable Pace.
 3. **Maximize Your Week** (Continuing Education). The mini courses (starting with Time Boss x AI), plus masterclasses and live Weekly Planning Meetings.
 
@@ -30,7 +30,7 @@ Both meetings follow the Time Boss "Checklist for Your Week" (Reflect, Decide, C
 
 ## Previewing the celebration
 
-Open `#/preview/weekly` or `#/preview/daily` (add a number for a streak, e.g. `#/preview/daily/10` for a milestone), or use "Preview the celebration" on a meeting's page. Nothing is saved; Replay plays it again.
+Open `#/preview/weekly` or `#/preview/daily` (add a number for a streak, e.g. `#/preview/daily/10` for a milestone), or use "Preview the Celebration" on a meeting's page. Nothing is saved; Replay plays it again.
 
 ## Avatars
 
@@ -38,7 +38,7 @@ Each person gets a random background color from `avatarColors` in `data.js`, sto
 
 ## Community features
 
-- **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View all. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
+- **Who ran it:** while a member hasn't run a meeting for the current period, Home and the meeting page show "Join N Time Bosses at <company> who've already planned next week" (or run their Daily Review Meeting today) with an avatar stack and View All. Leads with the member's company when at least three teammates ran it, otherwise the whole community. Weekly counts the week being planned; daily counts today, or the last workday until someone runs it today. `communityFill` in `data.js` adds background members at four other companies so community counts look real; they don't appear on the login screen.
 - **Profile menu** (top right): Profile (photo, name, role) and Settings (public or private activity; time zone, defaulting to the device; email reminders for the Weekly Planning Meeting, default Friday 8:00 AM, and the Daily Review Meeting, default 4:30 PM). Private members' streaks and meetings are visible only to themselves, their team leaders, and coaches.
 
 ## Notes for the production build
