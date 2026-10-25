@@ -516,14 +516,12 @@ body.modal-open { overflow: hidden; }
 .content-top { display: flex; justify-content: flex-end; padding: 16px clamp(16px, 3vw, 48px) 0; max-width: 1200px; }
 .content-top + main { padding-top: 8px; }
 .pm { position: relative; }
-.pm-btn { display: flex; align-items: center; gap: 6px; background: none; padding: 4px 6px 4px 4px; border-radius: 100px; color: var(--heading); }
+.pm-btn { display: flex; align-items: center; gap: 6px; background: none; padding: 2px 4px 2px 2px; border-radius: 100px; color: var(--heading); }
 .pm-btn:hover { background: var(--paper); }
 .pm-chev { width: 16px; height: 16px; }
-.pm-btn { --b: 20px; --bf: 10.5px; }
-.pm-btn .pbs { margin-right: 4px; align-items: center; }
-.pm-btn .pb-c { margin-top: 0; }
-.topbar .pb.wpm { background: #2b3a52; box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .35); }
-.topbar .pb.locked { background: #2b3a52; color: rgba(255, 255, 255, .6); }
+.pav.pav-pm { --s: 36px; --b: 16px; --bf: 9px; gap: 3px; }
+.pav.pav-pm .pbs { gap: 2px; }
+.topbar .pb.wpm { box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .55); }
 .pm-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 260px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 22px 48px -18px rgba(14, 27, 46, .35); padding: 8px; display: grid; }
 .pm-who { display: flex; gap: 10px; align-items: center; padding: 8px 10px 12px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
 .pm-who b { color: var(--heading); display: block; font-size: 14.5px; }
@@ -614,6 +612,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .menu-btn { display: grid; place-items: center; background: rgba(255, 255, 255, .1); color: #fff; width: 40px; height: 40px; border-radius: 100px; }
   .menu-btn .ic { width: 22px; height: 22px; }
   .content-top { display: none; }
+  .content-top + main { padding-top: 28px; }
   .topbar .pm { margin-left: auto; }
   .topbar .pm-btn { color: #fff; }
   .topbar .pm-btn:hover { background: rgba(255, 255, 255, .1); }
