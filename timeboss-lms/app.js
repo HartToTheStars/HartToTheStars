@@ -1452,6 +1452,22 @@
       if (c) { c.textContent = `${t.value.length.toLocaleString()} / ${max.toLocaleString()}`; c.classList.toggle("near", t.value.length >= max * 0.9); }
     }
   });
+  // Tap an attached image or GIF to see it as large as the screen allows; tap again or press Escape to close
+  const closeLightbox = () => { document.querySelector(".lightbox")?.remove(); document.body.classList.remove("lightbox-open"); };
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".lightbox")) return closeLightbox();
+    const img = e.target.closest(".att img");
+    if (!img || img.closest(".att-preview")) return;
+    e.preventDefault();
+    const box = document.createElement("div");
+    box.className = "lightbox";
+    box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "Image");
+    box.innerHTML = `<img src="${img.getAttribute("src")}" alt="${esc(img.alt)}"><button class="lightbox-close" aria-label="Close">×</button>`;
+    document.body.appendChild(box); document.body.classList.add("lightbox-open");
+    box.querySelector("button").focus();
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
+  window.addEventListener("hashchange", closeLightbox);
   // Rows that act as buttons open with Enter or Space too
   document.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches?.('[role="button"][data-action]')) { e.preventDefault(); e.target.click(); } });
   // Writing tools (image, emoji, GIF) show while a writing box is in use
