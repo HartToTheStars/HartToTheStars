@@ -335,10 +335,16 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .ic.pin { width: 15px; height: 15px; }
 .prompt-date { display: block; color: rgba(255, 255, 255, .6); font-size: 13.5px; margin-top: 2px; }
 .pinned h3 { font-size: clamp(21px, 2.3vw, 27px); margin: 8px 0 16px; max-width: 30ch; }
-.reply-form { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
-.reply-form input { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: #fff; }
-.reply-form input::placeholder { color: rgba(255, 255, 255, .5); }
-.reply-form .btn { flex: none; }
+.reply-form { margin-bottom: 6px; }
+.reply-input { display: flex; gap: 10px; align-items: flex-start; }
+.reply-input .avatar { margin-top: 10px; }
+.reply-form textarea { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .2); color: #fff; resize: none; overflow: hidden; line-height: 1.5; min-height: 66px; max-height: 320px; }
+.reply-form textarea:focus { overflow-y: auto; }
+.reply-form textarea::placeholder { color: rgba(255, 255, 255, .5); }
+.reply-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin: 8px 0 4px; }
+.reply-actions .btn { flex: none; }
+.char-count { color: rgba(255, 255, 255, .5); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.char-count.near { color: #f3c98b; }
 .replies .reply { display: flex; gap: 10px; padding: 11px 0; border-top: 1px solid rgba(255, 255, 255, .08); font-size: 15px; color: rgba(255, 255, 255, .85); }
 .replies .reply.fresh { animation: reply-in .5s ease-out; }
 @keyframes reply-in { from { opacity: 0; transform: translateY(-6px); background: rgba(159, 194, 208, .15); } }
@@ -346,6 +352,8 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .replies small.muted { display: inline; color: rgba(255, 255, 255, .45); }
 .replies summary { color: var(--teal-2); font-weight: 600; padding: 10px 0 2px; }
 .comment-form input { padding: 8px 11px; }
+.comment small.meta, .reply small.meta { display: block; margin: 1px 0 3px; font-size: 13px; color: var(--muted); }
+.reply small.meta { color: rgba(255, 255, 255, .5); }
 
 /* team space */
 .team-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }

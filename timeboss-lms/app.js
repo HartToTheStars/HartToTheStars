@@ -208,6 +208,8 @@
   const isCoach = (u = me()) => u && u.role === "coach";
   const teamOf = (cid) => S.users.filter((u) => u.companyId === cid);
   // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
+  // "Acme Logistics · 3h ago" under a name in comments and replies; coaches show Time Boss
+  const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")} · ${ago(ts)}</small>`;
   const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "" : `ring-p${phaseOf(u)}`}" style="background:${u.companyId ? company(u.companyId)?.color : "#5e8497"}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
   function toast(msg) {
@@ -625,11 +627,12 @@
   let freshReply = 0; // ts of the reply just posted, so it can animate in once
   function pinnedPrompt() {
     const p = promptFor(), replies = (S.promptReplies[dateKey()] || []).slice().sort((a, b) => b.ts - a.ts);
-    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${profileAvatar(a, "md")}<div><b>${esc(a.name)}</b> <small class="muted">${ago(r.ts)}</small><div>${esc(r.body)}</div></div></div>`; };
+    const reply = (r) => { const a = user(r.authorId); return `<div class="reply ${r.ts === freshReply ? "fresh" : ""}">${profileAvatar(a, "md")}<div><b>${esc(a.name)}</b>${whereWhen(a, r.ts)}<div>${esc(r.body)}</div></div></div>`; };
     return `<section class="card prompt-card pinned">
       <div class="row between"><div><span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span><small class="prompt-date">${longDate()}</small></div><small class="muted">${plural(replies.length, "reply", "replies")}</small></div>
       <h3>${esc(p.q)}</h3>
-      <form data-form="reply" class="reply-form">${avatar(me(), "sm")}<input name="body" placeholder="Your answer..." required><button class="btn accent sm">Reply</button></form>
+      <form data-form="reply" class="reply-form"><div class="reply-input">${avatar(me(), "sm")}<textarea name="body" rows="2" maxlength="1000" placeholder="Your answer..." data-autogrow data-counter required></textarea></div>
+        <div class="reply-actions"><small class="char-count" aria-live="polite">0 / 1,000</small><button class="btn accent sm">Reply</button></div></form>
       <div class="replies">${replies.slice(0, 3).map(reply).join("")}
         ${replies.length > 3 ? `<details><summary>Show all ${replies.length} replies</summary>${replies.slice(3).map(reply).join("")}</details>` : ""}</div>
     </section>`;
@@ -644,7 +647,7 @@
         <span class="muted sm">${plural(p.comments.length, "comment", "comments")}</span>
       </div>
       <div class="comments">
-        ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${profileAvatar(ca, "md")}<div><b>${esc(ca.name)}</b> <small class="muted">${ago(c.ts)}</small><div>${esc(c.body)}</div></div></div>`; }).join("")}
+        ${p.comments.map((c) => { const ca = user(c.authorId); return `<div class="comment">${profileAvatar(ca, "md")}<div><b>${esc(ca.name)}</b>${whereWhen(ca, c.ts)}<div>${esc(c.body)}</div></div></div>`; }).join("")}
         <form data-form="comment" data-id="${p.id}" class="comment-form"><input name="body" placeholder="Write a comment..." required><button class="ghost sm">Reply</button></form>
       </div>
     </article>`;
@@ -1112,7 +1115,7 @@
     const v = readForm(f);
     if (kind === "post") S.posts.push({ id: uid(), authorId: me().id, ts: Date.now(), body: v.body.trim(), likes: [], comments: [] });
     if (kind === "comment") S.posts.find((p) => p.id === f.dataset.id).comments.push({ authorId: me().id, ts: Date.now(), body: v.body.trim() });
-    if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim() }); }
+    if (kind === "reply") { freshReply = Date.now(); (S.promptReplies[dateKey()] ||= []).push({ authorId: me().id, ts: freshReply, body: v.body.trim().slice(0, 1000) }); }
     if (kind === "profile") {
       const u = me();
       u.name = v.name.trim() || u.name; u.title = v.title.trim();
@@ -1149,6 +1152,16 @@
     save(); render();
   });
 
+  // Text boxes that grow with their copy, with a live character count where asked
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t.maxLength > 0 && t.value.length > t.maxLength) t.value = t.value.slice(0, t.maxLength);
+    if (t.matches("textarea[data-autogrow]")) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+    if (t.matches("textarea[data-counter]")) {
+      const c = t.form?.querySelector(".char-count"), max = +t.maxLength;
+      if (c) { c.textContent = `${t.value.length.toLocaleString()} / ${max.toLocaleString()}`; c.classList.toggle("near", t.value.length >= max * 0.9); }
+    }
+  });
   // Photo upload on the Profile page
   document.addEventListener("change", async (e) => {
     if (e.target.dataset.actionChange !== "photo" || !e.target.files[0]) return;
