@@ -712,7 +712,8 @@ body.modal-open { overflow: hidden; }
 .settings-form .check-row { margin-bottom: 8px; }
 .settings-form .check-row small { display: block; margin-top: 2px; }
 .settings-form .check-row b { color: var(--heading); }
-.settings-form .row { margin-top: 18px; }
+/* Save button: the same space above it as the card has below it */
+.profile-form > .row:last-child, .settings-form > .row:last-child { margin-top: 24px; }
 .remind-card { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-bottom: 16px; }
 .tz-field { margin: 4px 0 18px; display: grid; gap: 6px; max-width: 360px; }
 .tz-field select { margin: 0; }
@@ -859,5 +860,6 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
   .page-head { flex-direction: column; align-items: flex-start; }
   .card { padding: 20px; }
+  .profile-form > .row:last-child, .settings-form > .row:last-child { margin-top: 20px; }
   .lesson { padding: 22px; }
 }
