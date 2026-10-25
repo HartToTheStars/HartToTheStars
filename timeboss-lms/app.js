@@ -335,7 +335,8 @@
   const LOGO = "assets/time-boss-logo-white.png";
   // Use the real logo only once it has loaded; otherwise show the wordmark (no flicker on re-render)
   let logoOk = false;
-  Object.assign(new Image(), { onload: () => { logoOk = true; render(); }, src: LOGO });
+  // Skip the re-render while a celebration is playing so it isn't cut short; the logo appears on the next render
+  Object.assign(new Image(), { onload: () => { logoOk = true; if (!document.querySelector(".celebrate:not(.settled)")) render(); }, src: LOGO });
   const wordmark = (sub) => `<div class="brand"><span class="logo">${icon("clock")}</span><div><b>TIME BOSS</b>${sub ? `<small>${sub}</small>` : ""}</div></div>`;
   const logo = (sub) => (logoOk ? `<img class="brand-img" src="${LOGO}" alt="Time Boss">${sub ? `<small class="brand-sub">${sub}</small>` : ""}` : wordmark(sub));
 
@@ -840,7 +841,9 @@
     const line = !grew && tool === "daily" ? "Saved. Weekend reviews don't change your workday streak, but they still count for you."
       : tool === "weekly" ? "Your week is planned. Share it with someone and protect the blocks." : "Incomplete tasks have a home. Tomorrow's plan is reviewed. You can close the laptop.";
     const milestone = grew && (n === 1 ? "Day one of a new streak." : n % 5 === 0 ? `Milestone: ${n} ${tool === "weekly" ? "weeks" : "workdays"} in a row.` : "");
-    return `<section class="celebrate" aria-live="polite">
+    // Play the animations only on arrival (or Replay); later re-renders, like opening the profile menu, show the finished state
+    const play = celebrateFresh; celebrateFresh = false;
+    return `<section class="celebrate ${play ? "" : "settled"}" aria-live="polite">
       <h1>${t.title} done</h1><p>${line}</p>
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
       <span class="unit">${unit}</span>
@@ -863,7 +866,7 @@
       ${celebrate(tool, n - 1, { preview: n })}`;
   };
   function toolView(tool, { sample = false } = {}) {
-    if (justSaved?.tool === tool) { const html = celebrate(tool, justSaved.before); justSaved = null; return html; }
+    if (justSaved?.tool === tool) return celebrate(tool, justSaved.before); // stays up until the member navigates away
     const t = TOOLS[tool], dk = me().id + "|" + tool, draft = sample ? null : S.drafts[dk];
     const history = sample ? [] : runsOf(me().id, tool).sort((a, b) => b.ts - a.ts);
     const streakN = sample ? SAMPLE[tool].n : tool === "weekly" ? wpmStreak(me().id) : drmStreak(me().id);
@@ -993,8 +996,9 @@
     countUp();
   }
   // Count the streak up from the previous number on the completion screen
+  let celebrateFresh = true;
   function countUp() {
-    if (!document.querySelector(".celebrate") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!document.querySelector(".celebrate:not(.settled)") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     confetti();
     const el = document.querySelector(".celebrate .big[data-from]");
     if (!el) return;
@@ -1018,7 +1022,7 @@
     host.appendChild(box);
     setTimeout(() => box.remove(), 3200);
   }
-  window.addEventListener("hashchange", () => { ranModal = null; pmOpen = false; render(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { ranModal = null; pmOpen = false; justSaved = null; celebrateFresh = true; render(); window.scrollTo(0, 0); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && ranModal) { ranModal = null; render(); } });
 
   let timerInt;
@@ -1055,7 +1059,7 @@
       "show-ran": () => { ranModal = { tool, scope: id }; render(); document.querySelector(".modal .ghost")?.focus(); },
       "ran-scope": () => { ranModal.scope = id; render(); },
       "close-modal": () => { ranModal = null; render(); },
-      replay: () => render(),
+      replay: () => { celebrateFresh = true; render(); },
       "pm-toggle": () => { pmOpen = !pmOpen; render(); },
       "remove-photo": () => { delete me().photo; save(); render(); toast("Photo removed"); },
       // Production: Enroll goes to checkout (SEED.cohort.url) and marks the member enrolled on payment
@@ -1119,6 +1123,7 @@
       if (d.step < TOOLS[tool].steps.length - 1) d.step++;
       else {
         justSaved = { tool, before: streakOf(tool, me().id) };
+        celebrateFresh = true;
         S.toolRuns.push({ id: uid(), userId: me().id, tool, ts: Date.now(), answers: d.answers });
         delete S.drafts[dk];
       }

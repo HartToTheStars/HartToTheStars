@@ -274,6 +274,8 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .celebrate .row { justify-content: center; }
 .celebrate .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .3); }
 .celebrate .btn.ghost:hover { background: rgba(255, 255, 255, .08); }
+.celebrate.settled *, .celebrate.settled *::after { animation: none !important; }
+.celebrate.settled .plus-one, .celebrate.settled .milestone { opacity: 1; }
 .celebrate .big-wrap { position: relative; display: inline-block; }
 .celebrate .plus-one { position: absolute; top: 4px; right: -44px; font-family: var(--font-body); font-size: 22px; font-weight: 800; color: var(--navy); background: var(--teal-2); border-radius: 100px; padding: 4px 10px; opacity: 0; animation: plus-pop 1.4s cubic-bezier(.2, 1.4, .4, 1) .95s forwards; }
 @keyframes plus-pop { 0% { opacity: 0; transform: translateY(14px) scale(.4); } 30% { opacity: 1; transform: translateY(-6px) scale(1.1); } 60%, 100% { opacity: 1; transform: translateY(0) scale(1); } }
