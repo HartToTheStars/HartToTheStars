@@ -558,6 +558,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .phase-body p { color: var(--muted); max-width: 64ch; }
 .phase-body .bar { max-width: 420px; margin-bottom: 18px; }
 .phase-body .row { gap: 10px; }
+.prompt-cta { align-items: center; gap: 14px; margin-top: 4px; }
+.prompt-cta .muted { font-size: 14px; }
 /* Private team space marker under the company name */
 .private-team { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 0; padding: 6px 14px 6px 11px; border-radius: 100px; background: var(--teal-soft); color: var(--teal); font-size: 14px; font-weight: 600; }
 .private-team .ic { width: 16px; height: 16px; stroke-width: 2; }

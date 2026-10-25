@@ -646,8 +646,7 @@
           ${cardHead("community", "Community", "#/community")}
           <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span>
           <h3>${esc(p.q)}</h3>
-          <p class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</p>
-          <a class="btn accent sm" href="#/community">Answer in Community</a>
+          <div class="row prompt-cta"><a class="btn accent sm" href="#/community">Answer in Community</a><span class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</span></div>
         </div>
         <div class="card office-card">
           ${cardHead("office", "Office Hours", "#/office-hours")}
