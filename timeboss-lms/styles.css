@@ -881,7 +881,8 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .grid.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 760px) {
+/* Phones and every iPad held upright (up to the 13-inch at 1032px): top bar with a slide-out menu instead of the sidebar */
+@media (max-width: 1080px) {
   #app:not(.logged-out) { grid-template-columns: 1fr; }
   .sidebar { position: fixed; inset: 0 auto 0 0; width: min(300px, 86vw); z-index: 40; transform: translateX(-100%); transition: transform .25s; }
   body.menu-open .sidebar { transform: none; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .45); }
@@ -902,6 +903,15 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .topbar .pm-btn:hover, .topbar .pm-btn[aria-expanded="true"] { background: rgba(255, 255, 255, .1); border-color: rgba(255, 255, 255, .28); }
   .topbar .avatar { --gap: var(--navy); }
   .pm-menu { width: min(280px, calc(100vw - 32px)); }
+}
+/* iPads held sideways and small laptops: a narrower sidebar leaves room for two content columns */
+@media (min-width: 1081px) and (max-width: 1279px) {
+  #app:not(.logged-out) { grid-template-columns: 240px 1fr; }
+  .feed-wrap { grid-template-columns: minmax(0, 1fr) 280px; }
+  .team-grid { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+/* Phones */
+@media (max-width: 760px) {
   .remind-card { grid-template-columns: 1fr; }
   /* Team members table becomes one card per person */
   table.team thead { display: none; }
@@ -966,3 +976,12 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 .faces .avatar:first-child { margin-left: 0; }
 .face-more { margin-left: -6px; height: 44px; min-width: 44px; padding: 0 10px; box-sizing: border-box; border-radius: 100px; display: inline-grid; place-items: center; background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 0 0 2px var(--bg); }
 @media (max-width: 760px) { .faces-strip { flex-direction: column; align-items: flex-start; gap: 8px; } .faces .avatar { width: 36px; height: 36px; font-size: 12px; } .face-more { height: 36px; min-width: 36px; font-size: 12px; } }
+
+/* Page flourish (see reveal() in app.js): sections fade up; avatars in a row pop in one by one, left to right */
+.rv:not(.in) { opacity: 0; }
+.rv.in { animation: rv-up .55s cubic-bezier(.2, .7, .2, 1) var(--d, 0ms) both; }
+.rv-row:not(.in) > * { opacity: 0; }
+.rv-row.in > * { animation: rv-pop .42s cubic-bezier(.3, 1.5, .5, 1) calc(var(--d, 0ms) + 120ms + var(--i, 0) * 65ms) both; }
+@keyframes rv-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes rv-pop { from { opacity: 0; transform: translateX(-10px) scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rv:not(.in), .rv-row:not(.in) > * { opacity: 1; } .rv.in, .rv-row.in > * { animation: none; } }

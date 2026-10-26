@@ -1337,6 +1337,7 @@
       <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}${addUsersView()}`;
     document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_ || addUsersOpen);
     onePrimary(root);
+    reveal(root);
     if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
       scrolledFor = location.hash;
@@ -1347,6 +1348,50 @@
     tickTimer();
     countUp();
   }
+  // Page flourish: sections fade up as they scroll into view, and rows of avatars pop in one by one, left to right.
+  // Each plays once per page visit: re-renders (a like, a reply, the logo loading) keep what has shown and still wait on the rest.
+  // Skipped for people who ask for reduced motion.
+  let revealHash = null, revealDone = new Set(), revealObs = null;
+  const SECTIONS = ".page-head, .faces-strip, .card, .habits, .myw, .locked-wrap, .phase-card, .events-card";
+  function reveal(root) {
+    revealObs?.disconnect();
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (location.hash !== revealHash) { revealHash = location.hash; revealDone = new Set(); }
+    const main = root.querySelector("#main");
+    const items = [
+      ...[...main.querySelectorAll(SECTIONS)].filter((el) => !el.parentElement.closest(SECTIONS)).map((el, i) => [el, "s" + i, "rv"]),
+      ...[...main.querySelectorAll(".faces, .av-stack")].map((el, i) => [el, "r" + i, "rv-row"]),
+    ].filter(([, key]) => !revealDone.has(key));
+    const show = (el, n) => {
+      el.style.setProperty("--d", `${Math.min(n, 5) * 70}ms`); // things that appear together arrive in order
+      el.classList.add("in");
+      revealDone.add(el.dataset.rv);
+    };
+    revealObs = new IntersectionObserver((entries) => {
+      entries.filter((e) => e.isIntersecting).forEach((e, n) => { show(e.target, n); revealObs.unobserve(e.target); });
+    }, { rootMargin: "0px 0px -6% 0px" });
+    items.forEach(([el, key, cls]) => {
+      if (cls === "rv-row") [...el.children].forEach((c, i) => c.style.setProperty("--i", i));
+      el.dataset.rv = key;
+      el.classList.add(cls);
+    });
+    // Next frame, once a page change has scrolled back to the top: what's on screen plays now, the rest on scroll
+    const obs = revealObs;
+    let ran = false;
+    const start = () => {
+      if (ran || obs !== revealObs) return;
+      ran = true;
+      let n = 0;
+      items.forEach(([el]) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < innerHeight * 0.94 && r.bottom > 0) show(el, n++);
+        else obs.observe(el);
+      });
+    };
+    requestAnimationFrame(start);
+    setTimeout(start, 100); // backup for tabs that aren't drawing frames (previews, thumbnails)
+  }
+
   // One filled (pop color) button per page. A locked section's unlock button wins, otherwise the first visible one;
   // every other filled button switches to the outline style. The sidebar's Next Step stays filled only when the page has none.
   function onePrimary(root) {
