@@ -6,6 +6,7 @@ window.TB_SEED = {
     { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com" },
     { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org" },
     { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio" },
+    { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com" }, // an individual leader on their own, without their team
   ],
 
   // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (enrolled: true = in the current cohort; otherwise ready to enroll), 3 = Maximize Your Week (completed the cohort)
@@ -45,6 +46,7 @@ window.TB_SEED = {
     { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin", phase: 3, habit: 0.85 },
     { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, enrolled: true, habit: 0.7 },
     { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin", phase: 3, habit: 0.76 },
+    { id: "u_elena", name: "Elena Brooks", title: "Founder and Principal", companyId: "hartwell", role: "member", phase: 2, enrolled: true, habit: 0.7 },
   ],
 
   coaches: ["u_andrew", "u_coach2"],
@@ -66,6 +68,7 @@ window.TB_SEED = {
 
   // Extra community members at other companies so community-wide counts ("67 Time Bosses ran theirs") look real.
   // They post nothing and don't appear on the login screen.
+  communitySize: 767, // shown on Home for people without a team
   communityFill: {
     perCompany: 16,
     companies: [

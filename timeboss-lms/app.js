@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v8"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v9"; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -586,7 +586,7 @@
         <div class="login-top">${logo("Community · prototype")}</div>
         <p class="muted">Pick a demo user. Each company sees its own private team space; everyone shares the Community.</p>
         <div class="login-group"><h4>One person at each step</h4><div class="picks">
-          ${["u_sam", "u_tyler", "u_dev", "u_maria"].map((id) => { const u = user(id); return `<button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>Phase ${phaseOf(u)}: ${phaseLabel(u)}</small></span></button>`; }).join("")}
+          ${["u_sam", "u_tyler", "u_dev", "u_maria", "u_elena"].map((id) => { const u = user(id); return `<button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>Phase ${phaseOf(u)}: ${phaseLabel(u)}</small></span></button>`; }).join("")}
         </div></div>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
           <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} · ${teamOf(cid).length}` : "Time Boss coaches"}</h4><div class="picks">
@@ -647,11 +647,27 @@
   }
 
 
+  // Home opens on faces: a teammate and the rest of your team, or the wider community when you're on your own
+  const homeSeed = Math.random(); // picks the named teammate once per page load, so re-renders don't reshuffle
+  function homeFaces(u) {
+    const faces = (list, total) => `<span class="faces" aria-hidden="true">${list.slice(0, 8).map((x) => avatar(x)).join("")}${total > 8 ? `<span class="face-more">+${(total - 8).toLocaleString()}</span>` : ""}</span>`;
+    const photosFirst = (list) => [...list].sort((a, b) => !!b.photo - !!a.photo);
+    const team = u.companyId ? teamOf(u.companyId).filter((x) => x.id !== u.id && x.role !== "coach") : [];
+    if (team.length) {
+      const pool = team.some((x) => x.photo) ? team.filter((x) => x.photo) : team, lead = pool[Math.floor(homeSeed * pool.length)];
+      return `<section class="faces-strip">${faces([lead, ...photosFirst(team.filter((x) => x.id !== lead.id))], team.length)}
+        <p><b>${esc(lead.name)}</b>${team.length > 1 ? ` and ${plural(team.length - 1, "other", "others")}` : ""} at ${esc(company(u.companyId).name)} ${team.length > 1 ? "are" : "is"} on Time Boss.</p></section>`;
+    }
+    return `<section class="faces-strip">${faces(photosFirst(S.users.filter((x) => x.id !== u.id && x.role !== "coach")), SEED.communitySize)}
+      <p><b>${SEED.communitySize.toLocaleString()} people</b> are on Time Boss. <a href="#/community">Check Out the Community</a></p></section>`;
+  }
+
   V.home = () => {
     const u = me(), op = overallProgress(u.id), p = promptFor(), ms = monthStats(u.id);
     return `
       <header class="page-head"><div><h1>Good ${["morning", "afternoon", "evening"][new Date().getHours() < 12 ? 0 : new Date().getHours() < 18 ? 1 : 2]}, ${esc(u.name.split(" ")[0])}.</h1>
 </div></header>
+      ${homeFaces(u)}
 
       ${phaseCard()}
       ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>

@@ -954,3 +954,13 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .profile-form > .row:last-child, .settings-form > .row:last-child { margin-top: 20px; }
   .lesson { padding: 22px; }
 }
+
+/* Home: faces strip under the greeting */
+.faces-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; margin: -8px 0 var(--gap); }
+.faces-strip p { margin: 0; font-size: 15px; color: var(--heading); }
+.faces-strip a { font-weight: 700; color: var(--teal); white-space: nowrap; }
+.faces { display: inline-flex; align-items: center; padding: 4px; }
+.faces .avatar { --gap: var(--bg); width: 44px; height: 44px; font-size: 14px; margin-left: -6px; }
+.faces .avatar:first-child { margin-left: 0; }
+.face-more { margin-left: -6px; height: 44px; min-width: 44px; padding: 0 10px; box-sizing: border-box; border-radius: 100px; display: inline-grid; place-items: center; background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 0 0 2px var(--bg); }
+@media (max-width: 760px) { .faces-strip { flex-direction: column; align-items: flex-start; gap: 8px; } .faces .avatar { width: 36px; height: 36px; font-size: 12px; } .face-more { height: 36px; min-width: 36px; font-size: 12px; } }
