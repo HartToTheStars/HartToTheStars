@@ -641,7 +641,7 @@
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
           : tool === "daily" && !isWorkday(new Date()) ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Next one Monday, end of day</small>`
-          : `<a class="btn sm" href="#/tools/${tool}">Run Now</a><small>${t.when}</small>`}
+          : `<a class="btn sm" href="#/tools/${tool}">Run Now</a><small>${t.sub}</small>`}
       </div>
       <div class="habits-proof">${socialProof(tool, { compact: true })}</div></div>`;
   }
@@ -1352,7 +1352,9 @@
   function onePrimary(root) {
     const main = root.querySelector("#main"), filled = [...main.querySelectorAll(".btn:not(.ghost)")];
     const keep = main.querySelector(".locked-msg .btn:not(.ghost)") || filled.find((b) => b.offsetParent);
-    filled.forEach((b) => b !== keep && b.classList.add("ghost"));
+    filled.forEach((b) => { if (b !== keep) { b.style.transition = "none"; b.classList.add("ghost"); } }); // no fade from filled to outline
+    void main.offsetHeight; // apply the outline style now, then restore the hover fade
+    filled.forEach((b) => b.style.removeProperty("transition"));
     if (keep) root.querySelectorAll(".sidebar .btn:not(.ghost)").forEach((b) => b.classList.add("ghost"));
   }
   // Count the streak up from the previous number on the completion screen

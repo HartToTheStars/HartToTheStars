@@ -321,7 +321,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .celebrate h1 + .big-wrap { margin-top: 22px; }
 .celebrate .chain-label { margin: -18px 0 26px; text-align: center; } /* the chain above keeps a 28px bottom margin */
 .chain-label { display: block; margin-top: -4px; font-size: 13px; color: rgba(255, 255, 255, .6); }
-.habits-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.habits-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 4px; } /* button, then its note underneath, the same in both halves */
 .habits-foot small { color: rgba(255, 255, 255, .55); }
 .habits .btn { background: #fff; color: var(--navy); }
 .habits .btn:hover { background: var(--teal-2); }
@@ -719,7 +719,8 @@ nav a.locked .ic:first-child { color: rgba(159, 194, 208, .5); }
 .av-stack .avatar:first-child { margin-left: 0; }
 .stack-more { margin-left: -4px; height: 24px; min-width: 24px; padding: 0 6px; border-radius: 100px; display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 700; background: var(--paper); color: var(--heading); border: 1.5px solid var(--card); }
 .proof-all { display: inline; margin: 0 0 0 2px; padding: 0; white-space: nowrap; font-size: 14px; font-weight: 600; color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
-.proof.compact { margin: 2px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .78); gap: 8px; }
+.proof.compact { flex-direction: column; align-items: flex-start; margin: 2px 0 0; font-size: 13.5px; color: rgba(255, 255, 255, .78); gap: 8px; } /* faces above the line, the same in both halves */
+.proof.compact .proof-text { min-width: 0; }
 .proof.compact .av-stack .avatar { --gap: var(--navy); }
 .proof.compact .stack-more { background: rgba(255, 255, 255, .12); color: #fff; border-color: var(--navy); }
 .proof .proof-all { margin: 0 0 0 2px; line-height: inherit; vertical-align: baseline; }
