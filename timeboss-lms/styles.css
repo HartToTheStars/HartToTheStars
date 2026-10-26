@@ -985,3 +985,4 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 @keyframes rv-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes rv-pop { from { opacity: 0; transform: translateX(-10px) scale(.6); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .rv:not(.in), .rv-row:not(.in) > * { opacity: 1; } .rv.in, .rv-row.in > * { animation: none; } }
+.habits-note { margin: 4px 0 0; color: rgba(255, 255, 255, .6); font-size: 14px; }

@@ -1,7 +1,10 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v9"; // bump when the saved data shape changes so browsers reload the demo data
+  const KEY = "tb_lms_v9";
+  // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
+  // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
+  const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
   const DAY = 864e5;
 
   // ---------- helpers ----------
@@ -270,7 +273,7 @@
     const b = (pos, n, tip, cls = "") => `<span class="pb pb-${pos} ${cls}${String(n).length > 2 ? " pb-3" : ""}" data-tip="${tip}" aria-label="${tip}">${n}</span>`;
     const lock = icon("lock", "ic pb-lock"), w = shown ? wpmStreak(u.id) : 0, d = shown ? drmStreak(u.id) : 0;
     // Weekly streak, daily streak, then phase: the phase badge is the only one that changes color
-    return `<span class="pbs">${b("l", shown ? w : lock, streakTip("Weekly Planning Meeting", w), shown ? "wpm" : "locked")}${b("c", shown ? d : lock, streakTip("Daily Review Meeting", d), shown ? "drm" : "locked")}${b("r", ph, `Phase ${ph} - ${PHASES[ph - 1].name}`, `phase p${ph}`)}</span>`;
+    return `<span class="pbs">${b("l", shown ? w : lock, streakTip("Weekly Planning Meeting", w), shown ? "wpm" : "locked")}${DAILY_STREAKS ? b("c", shown ? d : lock, streakTip("Daily Review Meeting", d), shown ? "drm" : "locked") : ""}${b("r", ph, `Phase ${ph} - ${PHASES[ph - 1].name}`, `phase p${ph}`)}</span>`;
   }
   function profileAvatar(u, size = "", { link = true } = {}) {
     // Coaches get the same layout, with a Coach label where members show their numbers
@@ -560,7 +563,7 @@
   const sampleHalf = (tool) => {
     const n = SAMPLE[tool].n;
     return `<div class="habits-half">${cardHead(tool, TOOLS[tool].title)}
-      <div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}${chainLabel(tool)}</div>`;
+      ${tool === "daily" && !DAILY_STREAKS ? `<p class="habits-note">${TOOLS.daily.sub}</p>` : `<div class="habits-count"><b>${n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool)}${chainLabel(tool)}`}</div>`;
   };
   // Real-looking preview, dimmed and inert, with the lock message on top
   function lockedOver(preview, title, cls = "", { compact = false, proofTool = null } = {}) {
@@ -635,8 +638,8 @@
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
     return `<div class="habits-half">
       ${cardHead(tool, t.title, `#/tools/${tool}`)}
-      <div class="habits-count"><b>${n}</b><span>${unit}</span></div>
-      ${chain(tool, id, 10)}${chainLabel(tool)}
+      ${tool === "daily" && !DAILY_STREAKS ? "" : `<div class="habits-count"><b>${n}</b><span>${unit}</span></div>
+      ${chain(tool, id, 10)}${chainLabel(tool)}`}
       <div class="habits-foot">
         ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
           : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
@@ -853,7 +856,7 @@
   };
 
   // team space (company): leaderboard for everyone, member detail for leaders and coaches
-  let lbSort = "drm";
+  let lbSort = DAILY_STREAKS ? "drm" : "wpm";
   const canManage = (cid) => isCoach() || (me().role === "admin" && me().companyId === cid);
   const memberHref = (m) => (isCoach() ? `#/companies/${m.companyId}/${m.id}` : `#/company/${m.id}`);
   // Top five for each meeting, plus you at the bottom with your rank when you're not in the top five
@@ -870,7 +873,7 @@
       };
       return `<div class="lb-col">${cardHead(key === "wpm" ? "weekly" : "daily", title)}<ol class="lb">${ranked.slice(0, 5).map((x, i) => row(x, i)).join("")}${mine >= 5 ? `<li class="lb-gap" aria-hidden="true">⋯</li>${row(ranked[mine], mine, true)}` : ""}</ol></div>`;
     };
-    return `<div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${board("drm", "day", "Daily Review Meeting")}</div>`;
+    return `<div class="lb-cols">${board("wpm", "wk", "Weekly Planning Meeting")}${DAILY_STREAKS ? board("drm", "day", "Daily Review Meeting") : ""}</div>`;
   }
   const streakRows = (people) => people.filter((m) => m.role !== "coach" && m.companyId && hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
   function leaderboard(cid) {
@@ -912,7 +915,7 @@
   const roster$ = { q: "", sort: "month", dir: -1, page: 0 };
   const ROSTER_COLS = [
     ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
-    ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)],
+    ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
     ["mwpm", "Weekly Planning<br>past month", (x) => (hasHabits(x.m) ? x.ms.wpm : -1)], ["mdrm", "Daily Review<br>past month", (x) => (hasHabits(x.m) ? x.ms.drm : -1)],
     ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
   ];
@@ -923,9 +926,9 @@
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${phaseOf(x.m)} - ${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td><td data-label="Daily Review streak">${x.drm} day</td><td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="4" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="7" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${phaseOf(x.m)} - ${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td><td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td><td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
   }
@@ -1036,7 +1039,7 @@
       <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they join the Master Your Week Cohort</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span>${streakStat("weekly", m.id)}</div>
-        <div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>
+        ${DAILY_STREAKS ? `<div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>` : ""}
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
@@ -1152,6 +1155,10 @@
     const milestone = grew && (n === 1 ? "Day One of a New Streak" : n % 5 === 0 ? `${n}-${tool === "weekly" ? "Week" : "Day"} Streak Milestone` : "");
     // Play the animations only on arrival (or Replay); later re-renders, like opening the profile menu, show the finished state
     const play = celebrateFresh; celebrateFresh = false;
+    if (tool === "daily" && !DAILY_STREAKS) return `<section class="celebrate settled" aria-live="polite">
+      <h1>${t.title}</h1><p>Done for today.</p>
+      <div class="row"><a class="btn accent" href="#/home">Back to Home</a><a class="btn ghost" href="#/community">Share a Win in Community</a></div>
+    </section>`;
     return `<section class="celebrate ${play ? "" : "settled"}" aria-live="polite">
       <h1>${t.title}</h1>${line ? `<p>${line}</p>` : ""}
       <div class="big-wrap"><span class="big" ${grew ? `data-from="${before}"` : ""}>${n}</span>${grew ? `<span class="plus-one" aria-hidden="true">+1</span>` : ""}</div>
@@ -1196,7 +1203,7 @@
           ${sample ? "" : socialProof(tool)}
           <div class="row"><button class="btn big" data-action="start-tool" data-tool="${tool}">Run Your ${t.title}</button><a class="preview-link" href="#/preview/${tool}">Preview the Celebration</a></div></div>
           ${history.length ? `<h2 class="section">History</h2>${history.slice(0, 12).map((r) => `<details class="card run"><summary><b>${fmtDate(r.ts, { weekday: "long", month: "short", day: "numeric" })}</b> <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(tool, r.answers, r.ts))}</pre><button class="ghost sm" data-action="copy-run" data-id="${r.id}">Copy as Markdown</button></details>`).join("")}` : ""}
-        </div><div class="feed-glb">${streakCard}</div><aside class="side">${aiPanel}</aside></div>`;
+        </div><div class="feed-glb">${tool === "daily" && !DAILY_STREAKS ? "" : streakCard}</div><aside class="side">${aiPanel}</aside></div>`;
     }
     const s = t.steps[draft.step], last = draft.step === t.steps.length - 1;
     const field = (f) => {
@@ -1259,7 +1266,7 @@
     };
     const habits = isCoachP ? "" : !hasHabits(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your habits unlock when you join" : `${esc(p.name.split(" ")[0])}'s habits unlock when they join`} the Master Your Week Cohort.</p></div>`
       : !visibleTo(p) ? `<div class="card">${cardHead("weekly", "Habits")}<p class="muted">${isMe ? "Your activity is private." : `${esc(p.name.split(" ")[0])} keeps their activity private.`}</p></div>`
-      : `<div class="grid two">${streakCard("weekly")}${streakCard("daily")}</div>`;
+      : DAILY_STREAKS ? `<div class="grid two">${streakCard("weekly")}${streakCard("daily")}</div>` : streakCard("weekly");
     // Completed courses, grouped by the phase they belong to
     const d = done(p.id), groups = [
       [PHASES[0], SEED.courses.filter((x) => x.kind === "workshop")],
