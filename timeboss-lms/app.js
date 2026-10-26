@@ -1336,6 +1336,7 @@
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
       <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}${addUsersView()}`;
     document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_ || addUsersOpen);
+    onePrimary(root);
     if (scrollTarget && location.hash !== scrolledFor) {
       const el = document.getElementById(scrollTarget);
       scrolledFor = location.hash;
@@ -1345,6 +1346,14 @@
     freshNote = 0; // a new comment animates in once, not again on the next re-render
     tickTimer();
     countUp();
+  }
+  // One filled (pop color) button per page. A locked section's unlock button wins, otherwise the first visible one;
+  // every other filled button switches to the outline style. The sidebar's Next Step stays filled only when the page has none.
+  function onePrimary(root) {
+    const main = root.querySelector("#main"), filled = [...main.querySelectorAll(".btn:not(.ghost)")];
+    const keep = main.querySelector(".locked-msg .btn:not(.ghost)") || filled.find((b) => b.offsetParent);
+    filled.forEach((b) => b !== keep && b.classList.add("ghost"));
+    if (keep) root.querySelectorAll(".sidebar .btn:not(.ghost)").forEach((b) => b.classList.add("ghost"));
   }
   // Count the streak up from the previous number on the completion screen
   let celebrateFresh = true;
