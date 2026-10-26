@@ -29,8 +29,9 @@
 * { box-sizing: border-box; }
 body { margin: 0; font: 16px/1.7 var(--font-body); color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
 a { color: var(--teal); text-decoration: none; }
-h1, h2, h3, h4 { margin: 0 0 .3em; line-height: 1.15; color: var(--heading); font-family: var(--font-head); letter-spacing: -.01em; }
-h1 { font-size: clamp(28px, 3.4vw, 44px); font-weight: 800; }
+/* The serif headline face is for page titles (h1) only; every other heading uses the sans */
+h1, h2, h3, h4 { margin: 0 0 .3em; line-height: 1.2; color: var(--heading); font-family: var(--font-body); font-weight: 700; letter-spacing: -.01em; }
+h1 { font-family: var(--font-head); line-height: 1.15; font-size: clamp(28px, 3.4vw, 44px); font-weight: 800; }
 h3 { font-size: 18px; font-weight: 700; }
 h4 { font-weight: 700; font-family: var(--font-body); letter-spacing: 0; }
 p { margin: 0 0 .8em; }
@@ -145,7 +146,7 @@ output { color: var(--teal); font-weight: 900; }
 .bar span { display: block; height: 100%; background: var(--teal); border-radius: 99px; transition: width .4s; }
 .bar.thin { height: 5px; margin: 0; }
 
-.stat b { display: block; font-family: var(--font-head); font-size: clamp(36px, 3.6vw, 48px); font-weight: 800; color: var(--navy); margin: 2px 0 4px; letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: lining-nums; }
+.stat b { display: block; font-family: var(--font-body); font-size: clamp(36px, 3.6vw, 48px); font-weight: 800; color: var(--navy); margin: 2px 0 4px; letter-spacing: -.02em; line-height: 1.05; font-variant-numeric: lining-nums; }
 .stat .chain { margin: 4px 0 8px; }
 .stat .streak-num { display: flex; align-items: baseline; gap: 10px; }
 .stat .streak-num span { font-size: 15px; color: var(--muted); }
@@ -312,7 +313,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .habits-half { position: relative; display: flex; flex-direction: column; gap: 10px; }
 .habits-half + .habits-half { border-left: 1px solid rgba(255, 255, 255, .1); padding-left: 30px; margin-left: 30px; }
 .habits-count { display: flex; align-items: baseline; gap: 10px; }
-.habits-count b { font-family: var(--font-head); font-size: clamp(56px, 6vw, 80px); font-weight: 800; line-height: .9; letter-spacing: -.03em; color: #fff; font-variant-numeric: lining-nums; }
+.habits-count b { font-family: var(--font-body); font-size: clamp(56px, 6vw, 80px); font-weight: 800; line-height: .9; letter-spacing: -.03em; color: #fff; font-variant-numeric: lining-nums; }
 .habits-count span { color: var(--teal-2); font-size: 15px; }
 /* Who else ran it: below a rule at the bottom of each habit */
 .habits-proof { margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .14); }
@@ -344,7 +345,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .celebrate > * { position: relative; }
 .celebrate h1 { color: #fff; font-size: clamp(30px, 4vw, 44px); margin-bottom: 6px; }
 .celebrate p { color: rgba(255, 255, 255, .72); margin: 0 auto 22px; max-width: 46ch; }
-.celebrate .big { font-family: var(--font-head); font-weight: 800; font-size: clamp(96px, 14vw, 160px); line-height: .9; letter-spacing: -.04em; display: block; font-variant-numeric: lining-nums tabular-nums; }
+.celebrate .big { font-family: var(--font-body); font-weight: 800; font-size: clamp(96px, 14vw, 160px); line-height: .9; letter-spacing: -.04em; display: block; font-variant-numeric: lining-nums tabular-nums; }
 .celebrate .unit { color: var(--teal-2); font-size: 17px; display: block; margin: 6px 0 24px; }
 .celebrate .chain { justify-content: center; margin-bottom: 28px; }
 .celebrate .pip { width: 22px; height: 22px; }
@@ -377,7 +378,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 /* Master Your Week CTA: one look everywhere (sidebar, home, community) */
 .myw { background: var(--teal); color: #fff; border-radius: var(--radius); padding: 22px; margin-bottom: var(--gap); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; }
 .myw::after { content: ""; position: absolute; right: -36px; bottom: -36px; width: 120px; height: 120px; border-radius: 50%; border: 18px solid rgba(255, 255, 255, .08); }
-.myw .myw-head { align-self: stretch; font-family: var(--font-head); font-size: 20px; font-weight: 700; color: #fff; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .2); position: relative; }
+.myw .myw-head { align-self: stretch; font-family: var(--font-body); font-size: 20px; font-weight: 700; color: #fff; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .2); position: relative; }
 /* The Home phase card's next step uses the same teal Your Next Step panel */
 .phase-card .myw { border-radius: 0; margin: 0; padding: 22px 26px 26px; }
 .phase-card .myw h2 { color: #fff; }
@@ -595,7 +596,7 @@ table.team tfoot td { font-weight: 700; color: var(--heading); border-bottom: 0;
 .check-row { display: flex; gap: 12px; align-items: flex-start; font-weight: 500; font-size: 15.5px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; margin-bottom: 8px; cursor: pointer; transition: border-color .15s, background .15s; }
 .check-row input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--teal); flex: none; }
 .check-row:has(input:checked) { border-color: var(--teal); background: var(--teal-soft); }
-.steps-preview .phase-label { list-style: none; margin: 20px 0 8px -22px; font-family: var(--font-head); font-size: 19px; font-weight: 700; color: var(--teal); }
+.steps-preview .phase-label { list-style: none; margin: 20px 0 8px -22px; font-family: var(--font-body); font-size: 19px; font-weight: 700; color: var(--teal); }
 .steps-preview .phase-label:first-child { margin-top: 0; }
 .share-btn { margin-bottom: 18px; }
 details.run { padding: 9px 0; border-bottom: 1px solid var(--line); }
@@ -673,7 +674,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px soli
 .course .series { margin: -2px 0 8px; color: var(--teal); font-weight: 600; }
 .course .series + .accent-line { margin-top: 8px; }
 .course.locked .series { color: var(--muted); }
-.lesson-question { font-family: var(--font-head); font-size: clamp(20px, 2.2vw, 24px); font-style: italic; color: var(--teal); line-height: 1.35; margin: 4px 0 0; max-width: 36ch; }
+.lesson-question { font-family: var(--font-body); font-size: clamp(19px, 2vw, 22px); font-weight: 600; color: var(--teal); line-height: 1.35; margin: 4px 0 0; max-width: 36ch; }
 .level .grid { margin-top: 0; }
 .demo-link { color: rgba(255, 255, 255, .55); text-decoration: underline; text-underline-offset: 3px; margin-top: 18px; }
 
