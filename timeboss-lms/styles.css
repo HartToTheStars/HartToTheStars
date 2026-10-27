@@ -742,6 +742,15 @@ body.modal-open { overflow: hidden; }
 /* Profile menu (top right) */
 .content-top { display: flex; justify-content: flex-end; padding: 16px clamp(16px, 3vw, 48px) 0; max-width: 1200px; }
 .content-top + main { padding-top: 8px; }
+/* Desktop: the bell and profile sit on the page title's row instead of a row of their own */
+@media (min-width: 1081px) {
+  .content { position: relative; }
+  .content-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding-top: 38px; pointer-events: none; }
+  .content-top .hdr-right { pointer-events: auto; }
+  .content-top + main { padding-top: 36px; }
+  .content-top + main > .page-head:first-child { padding-right: 190px; }
+  .content-top + main > :first-child:not(.page-head) { margin-top: 72px; } /* pages without a title start below the profile */
+}
 .pm { position: relative; }
 /* The profile button is one outlined box around the picture, its numbers, and the arrow */
 .pm-btn { display: flex; align-items: center; gap: 8px; padding: 12px 8px 8px; /* extra top: the avatar ring draws 4px outside the picture */ border-radius: 16px; color: var(--heading); background: var(--card); border: 1px solid var(--line); -webkit-tap-highlight-color: transparent; }
