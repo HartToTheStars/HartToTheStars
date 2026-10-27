@@ -61,13 +61,13 @@ small { display: block; font-size: 13px; color: var(--muted); line-height: 1.5; 
 }
 .content { display: flex; flex-direction: column; min-width: 0; }
 .topbar { display: none; }
-.sidebar { background: var(--navy); color: rgba(255, 255, 255, .7); padding: 22px 14px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.sidebar { background: var(--navy); color: rgba(255, 255, 255, .7); padding: 34px 14px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 .brand { display: flex; gap: 10px; align-items: center; color: #fff; }
 .brand b { display: block; font-family: var(--font-label); font-size: 17px; font-weight: 800; letter-spacing: .08em; line-height: 1.1; }
 .brand small { color: rgba(255, 255, 255, .5); font-size: 12px; letter-spacing: .04em; }
 .brand .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--teal); display: grid; place-items: center; color: #fff; }
 .brand .logo .ic { width: 22px; height: 22px; }
-.brand-wrap { padding: 0 6px; }
+.brand-wrap { padding: 0 6px; margin-bottom: 16px; }
 /* Let the sidebar scroll rather than squeeze (and clip) the cards inside it */
 .sidebar > * { flex-shrink: 0; }
 @supports (height: 100dvh) { .sidebar { height: 100dvh; } }
