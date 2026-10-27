@@ -745,11 +745,11 @@ body.modal-open { overflow: hidden; }
 /* Desktop: the bell and profile sit on the page title's row instead of a row of their own */
 @media (min-width: 1081px) {
   .content { position: relative; }
-  .content-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding-top: 38px; pointer-events: none; }
+  .content-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding-top: 16px; pointer-events: none; }
   .content-top .hdr-right { pointer-events: auto; }
-  .content-top + main { padding-top: 36px; }
+  .content-top + main { padding-top: 14px; } /* title, bell and profile center on the sidebar logo */
   .content-top + main > .page-head:first-child { padding-right: 190px; }
-  .content-top + main > :first-child:not(.page-head) { margin-top: 72px; } /* pages without a title start below the profile */
+  .content-top + main > :first-child:not(.page-head) { margin-top: 94px; } /* pages without a title start below the profile */
 }
 .pm { position: relative; }
 /* The profile button is one outlined box around the picture, its numbers, and the arrow */
