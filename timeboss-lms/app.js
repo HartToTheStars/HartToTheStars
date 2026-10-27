@@ -1403,7 +1403,7 @@
   // every other filled button switches to the outline style. The sidebar's Next Step stays filled only when the page has none.
   function onePrimary(root) {
     const main = root.querySelector("#main"), filled = [...main.querySelectorAll(".btn:not(.ghost)")];
-    const keep = main.querySelector(".locked-msg .btn:not(.ghost)") || filled.find((b) => b.offsetParent);
+    const keep = main.querySelector(".phase-body .btn:not(.ghost)") || main.querySelector(".locked-msg .btn:not(.ghost)") || filled.find((b) => b.offsetParent); // the Courses card's Next Step leads Home
     filled.forEach((b) => { if (b !== keep) { b.style.transition = "none"; b.classList.add("ghost"); } }); // no fade from filled to outline
     void main.offsetHeight; // apply the outline style now, then restore the hover fade
     filled.forEach((b) => b.style.removeProperty("transition"));
