@@ -747,9 +747,10 @@ body.modal-open { overflow: hidden; }
   .content { position: relative; }
   .content-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding-top: 16px; pointer-events: none; }
   .content-top .hdr-right { pointer-events: auto; }
-  .content-top + main { padding-top: 14px; } /* title, bell and profile center on the sidebar logo */
+  /* Title capitals, bell and profile center on the sidebar logo (center 55px); the title size follows h1 */
+  .content-top + main { padding-top: calc(55px - .634 * clamp(28px, 3.4vw, 44px)); }
   .content-top + main > .page-head:first-child { padding-right: 190px; }
-  .content-top + main > :first-child:not(.page-head) { margin-top: 94px; } /* pages without a title start below the profile */
+  .content-top + main > :first-child:not(.page-head) { margin-top: 81px; } /* pages without a title start below the profile */
 }
 .pm { position: relative; }
 /* The profile button is one outlined box around the picture, its numbers, and the arrow */
