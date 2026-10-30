@@ -2,9 +2,10 @@
 // Course text is placeholder written to the Time Boss frameworks; swap in the real curriculum.
 
 window.TB_SEED = {
+  // customWorkshop: the company booked a private workshop (10+ seats), so its new people watch that recording instead of RSVPing for the live monthly one
   companies: [
-    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com" },
-    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org" },
+    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com", customWorkshop: true },
+    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org", customWorkshop: true },
     { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio" },
     { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com" }, // an individual leader on their own, without their team
   ],
@@ -46,6 +47,7 @@ window.TB_SEED = {
     { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin", phase: 3, habit: 0.85 },
     { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, enrolled: true, habit: 0.7 },
     { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin", phase: 3, habit: 0.76 },
+    { id: "u_jade", name: "Jade Wilson", title: "Producer", companyId: "brightline", role: "member", phase: 1, habit: 0.6 },
     { id: "u_elena", name: "Elena Brooks", title: "Founder and Principal", companyId: "hartwell", role: "member", phase: 2, enrolled: true, habit: 0.7 },
   ],
 
@@ -84,6 +86,12 @@ window.TB_SEED = {
 
   // Office hours booking (Calendly inline embed)
   officeHours: { calendlyUrl: "https://calendly.com/d/d3mx-5nj-rrw/time-boss-micro-office-hours", mins: 15 },
+  // 1x1 coaching call offered under a custom workshop recording (placeholder: the office hours link until there's a dedicated one)
+  coachingCallUrl: "https://calendly.com/d/d3mx-5nj-rrw/time-boss-micro-office-hours",
+
+  // Phase 1 for companies without a custom workshop: the live Unlock Your Week Workshop, second Tuesday of each month
+  liveWorkshop: { title: "Live Unlock Your Week Workshop", hour: 9, mins: 180, host: "u_andrew",
+    desc: "The half-day kickoff to Time Boss, live with a Time Boss coach and leaders from other teams." },
 
   // Workshop (phase 1), Master Your Week cohort curriculum (open for review after the cohort), and mini courses (Maximize Your Week). Lessons: { id, title, mins, body (html-ish paragraphs), action }
   courses: [
@@ -91,20 +99,14 @@ window.TB_SEED = {
       id: "workshop",
       kind: "workshop",
       title: "Unlock Your Week Workshop",
-      blurb: "Three short lessons on why time management fails and the weekly habits that fix it. Start here.",
+      blurb: "The kickoff to Time Boss: why time management fails and the weekly habits that fix it. Start here.",
+      // One recorded video, no chapters. Companies with a custom workshop get their own recording (customBody) in place of the standard one.
       lessons: [
-        { id: "ws1", title: "Why time management fails", mins: 8,
-          body: ["Most systems assume the problem is organization. It usually isn't. The problem is that your time is being taken by things you never consciously chose.",
-                 "Time Boss starts from a different question: what is diverting you, and why does it keep working?"],
-          action: "Write down the last three times you ended a day thinking 'where did it go?'" },
-        { id: "ws2", title: "Being the boss of your time", mins: 10,
-          body: ["A Time Boss decides in advance. Reactive people decide in the moment, which means someone else decides for them.",
-                 "Your calendar is a statement of priorities. If it's mostly other people's priorities, that's information."],
-          action: "Audit tomorrow's calendar. Mark each block: mine, theirs, or nobody's." },
-        { id: "ws3", title: "Your weekly habits", mins: 12,
-          body: ["Two meetings run the whole system: a Weekly Planning Meeting with yourself and a Daily Review Meeting.",
-                 "Weekly sets direction. Daily keeps you honest. Everything else is execution."],
-          action: "Block your Weekly Planning Meeting before your work week starts and a 15-minute Daily Review Meeting at the end of each workday, recurring." },
+        { id: "ws", title: "Unlock Your Week Workshop", mins: 120,
+          body: ["Why time management fails, what it means to be the boss of your time, and the two meetings that run the whole system: a Weekly Planning Meeting and a Daily Review Meeting.",
+                 "Watch it before your Master Your Week Cohort starts. It stays here for review any time."],
+          customBody: ["Your team's workshop, recorded with your tools and your use cases: why time management fails, what it means to be the boss of your time, and the Weekly Planning and Daily Review Meetings the whole system runs on.",
+                       "Watch it before your Master Your Week Cohort starts. It stays here for review any time."] },
       ],
     },
     {
@@ -416,12 +418,13 @@ window.TB_SEED = {
 
   // Explicit lesson progress for the demo users in each phase; everyone else gets generated progress
   progress: {
-    u_sam: ["ws1"], // phase 1: partway through the workshop
-    u_dev: ["ws1", "ws2", "ws3"], // phase 2: workshop done, cohort next
-    u_maria: ["ws1", "ws2", "ws3", "dv1", "dv2", "dv3", "hsp1", "hsp2", "en1"], // phase 3
-    u_lena: ["ws1", "ws2", "ws3", "dv1", "dv2", "dv3", "rc1", "qg1", "qg2"],
-    u_omar: ["ws1", "ws2", "ws3"],
-    u_tess: ["ws1", "ws2", "ws3", "mt1", "mt2", "en1", "en2"],
+    u_sam: [], // phase 1: hasn't watched Acme's custom workshop yet
+    u_jade: [], // phase 1: hasn't attended the live workshop yet
+    u_dev: ["ws"], // phase 2: workshop done, cohort next
+    u_maria: ["ws", "dv1", "dv2", "dv3", "hsp1", "hsp2", "en1"], // phase 3
+    u_lena: ["ws", "dv1", "dv2", "dv3", "rc1", "qg1", "qg2"],
+    u_omar: ["ws"],
+    u_tess: ["ws", "mt1", "mt2", "en1", "en2"],
   },
 };
 

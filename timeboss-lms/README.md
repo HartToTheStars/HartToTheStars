@@ -13,7 +13,7 @@ Before publishing, bump the `?v=` tags on styles.css, data.js and app.js in `ind
 
 ## Phases
 
-1. **Unlock Your Week** (Workshop). Everyone starts here. Finishing the workshop's lessons moves the member to phase 2. Habits and Events are locked in this phase.
+1. **Unlock Your Week** (Workshop). Everyone starts here, one of two ways. If their company booked a custom workshop (`customWorkshop` in data.js), they watch that recording on a single video page, which also offers a 1x1 coaching call since they missed the live room; Mark Complete moves them to phase 2. Otherwise they RSVP for the live monthly workshop (second Tuesday); in the prototype, "Demo: Mark Workshop Attended" stands in for attending. After phase 1, it becomes "Review the Workshop", linking to the standard recording or the company's custom one. Habits and Events are locked in this phase.
 2. **Master Your Week** (Group Coaching Cohort). Finishing the workshop makes a member ready to enroll. Habits (Weekly Planning Meeting, Daily Review Meeting, streaks, leaderboard) and Events open when they enroll. In the prototype, Enroll in Cohort enrolls immediately (production: checkout first), and "Demo: Mark the Cohort Complete" on the cohort page stands in for finishing it.
    The cohort's sessions open in the app for review once the cohort is complete: Dealing with Diversions; the four Solving the Root Cause of Diversions sessions (Relationships, Environment, Systems, Yourself); and Your Highest Sustainable Pace.
 3. **Maximize Your Week** (Continuing Education). The mini courses (starting with Time Boss x AI), plus masterclasses and live Weekly Planning Meetings.
