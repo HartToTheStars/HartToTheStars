@@ -708,7 +708,7 @@
       ${homeFaces(u)}
 
       ${phaseCard()}
-      ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
+      ${phaseOf(u) === 1 ? officeCard() : `      ${hasHabits(u) ? `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
 ` : lockedOver(`<section class="habits">${sampleHalf("weekly")}${sampleHalf("daily")}</section>`, "Join the Master Your Week Cohort to unlock Habits and Streaks.", "habits-lock", { compact: true })}
 
       <div class="grid two">
@@ -718,15 +718,16 @@
           <h3>${esc(p.q)}</h3>
           <div class="row prompt-cta"><a class="btn accent sm" href="#/community">Answer in Community</a><span class="muted">${plural((S.promptReplies[dateKey()] || []).length, "reply", "replies")} today</span></div>
         </div>
-        <div class="card office-card">
+        ${officeCard()}
+      </div>
+      ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "Join the Master Your Week Cohort to unlock Upcoming Events.", "events-lock", { compact: true })}`}`; // the workshop phase keeps Home to the courses and office hours
+  };
+  const officeCard = () => `<div class="card office-card">
           ${cardHead("office", "Office Hours", "#/office-hours")}
           <h3>15 Minutes with a Time Boss Coach</h3>
           <p class="muted">Get help on any challenge related to time.</p>
           <a class="btn ghost sm" href="#/office-hours">Book Office Hours</a>
-        </div>
-      </div>
-      ${hasHabits(u) ? eventsCard() : lockedOver(eventsCard({ sample: true }), "Join the Master Your Week Cohort to unlock Upcoming Events.", "events-lock", { compact: true })}`;
-  };
+        </div>`;
   // Home: the next live events with RSVP right there
   function eventsCard({ sample = false } = {}) {
     const list = allEvents().sort((a, b) => a.start - b.start).slice(0, sample ? 5 : 3); // the locked example shows more below its message
