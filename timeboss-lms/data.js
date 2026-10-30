@@ -91,7 +91,7 @@ window.TB_SEED = {
       id: "workshop",
       kind: "workshop",
       title: "Unlock Your Week Workshop",
-      blurb: "The foundation. Take back your calendar by naming what actually steals your time.",
+      blurb: "Three short lessons on why time management fails and the weekly habits that fix it. Start here.",
       lessons: [
         { id: "ws1", title: "Why time management fails", mins: 8,
           body: ["Most systems assume the problem is organization. It usually isn't. The problem is that your time is being taken by things you never consciously chose.",
@@ -223,12 +223,12 @@ window.TB_SEED = {
         { id: "em1", title: "Batching", mins: 5, body: ["Check email at set times, 2 to 4 per day. Close it between."], action: "Pick your email windows and put them on your calendar." },
         { id: "em2", title: "Zero-touch triage", mins: 7, body: ["Each email gets one touch: reply, schedule, delegate, archive."], action: "Run one batch today with the one-touch rule." },
       ] },
-    { id: "delegating", kind: "mini", title: "Delegating", blurb: "Hand off outcomes, not tasks.",
+    { id: "delegating", kind: "mini", title: "Delegating", blurb: "Decide what to hand off, who gets it, and how to describe the result you need.",
       lessons: [
         { id: "dl1", title: "What to delegate", mins: 6, body: ["If someone else can do it 80% as well, delegate it. Your 100% is expensive."], action: "List 5 things you did last week someone else could have done." },
         { id: "dl2", title: "The delegation brief", mins: 8, body: ["Define the outcome, the deadline, the constraints, and the check-in. Skip any one and it comes back to you."], action: "Delegate one item using the four-part brief." },
       ] },
-    { id: "meetings", kind: "mini", title: "Meetings", blurb: "Fewer, shorter, better.",
+    { id: "meetings", kind: "mini", title: "Meetings", blurb: "Cut recurring meetings you don't need and shorten the ones you keep.",
       lessons: [
         { id: "mt1", title: "Should this be a meeting?", mins: 5, body: ["A meeting is for decisions and discussion. Updates go async."], action: "Cancel or convert one recurring meeting to async." },
         { id: "mt2", title: "Running a tight meeting", mins: 7, body: ["Agenda in advance, a decision owner, end with who-does-what-by-when."], action: "Use the 3-line agenda on your next meeting." },
@@ -343,7 +343,7 @@ window.TB_SEED = {
     { id: "p2", authorId: "u_priya", h: 6, likes: 14, body: "Six weeks in a row of Weekly Planning Meetings. Biggest change: I stopped putting 'finish budget' on my calendar and started blocking subtasks with a definition of Done. Two hours max, every time. It's boring and it works.",
       comments: [{ a: "u_erin", h: 5, b: "The 2 hour rule changed how I scope everything.",
                    r: [{ a: "u_priya", h: 4.5, l: 3, b: "Same. If a task runs over two hours, I haven't figured out Done yet." }] },
-                 { a: "u_andrew", h: 4, b: "Boring and it works is the whole system in four words. 🙌", gif: "assets/gifs/nice-work.gif" }] },
+                 { a: "u_andrew", h: 4, b: "Love this, Priya. Two-hour subtasks with a clear Done is exactly the habit. 🙌", gif: "assets/gifs/nice-work.gif" }] },
     { id: "p3", authorId: "u_sam", h: 9, likes: 11, body: "Honest post: I've skipped my Daily Review three days running. By 5pm I'm fried and it feels like one more meeting. How do you all make it stick?",
       comments: [{ a: "u_grace", h: 8.5, l: 7, b: "I do it standing up, 10 minutes, before I close the laptop. If I sit down it turns into email.",
                    r: [{ a: "u_sam", h: 6, l: 2, b: "Standing up is a good trick. Trying it today." }] },

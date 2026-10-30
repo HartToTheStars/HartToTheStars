@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v9";
+  const KEY = "tb_lms_v10";
   // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
   // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
   const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
@@ -71,7 +71,7 @@
     daily: {
       title: "Daily Review Meeting",
       mins: 15,
-      when: "End of your workday · 15 minutes",
+      when: "End of your workday, 15 minutes",
       sub: "15 minutes, at the end of your work day.", // page subtitle
       prompt: window.TB_PROMPTS.daily,
       steps: [
@@ -99,7 +99,7 @@
   }
 
   // ---------- phases ----------
-  // 1. Unlock Your Week Workshop → 2. Master Your Week Cohort → 3. Maximize Your Week (ongoing education)
+  // 1. Unlock Your Week Workshop, 2. Master Your Week Cohort, 3. Maximize Your Week (ongoing education)
   const WORKSHOP = "workshop";
   const PHASES = [
     { n: 1, name: "Unlock Your Week", sub: "Workshop" },
@@ -142,10 +142,10 @@
     // Habits start with the cohort: none for people not yet enrolled, and only since the current cohort began for those in it
     members.filter((u) => u.phase === 3 || u.enrolled).forEach((u) => {
       const r = rng(uidKey(u.id)), base = u.habit ?? 0.35 + r() * 0.6;
-      const weeksBack = u.phase === 3 ? 10 : SEED.cohort.currentWeek - 1;
+      const weeksBack = u.phase === 3 ? 6 + Math.floor(rng(uidKey(u.id) + 7)() * 12) : SEED.cohort.currentWeek - 1; // finished the cohort 6 to 17 weeks ago
       let prev = true;
       const drmHour = 14 + Math.floor(r() * 4); // each person has a usual end-of-day time
-      for (let i = u.phase === 3 ? 60 : weeksBack * 7 + 5; i >= 0; i--) {
+      for (let i = weeksBack * 7 + 5; i >= 0; i--) {
         const d = startOfDay(now - i * DAY);
         if (!isWorkday(d)) continue;
         prev = r() < (prev ? Math.min(0.96, base + 0.05) : Math.max(0.15, base - 0.15));
@@ -229,8 +229,8 @@
   const isCoach = (u = me()) => u && u.role === "coach";
   const teamOf = (cid) => S.users.filter((u) => u.companyId === cid);
   // Avatar ring shows the member's phase (sand: Unlock Your Week, light teal: Master Your Week, teal: Maximize Your Week)
-  // "Acme Logistics · 3h ago" under a name in comments and replies; coaches show Time Boss
-  const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")} · ${ago(ts)}</small>`;
+  // "Acme Logistics, 3h ago" under a name in comments and replies; coaches show Time Boss
+  const whereWhen = (u, ts) => `<small class="meta">${esc(u.companyId ? company(u.companyId)?.name : "Time Boss")}, ${ago(ts)}</small>`;
   const avatar = (u, size = "") => `<span class="avatar ${size} ${u.photo ? "photo" : ""} ${u.role === "coach" || !u.companyId ? "ring-coach" : `ring-p${phaseOf(u)}`}" style="background:${u.color || (u.companyId ? company(u.companyId)?.color : "#5e8497")}${u.photo ? `;background-image:url('${u.photo}')` : ""}">${u.photo ? "" : esc(initials(u.name))}</span>`;
 
   // Short confirmation card: a bold line, plus an optional detail line under it
@@ -336,7 +336,7 @@
     d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7 || 7)); // next Friday
     for (let i = 0; i < 4; i++) {
       const start = at(d, 14, 0);
-      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Weekly Planning Meeting (live, group)", desc: "Plan next week alongside other Time Bosses, with a coach on hand.", start, mins: 45, host: "u_coach2" });
+      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Live Weekly Planning Meeting", desc: "Plan next week alongside other Time Bosses, with a coach on hand.", start, mins: 45, host: "u_coach2" });
       d.setDate(d.getDate() + 7);
     }
     return out;
@@ -419,7 +419,7 @@
         ${link("#/tools/daily", "Daily Review Meeting", "daily", lockH)}
       </nav>
       ${mywCta()}
-      <div class="me">${profileAvatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? " · " + u.role : ""}</small></div>
+      <div class="me">${profileAvatar(u)}<div><b>${esc(u.name)}</b><small>${c ? esc(c.name) : "Time Boss Team"}${u.role !== "member" ? ", " + u.role[0].toUpperCase() + u.role.slice(1) : ""}</small></div>
         <button class="ghost sm" data-action="logout" title="Switch user">Switch</button></div>`;
   }
 
@@ -551,7 +551,7 @@
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ran-title">
         <div class="modal-head"><h2 id="ran-title">${fixed ? esc(ranModal.title) : `Ran their ${TOOLS[tool].title} ${periodLabel(tool)}`}</h2><button class="ghost sm" data-action="close-modal" aria-label="Close">Close</button></div>
         ${!fixed && u.companyId ? `<div class="seg"><button class="${scope === "team" ? "on" : ""}" data-action="ran-scope" data-id="team">${esc(company(u.companyId).name)} (${p.all.filter((x) => x.u.companyId === u.companyId).length})</button><button class="${scope === "all" ? "on" : ""}" data-action="ran-scope" data-id="all">Everyone (${p.all.length})</button></div>` : ""}
-        <ul class="ran-list">${list.map((x) => `<li>${profileAvatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)} · ${esc(company(x.u.companyId).name)} · ${ago(x.ts)}</small></div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
+        <ul class="ran-list">${list.map((x) => `<li>${profileAvatar(x.u)}<div><b>${esc(x.u.name)}${x.u.id === u.id ? " (you)" : ""}</b><small>${esc(x.u.title)}, ${esc(company(x.u.companyId).name)}, ${ago(x.ts)}</small></div></li>`).join("") || `<li class="muted">Nobody yet. Be the first.</li>`}</ul>
       </div>`;
   }
 
@@ -586,15 +586,15 @@
   V.login = () => `
     <div class="login">
       <div class="login-card">
-        <div class="login-top">${logo("Community · prototype")}</div>
+        <div class="login-top">${logo("Community Prototype")}</div>
         <p class="muted">Pick a demo user. Each company sees its own private team space; everyone shares the Community.</p>
         <div class="login-group"><h4>One person at each step</h4><div class="picks">
           ${["u_sam", "u_tyler", "u_dev", "u_maria", "u_elena"].map((id) => { const u = user(id); return `<button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>Phase ${phaseOf(u)}: ${phaseLabel(u)}</small></span></button>`; }).join("")}
         </div></div>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
-          <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} · ${teamOf(cid).length}` : "Time Boss coaches"}</h4><div class="picks">
+          <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} (${teamOf(cid).length})` : "Time Boss Coaches"}</h4><div class="picks">
           ${S.users.filter((u) => u.companyId === cid).map((u) => `
-            <button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.title)}${u.role !== "member" ? " · " + u.role : ""}${u.role === "coach" ? "" : ` · Phase ${phaseOf(u)}`}</small></span></button>`).join("")}
+            <button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.title)}${u.role !== "member" ? ", " + u.role[0].toUpperCase() + u.role.slice(1) : ""}${u.role === "coach" ? "" : `, Phase ${phaseOf(u)}`}</small></span></button>`).join("")}
           </div></div>`).join("")}
         <details class="join"><summary>Join with a company code</summary>
           <form data-form="join" class="stack">
@@ -696,7 +696,7 @@
   function eventsCard({ sample = false } = {}) {
     const list = allEvents().sort((a, b) => a.start - b.start).slice(0, sample ? 5 : 3); // the locked example shows more below its message
     const row = (e) => `<li class="ev-row"><span class="date-chip sm"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></span>
-      <div class="ev-main"><b>${esc(e.title)}</b><small>${fmtDate(e.start, { weekday: "short" })} · ${fmtTime(e.start)} · ${e.mins} min</small></div>
+      <div class="ev-main"><b>${esc(e.title)}</b><small>${fmtDate(e.start, { weekday: "short" })}, ${fmtTime(e.start)}, ${e.mins} min</small></div>
       ${!sample && rsvpd(e.id) ? `<a class="btn ghost sm" href="#/events">✓ Going</a>` : `<button class="btn sm" ${sample ? "" : `data-action="rsvp" data-id="${e.id}"`}>RSVP</button>`}</li>`;
     return `<div class="card events-card">${cardHead("events", "Upcoming Events", "#/events")}<ul class="ev-list">${list.map(row).join("")}</ul>
       <a class="link-all" href="#/events">See All Events</a></div>`;
@@ -774,7 +774,7 @@
     const a = user(p.authorId), liked = p.likes.includes(me().id), href = `#/post/${p.id}`;
     const shown = full ? p.comments : p.comments.slice(-2);
     return `<article class="card post" id="post-${p.id}">
-      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? " · " + esc(company(a.companyId).name) : ""} · <a class="post-time" href="${href}">${ago(p.ts)}</a></small></div></div>
+      <div class="post-head">${profileAvatar(a, "lgp")}<div><b>${esc(a.name)}</b><small>${esc(a.title)}${a.companyId ? ", " + esc(company(a.companyId).name) : ""}, <a class="post-time" href="${href}">${ago(p.ts)}</a></small></div></div>
       <div class="post-body">${paras(p.body)}${attView(p.att)}</div>
       <div class="post-actions">
         <button class="ghost sm ${liked ? "liked" : ""}" data-action="like" data-id="${p.id}">${liked ? "♥" : "♡"} ${p.likes.length || ""}</button>
@@ -798,7 +798,7 @@
       </div>
       <aside class="side">
         <div class="card"><h3>Previous Prompts</h3>
-          <ul class="list">${past.map((p) => `<li><a class="past-prompt" href="#/prompt/${p.k}"><b>${esc(p.q)}</b><small>${fmtDate(p.d)} · ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></a></li>`).join("")}</ul></div>
+          <ul class="list">${past.map((p) => `<li><a class="past-prompt" href="#/prompt/${p.k}"><b>${esc(p.q)}</b><small>${fmtDate(p.d)}, ${plural((S.promptReplies[p.k] || []).length, "reply", "replies")}</small></a></li>`).join("")}</ul></div>
       </aside></div>`;
   };
   // Post and prompt detail pages; a notification passes the comment to scroll to and highlight
@@ -807,12 +807,12 @@
     const p = S.posts.find((x) => x.id === id);
     if (!p) return notFound();
     scrollTarget = noteId ? "n-" + noteId : null;
-    return `<div class="detail"><a class="back" href="#" data-action="back">← Back</a>${postCard(p, true)}</div>`;
+    return `<div class="detail"><a class="back" href="#" data-action="back">Back</a>${postCard(p, true)}</div>`;
   };
   V.prompt = (k, noteId) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(k || "")) return notFound();
     scrollTarget = noteId ? "n-" + noteId : null;
-    return `<div class="detail"><a class="back" href="#" data-action="back">← Back</a>${pinnedPrompt(k, true)}</div>`;
+    return `<div class="detail"><a class="back" href="#" data-action="back">Back</a>${pinnedPrompt(k, true)}</div>`;
   };
 
   // ---------- notifications: likes, comments, and replies on my posts, comments, and prompt answers ----------
@@ -877,7 +877,7 @@
   }
   const streakRows = (people) => people.filter((m) => m.role !== "coach" && m.companyId && hasHabits(m) && visibleTo(m)).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id) }));
   function leaderboard(cid) {
-    return `<div class="card lb-card"><div class="lb-title"><h3>Habits Leaderboard</h3><span class="muted">${esc(company(cid).name)} Only</span></div>${streakBoards(streakRows(teamOf(cid)), { link: canManage(cid) })}
+    return `<div class="card lb-card"><div class="lb-title"><h3>Habits Leaderboard</h3></div>${streakBoards(streakRows(teamOf(cid)), { link: canManage(cid) })}
       ${hasHabits() || isCoach() ? "" : `<small class="muted">Enroll in Master Your Week to unlock Habits and Streaks.</small>`}</div>`;
   }
   // Everyone in the community; on phones it sits collapsed at the top of Community
@@ -900,19 +900,19 @@
       [2, "Cohort sessions", lessons(["cohort"])],
       [3, "Mini courses", lessons(["mini"])],
     ];
-    const step = u && nextStep(u);
-    return `<div class="card vs-card"><h3>${u ? "You vs. the Team" : "Team Progress"}</h3>
+    const step = u && nextStep(u), solo = u && all.length < 2; // nobody to compare with on a one-person team
+    return `<div class="card vs-card"><h3>${solo ? "Your Progress" : u ? "You vs. the Team" : "Team Progress"}</h3>
       ${rows.map(([n, what, ids]) => {
         const avg = avgOf(all, (m) => pctDone(m.id, ids)), you = u ? pctDone(u.id, ids) : null, ph = PHASES[n - 1];
-        return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
-          <div class="bar vs-bar">${u ? `<span style="width:${you}%" data-tip="You: ${Math.round(you)}% of ${what.toLowerCase()} done"></span><i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of ${what.toLowerCase()} done" aria-label="Team average: ${Math.round(avg)}%"></i>` : `<span class="avg-fill" style="width:${avg}%" data-tip="Team average: ${Math.round(avg)}%"></span>`}</div></div>`;
+        return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${solo ? `<b>${Math.round(you)}%</b>` : u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
+          <div class="bar vs-bar">${u ? `<span style="width:${you}%" data-tip="You: ${Math.round(you)}% of ${what.toLowerCase()} done"></span>${solo ? "" : `<i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of ${what.toLowerCase()} done" aria-label="Team average: ${Math.round(avg)}%"></i>`}` : `<span class="avg-fill" style="width:${avg}%" data-tip="Team average: ${Math.round(avg)}%"></span>`}</div></div>`;
       }).join("")}
-      ${u ? `<small class="muted vs-key"><i class="avg-key"></i> marks the average across all ${all.length} people at ${esc(company(u.companyId).name)}.</small>
-      <div class="vs-next"><span class="muted">Your next step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
+      ${u ? `${solo ? "" : `<small class="muted vs-key"><i class="avg-key"></i> marks the average across all ${all.length} people at ${esc(company(u.companyId).name)}.</small>`}
+      <div class="vs-next"><span class="muted">Your Next Step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
   }
 
   // Team Members: search, sort by any column, 10 per page, and Add People (leaders and coaches only)
-  const roster$ = { q: "", sort: "month", dir: -1, page: 0 };
+  const roster$ = { q: "", sort: "name", dir: 1, page: 0 };
   const ROSTER_COLS = [
     ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
     ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
@@ -926,9 +926,9 @@
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span class="phase-pill p${phaseOf(x.m)}" title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${phaseOf(x.m)} - ${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 && !enrolled(x.m) ? "Ready to enroll" : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${(avgOf(hab, (x) => x.wpm)).toFixed(1)} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${(avgOf(hab, (x) => x.drm)).toFixed(1)} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
   }
@@ -963,7 +963,7 @@
   let actLimit = 20, actGroups = {};
   function teamActivity(cid) {
     const c = company(cid), team = teamOf(cid), ids = new Set(team.map((m) => m.id)), since = Date.now() - 14 * DAY, items = [];
-    const name = (m) => `<a class="act-name" href="#/people/${m.id}">${esc(m.name)}</a>`;
+    const meId = me().id, name = (m) => `<a class="act-name" href="#/people/${m.id}">${m.id === meId ? "You" : esc(m.name)}</a>`;
     const add = (ts, who, html, href, snippet = "", group = "") => ts >= since && items.push({ ts, who, html, href, snippet, group });
     S.posts.forEach((p) => {
       if (ids.has(p.authorId)) add(p.ts, [user(p.authorId)], `${name(user(p.authorId))} posted in the Community`, `#/post/${p.id}`, p.body);
@@ -1000,10 +1000,17 @@
       if (!g.who.includes(m)) { g.who.push(m); g.runs.push({ u: m, ts: r.ts }); }
     });
     actGroups = {};
+    const solo = {}; // one person's runs of the same meeting in the same week become one line
     Object.entries(groups).forEach(([key, g]) => {
       const t = TOOLS[g.tool].title;
-      if (g.who.length > 1) actGroups[key] = { tool: g.tool, title: `Completed their ${t} · ${longDate(new Date(g.day + "T12:00"))}`, list: g.runs.sort((a, b) => b.ts - a.ts) };
-      add(g.ts, g.who, g.who.length === 1 ? `${name(g.who[0])} completed their ${t}` : `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`, "", g.who.length > 1 ? key : "");
+      if (g.who.length === 1) { (solo[`${g.tool}|${g.who[0].id}|${mondayOf(g.ts).getTime()}`] ||= []).push(g); return; }
+      actGroups[key] = { tool: g.tool, title: `Completed their ${t} on ${longDate(new Date(g.day + "T12:00"))}`, list: g.runs.sort((a, b) => b.ts - a.ts) };
+      add(g.ts, g.who, `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`, "", key);
+    });
+    Object.values(solo).forEach((gs) => {
+      const m = gs[0].who[0], t = TOOLS[gs[0].tool].title, ts = Math.max(...gs.map((g) => g.ts)), whose = m.id === meId ? "your" : "their";
+      const week = mondayOf(ts).getTime() === mondayOf(Date.now()).getTime() ? "this week" : `the week of ${fmtDate(mondayOf(ts), { month: "short", day: "numeric" })}`;
+      add(ts, [m], gs.length === 1 ? `${name(m)} completed ${whose} ${t}` : `${name(m)} completed ${gs.length} ${t}s ${week}`, `#/tools/${gs[0].tool}`);
     });
     items.sort((a, b) => b.ts - a.ts);
     const row = (it) => `<li class="act ${it.group ? "act-group" : ""}"${it.group ? ` data-action="show-group" data-id="${it.group}" role="button" tabindex="0" aria-label="See who completed it"` : ""}>${it.who.length > 1 ? avatarStack(it.who.map((u) => ({ u })), 4) : `<a href="#/people/${it.who[0].id}" class="act-av" aria-hidden="true" tabindex="-1">${avatar(it.who[0], "md")}</a>`}
@@ -1018,7 +1025,7 @@
     if (tab === "manage" && !manage) tab = "activity";
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
-      <p class="private-team">${icon("lock")}<span>Only visible to members of ${esc(c.name)}</span></p></div></header>
+      <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
       ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}</a></nav>` : ""}
       ${tab === "manage" ? roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
@@ -1035,12 +1042,12 @@
       const d = startOfDay(Date.now() - i * DAY), k = dateKey(d), planned = runs.some((r) => r.tool === "weekly" && dateKey(new Date(r.ts)) === k);
       cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? ", Daily Review Meeting" : ""}${planned ? ", Weekly Planning Meeting" : ""}"></span>`);
     }
-    return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">← ${esc(company(m.companyId)?.name || "Team")}</a>
-      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)} · ${esc(m.email)} · Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
+    return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">Back to ${esc(company(m.companyId)?.name || "Team")}</a>
+      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)}, ${esc(m.email)}, Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they join the Master Your Week Cohort</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week, ${courseProgress(m.id, courseById(WORKSHOP)).n} of ${courseProgress(m.id, courseById(WORKSHOP)).total} workshop lessons done` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span>${streakStat("weekly", m.id)}</div>
         ${DAILY_STREAKS ? `<div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>` : ""}
-        <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}% · Daily Review Meeting ${ms.drm}%</small></div>
+        <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}%, Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
       </div>
       <div class="card"><div class="card-head"><h3>Last 30 Days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
@@ -1063,7 +1070,7 @@
     return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across teams.</p></div></header>
       <div class="grid three">${S.companies.filter((c) => !c.background).map((c) => {
         const ms = teamOf(c.id), avg = Math.round(avgOf(ms, (m) => monthStats(m.id).all));
-        return `<a class="card company-tile" href="#/companies/${c.id}" style="border-top:4px solid ${c.color}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "member", "members")}</p>${bar(avg)}<small>${avg}% past month Weekly Planning Meeting and Daily Review Meeting completion</small></a>`;
+        return `<a class="card company-tile" href="#/companies/${c.id}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "member", "members")}</p>${bar(avg)}<small>${avg}% past month Weekly Planning Meeting and Daily Review Meeting completion</small></a>`;
       }).join("")}</div>`;
   };
 
@@ -1073,31 +1080,31 @@
     if (courseId) return courseView(courseId);
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
     const tile = (x) => {
-      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)} · Part ${x.part} of ${seriesLen(x)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
+      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}, Part ${x.part} of ${seriesLen(x)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
       const p = courseProgress(u.id, x);
-      return `<a class="card course" href="${courseHref(x)}"><div class="row between"><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<div class="accent-line"></div><p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete ✓" : p.n ? `${p.n}/${p.total} done` : "Not started"}</small></a>`;
+      return `<a class="card course" href="${courseHref(x)}"><div class="row between"><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete" : p.n ? `${p.n} of ${p.total} done` : "Not started"}</small></a>`;
     };
     const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span><span class="level-title">${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}${n === ph ? `<small>You are here</small>` : ""}</span></span></h2>${body}</section>`;
     return `
       <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${tile(courseById(WORKSHOP))}</div>`)}
       ${level(2, `<div class="card level-cohort"><div><h3>${esc(c.name)} Cohort</h3><p class="muted">${c.weeks} weeks, live with a Time Boss coach. Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.</p></div>
-        ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled · week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete ✓</span>`}</div>
+        ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled, Week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete</span>`}</div>
         ${ph === 3 ? `<p class="muted level-note">What the cohort covered, open for review any time.</p>` : ""}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "cohort").map(tile).join("")}</div>`)}
       ${level(3, `${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete the Master Your Week Cohort: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
   };
-  const lockedView = () => `<a class="back" href="#/learn">← Courses</a><div class="card locked-card">${icon("lock", "ic lock big")}<h2>Unlocks after the Master Your Week Cohort</h2>
+  const lockedView = () => `<a class="back" href="#/learn">Back to Courses</a><div class="card locked-card">${icon("lock", "ic lock big")}<h2>Unlocks after the Master Your Week Cohort</h2>
     <p class="muted">Cohort sessions open here for review, and Maximize Your Week courses unlock, once you complete the cohort.</p>${mywCta()}</div>`;
   function courseView(id) {
     const c = courseById(id); if (!c) return notFound();
     if (!unlocked(c)) return lockedView();
     const d = done(me().id), p = courseProgress(me().id, c);
-    return `<a class="back" href="#/learn">← Courses</a>
-      <header class="page-head"><div><span class="tag">${c.kind === "workshop" ? "Unlock Your Week Workshop" : c.kind === "cohort" ? "Master Your Week · review" : "Maximize Your Week · mini course"}</span><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
-      <div class="card">${bar(p.pct)}<small>${p.n}/${p.total} lessons complete</small>
-        <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.question ? esc(l.question) + " · " : ""}${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
+    return `<a class="back" href="#/learn">Back to Courses</a>
+      <header class="page-head"><div><span class="tag">${c.kind === "workshop" ? "Unlock Your Week Workshop" : c.kind === "cohort" ? "Master Your Week Cohort Review" : "Maximize Your Week Mini Course"}</span><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
+      <div class="card">${bar(p.pct)}<small>${p.n} of ${p.total} lessons done</small>
+        <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.question ? esc(l.question) + ", " : ""}${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
   }
   function lessonView(cid, lid) {
     const c = SEED.courses.find((x) => x.id === cid), i = c?.lessons.findIndex((l) => l.id === lid);
@@ -1105,9 +1112,9 @@
     if (!unlocked(c)) return lockedView();
     const l = c.lessons[i], next = c.lessons[i + 1], isDone = !!done(me().id)[l.id];
     const nextSession = !next && nextInSeries(c);
-    return `<a class="back" href="${c.lessons.length === 1 ? "#/learn" : `#/learn/${c.id}`}">← ${c.lessons.length === 1 ? "Courses" : esc(c.title)}</a>
+    return `<a class="back" href="${c.lessons.length === 1 ? "#/learn" : `#/learn/${c.id}`}">Back to ${c.lessons.length === 1 ? "Courses" : esc(c.title)}</a>
       <article class="card lesson">
-        <span class="eyebrow">${c.series ? `${esc(c.series)} · Part ${c.part} of ${seriesLen(c)}` : `Lesson ${i + 1} of ${c.lessons.length}`} · ${l.mins} min</span>
+        <span class="eyebrow">${c.series ? `${esc(c.series)}, Part ${c.part} of ${seriesLen(c)}` : `Lesson ${i + 1} of ${c.lessons.length}`}, ${l.mins} min</span>
         <h1>${esc(l.title)}</h1>
         ${l.question ? `<p class="lesson-question">${esc(l.question)}</p>` : ""}
         <div class="video">▶ Video placeholder</div>
@@ -1124,16 +1131,16 @@
   V.events = () => (hasHabits() ? eventsPage() : lockedOver(eventsPage(), "Join the Master Your Week Cohort to unlock Upcoming Events.", "page"));
   function eventsPage() {
     const ev = (e) => {
-      const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 41 : 12);
+      const n = (S.rsvps[e.id] || []).length + (e.type === "masterclass" ? 24 + (uidKey(e.id) % 26) : 6 + (uidKey(e.id) % 11)); // sample RSVPs, steady per event
       const on = rsvpd(e.id);
       return `<div class="card event"><div class="date-chip"><b>${new Date(e.start).getDate()}</b><small>${fmtDate(e.start, { month: "short" })}</small></div>
-        <div class="event-body"><h3>${esc(e.title)}</h3><p class="muted">${fmtDate(e.start, { weekday: "long" })} · ${fmtTime(e.start)} · ${e.mins} min · with ${esc(user(e.host).name)}</p>${e.desc ? `<p>${esc(e.desc)}</p>` : ""}<small class="muted">${n} going</small></div>
+        <div class="event-body"><h3>${esc(e.title)}</h3><p class="muted">${fmtDate(e.start, { weekday: "long" })}, ${fmtTime(e.start)}, ${e.mins} min<br>With ${esc(user(e.host).name)}</p>${e.desc ? `<p>${esc(e.desc)}</p>` : ""}<small class="muted">${n} going</small></div>
         <div class="event-actions"><button class="btn ${on ? "ghost" : ""}" data-action="rsvp" data-id="${e.id}">${on ? "✓ Going" : "RSVP"}</button>
           ${on ? `<a class="btn ghost sm" download="${e.id}.ics" href="data:text/calendar;charset=utf-8,${encodeURIComponent(icsFor(e))}">Add to Calendar</a>` : ""}</div></div>`;
     };
     return `<header class="page-head"><div><h1>Upcoming Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
       <h2 class="section">Monthly Masterclass</h2>${masterclassEvents().map(ev).join("")}
-      <h2 class="section">Weekly Planning Meeting (live, group)</h2><p class="muted">Plan next week alongside other Time Bosses. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map(ev).join("")}`;
+      <h2 class="section">Live Weekly Planning Meetings</h2><p class="muted">Plan next week alongside other Time Bosses, with a coach on hand. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map((e) => ev({ ...e, desc: "" })).join("")}`;
   }
 
   // office hours: Calendly inline embed, prefilled with the member's name and email
@@ -1212,7 +1219,7 @@
       if (f.type === "check") return `<label class="check-row"><input type="checkbox" name="${f.k}" value="Yes" ${v ? "checked" : ""}><span>${esc(f.label)}</span></label>`;
       return `<label>${esc(f.label)}<input type="${f.type}" name="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph || "")}"></label>`;
     };
-    return `<header class="page-head"><div><span class="eyebrow">${t.title} · ${s.phase} · step ${draft.step + 1} of ${t.steps.length}</span><h1>${esc(s.title)}</h1></div>
+    return `<header class="page-head"><div><span class="eyebrow">${t.title}, ${s.phase}, Step ${draft.step + 1} of ${t.steps.length}</span><h1>${esc(s.title)}</h1></div>
         <div class="timer" id="timer" data-start="${draft.startedAt}" data-budget="${t.mins}">--:--</div></header>
       <div class="stepper">${t.steps.map((x, i) => `<span class="${i < draft.step ? "done" : i === draft.step ? "cur" : ""}" title="${esc(x.phase)}: ${esc(x.title)}"></span>`).join("")}</div>
       <div class="feed-wrap"><div class="feed-main">
@@ -1221,8 +1228,8 @@
           ${s.fields.map(field).join("")}
           ${s.share ? `<button type="button" class="btn ghost sm share-btn" data-action="copy-draft" data-tool="${tool}">Copy My Plan to Share</button>` : ""}
           <div class="row between">
-            <span>${draft.step > 0 ? `<button type="button" class="ghost" data-action="tool-back" data-tool="${tool}">← Back</button>` : ""}<button type="button" class="ghost danger" data-action="tool-abandon" data-tool="${tool}">Discard</button></span>
-            <button class="btn">${last ? "Finish & Save" : "Next →"}</button>
+            <span>${draft.step > 0 ? `<button type="button" class="ghost" data-action="tool-back" data-tool="${tool}">Back</button>` : ""}<button type="button" class="ghost danger" data-action="tool-abandon" data-tool="${tool}">Discard</button></span>
+            <button class="btn">${last ? "Finish & Save" : "Next"}</button>
           </div>
         </form>
       </div><aside class="side">${aiPanel}</aside></div>`;
@@ -1233,7 +1240,7 @@
   V.cohort = () => {
     const c = SEED.cohort;
     return `<div class="cohort-hero">
-      <span class="eyebrow">${phaseOf() === 2 && enrolled() ? `Your cohort · week ${c.currentWeek} of ${c.weeks}` : `Next cohort · starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}`}</span>
+      <span class="eyebrow">${phaseOf() === 2 && enrolled() ? `Your Cohort, Week ${c.currentWeek} of ${c.weeks}` : `Next Cohort Starts ${fmtDate(c.startsOn + "T12:00", { weekday: "long", month: "long", day: "numeric" })}`}</span>
       <h1>${esc(c.name)}</h1>
       <p class="lead">Step 2 of 3. A ${c.weeks}-week live cohort that installs the Time Boss habits for good: the Weekly Planning Meeting, the Daily Review Meeting, and a pace you can actually hold.</p>
       <ul class="checks">${c.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}<li>Includes everything in this community</li></ul>
@@ -1278,9 +1285,9 @@
       return `<div class="pp-group"><div class="row between"><b>${ph.name}</b><small class="muted">${fin.length} of ${list.length}</small></div>
         ${fin.length ? `<ul class="pp-courses">${fin.map((x) => `<li>${icon("daily", "ic pp-check")}${esc(x.title)}</li>`).join("")}</ul>` : `<p class="muted sm">None yet</p>`}</div>`;
     }).join("")}</div>`;
-    return `<a class="back" href="#" data-action="back">← Back</a>
+    return `<a class="back" href="#" data-action="back">Back</a>
       <section class="card pp-hero"><button class="pp-photo" data-action="photo" data-id="${p.id}" aria-label="View ${esc(p.name)}'s photo larger">${avatar(p, "xl")}</button>
-        <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? ` · ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : " · Time Boss"}</p>
+        <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? `, ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : ", Time Boss"}</p>
         ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${PHASES[phaseOf(p) - 1].name}</span>`}
         ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
       </section>
@@ -1343,6 +1350,7 @@
     root.innerHTML = `<div class="topbar"><button class="menu-btn" data-action="menu" aria-label="Open menu">${icon("menu")}</button><a href="#/home" class="topbar-logo">${logo()}</a><div class="hdr-right">${bell()}${profileMenu()}</div></div>
       <aside class="sidebar">${nav()}</aside><div class="content"><div class="content-top"><div class="hdr-right">${bell()}${profileMenu()}</div></div><main id="main">${main}</main>${footer()}</div>${ranModalView()}${photoModalView()}${promptModalView()}${addUsersView()}`;
     document.body.classList.toggle("modal-open", !!ranModal || !!photoFor || !!promptFor_ || addUsersOpen);
+    oneNextStep(root);
     onePrimary(root);
     reveal(root);
     if (scrollTarget && location.hash !== scrolledFor) {
@@ -1355,20 +1363,16 @@
     tickTimer();
     countUp();
   }
-  // Page flourish: sections fade up as they scroll into view, and rows of avatars pop in one by one, left to right.
+  // Page flourish: rows of avatars pop in one by one, left to right, as they scroll into view.
   // Each plays once per page visit: re-renders (a like, a reply, the logo loading) keep what has shown and still wait on the rest.
   // Skipped for people who ask for reduced motion.
   let revealHash = null, revealDone = new Set(), revealObs = null;
-  const SECTIONS = ".page-head, .faces-strip, .card, .habits, .myw, .locked-wrap, .phase-card, .events-card";
   function reveal(root) {
     revealObs?.disconnect();
     if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (location.hash !== revealHash) { revealHash = location.hash; revealDone = new Set(); }
     const main = root.querySelector("#main");
-    const items = [
-      ...[...main.querySelectorAll(SECTIONS)].filter((el) => !el.parentElement.closest(SECTIONS)).map((el, i) => [el, "s" + i, "rv"]),
-      ...[...main.querySelectorAll(".faces, .av-stack")].map((el, i) => [el, "r" + i, "rv-row"]),
-    ].filter(([, key]) => !revealDone.has(key));
+    const items = [...main.querySelectorAll(".faces, .av-stack")].map((el, i) => [el, "r" + i, "rv-row"]).filter(([, key]) => !revealDone.has(key));
     const show = (el, n) => {
       el.style.setProperty("--d", `${Math.min(n, 5) * 70}ms`); // things that appear together arrive in order
       el.classList.add("in");
@@ -1401,6 +1405,10 @@
 
   // One filled (pop color) button per page. A locked section's unlock button wins, otherwise the first visible one;
   // every other filled button switches to the outline style. The sidebar's Next Step stays filled only when the page has none.
+  // The sidebar's Next Step card steps aside on pages that already show the next step (Home, your company page)
+  function oneNextStep(root) {
+    if (root.querySelector("#main .phase-body, #main .vs-next")) root.querySelector(".sidebar .myw")?.remove();
+  }
   function onePrimary(root) {
     const main = root.querySelector("#main"), filled = [...main.querySelectorAll(".btn:not(.ghost)")];
     const keep = main.querySelector(".phase-body .btn:not(.ghost)") || main.querySelector(".locked-msg .btn:not(.ghost)") || filled.find((b) => b.offsetParent); // the Courses card's Next Step leads Home
@@ -1529,7 +1537,7 @@
       "toggle-lesson": () => {
         const d = (S.progress[me().id] ||= {});
         const before = phaseOf();
-        if (d[id]) delete d[id]; else { d[id] = Date.now(); toast(before === 1 && phaseOf() === 2 ? "Workshop complete. The Master Your Week Cohort is unlocked." : "Lesson complete ✓"); }
+        if (d[id]) delete d[id]; else { d[id] = Date.now(); toast(before === 1 && phaseOf() === 2 ? "Workshop complete. The Master Your Week Cohort is unlocked." : "Lesson complete."); }
         save(); render();
       },
       rsvp: () => {
