@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v11";
+  const KEY = "tb_lms_v12";
   // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
   // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
   const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
@@ -164,14 +164,17 @@
       }
     });
 
-    // Lesson progress: explicit where seeded, otherwise by phase (workshop first) and scaled to habit strength
+    // Course progress: explicit where seeded, otherwise by phase (workshop first) and scaled to habit strength.
+    // Cohort sessions count once held: all six after the cohort, the weeks before this one while enrolled.
     const wsIds = SEED.courses.find((c) => c.id === WORKSHOP).lessons.map((l) => l.id);
-    const lessonIds = SEED.courses.filter((c) => c.id !== WORKSHOP).flatMap((c) => c.lessons.map((l) => l.id));
+    const sessionIds = SEED.courses.filter((c) => c.kind === "cohort").map((c) => c.lessons[0].id);
+    const miniIds = SEED.courses.filter((c) => c.kind === "mini").map((c) => c.lessons[0].id);
     const progress = {};
     members.forEach((u) => {
       const r = rng(uidKey(u.id) + 1);
-      const ids = SEED.progress[u.id] || (u.phase === 1 ? wsIds.slice(0, Math.floor(r() * wsIds.length))
-        : u.phase === 2 ? wsIds : [...wsIds, ...lessonIds.slice(0, Math.floor(lessonIds.length * (u.habit ?? 0.5) * (0.3 + r() * 0.6)))]);
+      const own = SEED.progress[u.id] || (u.phase === 1 ? [] : u.phase === 2 ? wsIds : [...wsIds, ...miniIds.slice(0, Math.floor(miniIds.length * (u.habit ?? 0.5) * (0.3 + r() * 0.6)))]);
+      const held = sessionIds.slice(0, u.phase === 3 ? sessionIds.length : u.phase === 2 && u.mywEnrolled ? SEED.cohort.currentWeek - 1 : 0);
+      const ids = [...own.filter((id) => wsIds.includes(id)), ...held, ...own.filter((id) => !wsIds.includes(id))];
       // Spread completions out: each person's latest lesson lands somewhere in the last few weeks, earlier ones a day or two apart
       let t = now - (0.3 + r() * 20) * DAY;
       const times = ids.map(() => { const x = t; t -= (1 + r() * 2) * DAY; return x; }).reverse();
@@ -253,11 +256,18 @@
   const courseById = (id) => SEED.courses.find((c) => c.id === id);
   // Single-session courses (e.g. each Root Cause part) open straight to their content
   const courseHref = (c) => (c.lessons.length === 1 ? `#/learn/${c.id}/${c.lessons[0].id}` : `#/learn/${c.id}`);
-  const seriesLen = (c) => SEED.courses.filter((x) => x.series === c.series).length;
-  const nextInSeries = (c) => c.series && SEED.courses.find((x) => x.series === c.series && x.part === c.part + 1);
   const workshopDone = (id) => courseProgress(id, courseById(WORKSHOP)).pct === 100;
   const phaseOf = (u = me()) => (u.role === "coach" || u.mywDone ? 3 : workshopDone(u.id) ? 2 : 1);
-  const unlocked = (c, u = me()) => c.id === WORKSHOP || phaseOf(u) === 3;
+  const unlocked = (c, u = me()) => c.id === WORKSHOP || (c.kind === "cohort" ? weekOf(c) <= weeksHeld(u) : phaseOf(u) === 3);
+  // Master Your Week runs one live session a week, in order. A session's recording and slides open once it's held:
+  // all six after the cohort, the weeks before this one while enrolled, none before enrolling.
+  const sessions = () => SEED.courses.filter((x) => x.kind === "cohort");
+  const weekOf = (c) => sessions().indexOf(c) + 1;
+  const weeksHeld = (u = me()) => (phaseOf(u) === 3 ? SEED.cohort.weeks : enrolled(u) ? SEED.cohort.currentWeek - 1 : 0);
+  const stampHeld = (u) => { const d = (S.progress[u.id] ||= {}); sessions().slice(0, weeksHeld(u)).forEach((c) => (d[c.lessons[0].id] ||= Date.now())); };
+  const sessionTime = () => `${new Date(2026, 0, 4 + SEED.cohort.sessionDay).toLocaleDateString("en-US", { weekday: "long" })} at ${fmtTime(at(new Date(), SEED.cohort.sessionHour))}`;
+  // Production: downloads the deck (PDF); the prototype has no decks yet
+  const slidesBtn = (title) => `<button class="btn ghost" data-action="slides" data-id="${esc(title)}">Download Slides</button>`;
   // Phase 1 runs one of two ways: a company that booked a custom workshop shares its recording; everyone else RSVPs for the live monthly workshop
   const customWorkshop = (u = me()) => !!company(u.companyId)?.customWorkshop;
   const possessive = (s) => (s.endsWith("s") ? `${s}'` : `${s}'s`);
@@ -461,9 +471,9 @@
     if (ph === 2) return { h: "Enroll in the Master Your Week Cohort", p: `${c.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks.`,
       extra: `<dl class="cohort-facts"><div><dt>Next Cohort</dt><dd>Starts ${longDate(new Date(c.startsOn + "T12:00"))}</dd></div><div><dt>Seats Available</dt><dd>${c.seatsLeft}</dd></div></dl>`,
       btns: [{ action: "enroll", label: "Enroll in Cohort" }, { href: "#/cohort", label: "About the Cohort" }] };
-    const nx = nextLessonIn(u, [...SEED.courses.filter((x) => x.kind === "mini"), ...SEED.courses.filter((x) => x.kind === "cohort")]), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
+    const nx = nextLessonIn(u, SEED.courses.filter((x) => x.kind === "mini")), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
     const rsvpBtn = (e, label) => (rsvpd(e.id) ? { href: "#/events", label: `✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}` } : { action: "rsvp", id: e.id, label });
-    return { h: "Maximize Your Week", p: `Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.l.title)} in ${esc(nx.c.title)}.` : ""}`,
+    return { h: "Maximize Your Week", p: `Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.c.title)}.` : ""}`,
       btns: [nx ? { href: `#/learn/${nx.c.id}/${nx.l.id}`, label: "Watch Next Course" } : { href: "#/learn", label: "Browse Courses" }, rsvpBtn(mc, "RSVP for Next Masterclass"), rsvpBtn(wp, "RSVP for Weekly Planning Meeting")] };
   }
   const stepBtn = (b, cls) => (b.href ? `<a class="btn ${cls}" href="${b.href}"${b.download ? ` download="${b.download}"` : ""}>${b.label}</a>` : `<button class="btn ${cls}" data-action="${b.action}"${b.id ? ` data-id="${b.id}"` : ""}>${b.label}</button>`);
@@ -480,7 +490,7 @@
     if (n === ph) return { head: "Your Next Step", ...nextStep(u) };
     if (n < ph) return n === 1
       ? { head: "Completed", h: "Review the Workshop", p: `${customWorkshop(u) ? `${esc(workshopTitle(u))} stays` : "The recorded workshop stays"} open for review any time: the core ideas behind your Weekly Planning Meeting and Daily Review Meeting.`, btns: [{ href: workshopHref(), label: "Review the Workshop" }] }
-      : { head: "Completed", h: "You completed Master Your Week", p: "The cohort sessions are open for review: Dealing with Diversions, the four Solving the Root Cause sessions, and Your Highest Sustainable Pace.", btns: [{ href: "#/learn", label: "Review Cohort Sessions" }] };
+      : { head: "Completed", h: "You completed Master Your Week", p: "All six session recordings and slide decks are open for review: Dealing with Diversions, the four Solving the Root Cause sessions, and Your Highest Sustainable Pace.", btns: [{ href: "#/learn", label: "Review Cohort Sessions" }] };
     return n === 2
       ? { head: "Coming Up", h: "Master Your Week: Group Coaching Cohort", p: `${SEED.cohort.weeks} weeks, live with a Time Boss coach, to install the Time Boss habits and remove any roadblocks. It unlocks when you complete the Unlock Your Week Workshop.`, btns: [{ href: "#/cohort", label: "About the Cohort" }] }
       : { head: "Coming Up", h: "Maximize Your Week: Continuing Education", p: "Mini courses, a monthly masterclass, and live Weekly Planning Meetings. It unlocks when you complete the Master Your Week Cohort.", btns: [{ href: "#/learn", label: "See What's Included" }] };
@@ -1100,23 +1110,30 @@
   };
 
   // learn
-  V.learn = (courseId, lessonId) => {
-    if (lessonId) return lessonView(courseId, lessonId);
-    if (courseId) return courseView(courseId);
+  V.learn = (courseId) => {
+    if (courseId) return videoView(courseId);
     const u = me(), ph = phaseOf(u), c = SEED.cohort;
-    const tile = (x) => {
-      if (!unlocked(x, u)) return `<div class="card course locked" aria-disabled="true"><div class="row between"><small class="muted">${icon("lock", "ic lock")} ${x.kind === "cohort" ? "In the cohort" : "Locked"}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}, Part ${x.part} of ${seriesLen(x)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${x.kind === "cohort" ? "Covered live in the cohort, then open here for review" : "Unlocks after the Master Your Week Cohort"}</small></div>`;
-      const p = courseProgress(u.id, x);
-      return `<a class="card course" href="${courseHref(x)}"><div class="row between"><small class="muted">${x.series ? `Part ${x.part} of ${seriesLen(x)}` : plural(x.lessons.length, "lesson", "lessons")}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p>${bar(p.pct)}<small>${p.pct === 100 ? "Complete" : p.n ? `${p.n} of ${p.total} done` : "Not started"}</small></a>`;
+    const card = (x, head, foot, href) => {
+      const inner = `<div class="row between"><small class="muted">${head}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${foot}</small>`;
+      return href ? `<a class="card course" href="${href}">${inner}</a>` : `<div class="card course locked" aria-disabled="true">${inner}</div>`;
     };
+    // Cohort sessions: done weeks open as recordings, this week is live, later weeks wait their turn
+    const sessionTile = (x) => {
+      const n = weekOf(x), now = ph === 2 && enrolled(u) && n === c.currentWeek, lock = `${icon("lock", "ic lock")} Week ${n}`;
+      if (unlocked(x, u)) return card(x, `Week ${n}, Done`, "Watch Recording", courseHref(x));
+      if (now) return card(x, `Week ${n}, This Week`, `Live ${sessionTime()}, then the recording opens here`);
+      return card(x, lock, ph === 2 && enrolled(u) ? `Opens after Week ${n - 1}` : "Covered live, week by week, then open here as a recording");
+    };
+    const tile = (x) => (unlocked(x, u) ? card(x, `Video, ${x.lessons[0].mins} min`, done(u.id)[x.lessons[0].id] ? "Watched" : "Not watched yet", courseHref(x))
+      : card(x, `${icon("lock", "ic lock")} Locked`, "Unlocks after the Master Your Week Cohort"));
     const level = (n, body) => `<section class="level ${n < ph ? "done" : n === ph ? "current" : "ahead"}"><h2 class="level-head"><span class="phase-n">${n < ph ? "✓" : n}</span><span class="level-title">${PHASES[n - 1].name}<span class="level-sub">${PHASES[n - 1].sub}${n === ph ? `<small>You are here</small>` : ""}</span></span></h2>${body}</section>`;
     return `
       <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${workshopTile(u)}</div>`)}
       ${level(2, `<div class="card level-cohort"><div><h3>${esc(c.name)} Cohort</h3><p class="muted">${c.weeks} weeks, live with a Time Boss coach. Next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled, Week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete</span>`}</div>
-        ${ph === 3 ? `<p class="muted level-note">What the cohort covered, open for review any time.</p>` : ""}
-        <div class="grid three">${SEED.courses.filter((x) => x.kind === "cohort").map(tile).join("")}</div>`)}
+        ${ph === 3 ? `<p class="muted level-note">Every session's recording and slides, open for review any time.</p>` : ""}
+        <div class="grid three">${sessions().map(sessionTile).join("")}</div>`)}
       ${level(3, `${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete the Master Your Week Cohort: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
   };
@@ -1126,18 +1143,9 @@
     const n = nextStep(u);
     return `<div class="card course"><div class="row between"><small class="muted">${customWorkshop(u) ? "Recorded for your team" : "Live, once a month"}</small></div><h3>${esc(workshopTitle(u))}</h3><p class="muted">${n.p}</p><div class="row">${n.btns.map((x, i) => stepBtn(x, i ? "ghost sm" : "sm")).join("")}</div></div>`;
   }
-  const lockedView = () => `<a class="back" href="#/learn">Back to Courses</a><div class="card locked-card">${icon("lock", "ic lock big")}<h2>Unlocks after the Master Your Week Cohort</h2>
-    <p class="muted">Cohort sessions open here for review, and Maximize Your Week courses unlock, once you complete the cohort.</p>${mywCta()}</div>`;
-  function courseView(id) {
-    if (id === WORKSHOP) return workshopView();
-    const c = courseById(id); if (!c) return notFound();
-    if (!unlocked(c)) return lockedView();
-    const d = done(me().id), p = courseProgress(me().id, c);
-    return `<a class="back" href="#/learn">Back to Courses</a>
-      <header class="page-head"><div><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
-      <div class="card">${bar(p.pct)}<small>${p.n} of ${p.total} lessons done</small>
-        <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.question ? esc(l.question) + ", " : ""}${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
-  }
+  const lockedView = (c) => `<a class="back" href="#/learn">Back to Courses</a><div class="card locked-card">${icon("lock", "ic lock big")}${c.kind === "cohort"
+    ? `<h2>Week ${weekOf(c)} Opens After It's Held</h2><p class="muted">Master Your Week sessions run live, one a week, in order. Each recording and its slides open here once the session is held.</p>`
+    : `<h2>Unlocks after the Master Your Week Cohort</h2><p class="muted">Maximize Your Week courses unlock once you complete the cohort.</p>`}${mywCta()}</div>`;
   // The workshop is one video page, no chapters: the standard recording or the company's custom one.
   // Someone watching a custom recording missed the live room, so they get a 1x1 coaching call offer.
   function workshopView() {
@@ -1154,28 +1162,29 @@
         ${(custom ? l.customBody : l.body).map((p) => `<p>${esc(p)}</p>`).join("")}
         ${custom && ph === 1 ? `<div class="action-box"><b>1x1 Coaching</b><p>Schedule a 1x1 coaching call with a Time Boss coach to help you implement what you've learned.</p><a class="btn" href="${esc(SEED.coachingCallUrl)}" target="_blank" rel="noopener">Schedule a 1x1 Coaching Call</a></div>` : ""}
         <div class="row between">
+          ${slidesBtn(workshopTitle(u))}
           ${ph === 1 ? `<button class="btn" data-action="toggle-lesson" data-id="${l.id}">Mark Complete</button>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in Cohort</button>` : `<a class="btn ghost" href="#/learn">Back to Courses</a>`}
         </div>
       </article>`;
   }
-  function lessonView(cid, lid) {
-    if (cid === WORKSHOP) return workshopView();
-    const c = SEED.courses.find((x) => x.id === cid), i = c?.lessons.findIndex((l) => l.id === lid);
-    if (!c || i < 0) return notFound();
-    if (!unlocked(c)) return lockedView();
-    const l = c.lessons[i], next = c.lessons[i + 1], isDone = !!done(me().id)[l.id];
-    const nextSession = !next && nextInSeries(c);
-    return `<a class="back" href="${c.lessons.length === 1 ? "#/learn" : `#/learn/${c.id}`}">Back to ${c.lessons.length === 1 ? "Courses" : esc(c.title)}</a>
+  // Every course is one video page with a description. Cohort sessions add their slide deck and step to the next week.
+  function videoView(cid) {
+    const c = courseById(cid); if (!c) return notFound();
+    if (c.id === WORKSHOP) return workshopView();
+    if (!unlocked(c)) return lockedView(c);
+    const l = c.lessons[0], session = c.kind === "cohort", next = session && sessions()[weekOf(c)];
+    // Opening a mini course counts as watching it (production: when the video plays through)
+    if (!session && !done(me().id)[l.id]) { (S.progress[me().id] ||= {})[l.id] = Date.now(); save(); }
+    return `<a class="back" href="#/learn">Back to Courses</a>
       <article class="card lesson">
-        <span class="eyebrow">${c.series ? `${esc(c.series)}, Part ${c.part} of ${seriesLen(c)}` : `Lesson ${i + 1} of ${c.lessons.length}`}, ${l.mins} min</span>
-        <h1>${esc(l.title)}</h1>
-        ${l.question ? `<p class="lesson-question">${esc(l.question)}</p>` : ""}
+        <span class="eyebrow">${session ? `Master Your Week, Week ${weekOf(c)} Recording` : "Maximize Your Week"}, ${l.mins} min</span>
+        <h1>${esc(c.title)}</h1>
+        ${c.series ? `<p class="lesson-question">${esc(c.blurb)}</p>` : ""}
         <div class="video">▶ Video placeholder</div>
         ${l.body.map((p) => `<p>${esc(p)}</p>`).join("")}
-        <div class="action-box"><b>Your action</b><p>${esc(l.action)}</p></div>
         <div class="row between">
-          <button class="btn ${isDone ? "ghost" : ""}" data-action="toggle-lesson" data-id="${l.id}">${isDone ? "✓ Completed (Undo)" : "Mark Complete"}</button>
-          ${next ? `<a class="btn ghost" href="#/learn/${c.id}/${next.id}">Next: ${esc(next.title)}</a>` : nextSession ? `<a class="btn ghost" href="${courseHref(nextSession)}">Next: ${esc(nextSession.title)}</a>` : `<a class="btn ghost" href="#/learn">Back to Courses</a>`}
+          ${session ? slidesBtn(c.title) : ""}
+          ${next && unlocked(next) ? `<a class="btn ghost" href="${courseHref(next)}">Next: Week ${weekOf(next)}</a>` : `<a class="btn ghost" href="#/learn">Back to Courses</a>`}
         </div>
       </article>`;
   }
@@ -1585,9 +1594,11 @@
       "pm-toggle": () => { pmOpen = !pmOpen; render(); },
       "remove-photo": () => { delete me().photo; save(); render(); toast("Photo removed"); },
       // Production: Enroll goes to checkout (SEED.cohort.url) and marks the member enrolled on payment
-      enroll: () => { me().mywEnrolled = true; save(); location.hash = "#/home"; render(); toast("You're enrolled in Master Your Week. Your habits and live events are open."); },
+      enroll: () => { me().mywEnrolled = true; stampHeld(me()); save(); location.hash = "#/home"; render(); toast("You're enrolled in Master Your Week. Your habits and live events are open."); },
+      // Production: downloads the slide deck PDF
+      slides: () => toast("Slide deck download", `${id} slides (PDF) would download here.`),
       "attend-workshop": () => { (S.progress[me().id] ||= {})[courseById(WORKSHOP).lessons[0].id] = Date.now(); save(); render(); toast("Workshop attended. The Master Your Week Cohort is unlocked."); },
-      "complete-cohort": () => { me().mywDone = true; me().mywEnrolled = true; save(); location.hash = "#/home"; render(); toast("Master Your Week complete. Maximize Your Week is unlocked."); },
+      "complete-cohort": () => { me().mywDone = true; me().mywEnrolled = true; stampHeld(me()); save(); location.hash = "#/home"; render(); toast("Master Your Week complete. Maximize Your Week is unlocked."); },
       "toggle-lesson": () => {
         const d = (S.progress[me().id] ||= {});
         const before = phaseOf();
