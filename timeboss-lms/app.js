@@ -290,6 +290,14 @@
   const badgeReady = (b, u = me()) => b.reqs.every((r, i) => reqMet(b, r, i, u));
   // A badge looks like a merit badge patch: the icon, with its number on the edge
   const medal = (b, u = me(), size = "") => `<span class="badge-m ${badgesOf(u)[b.id] ? "got" : ""} ${size}" aria-hidden="true">${icon(b.icon)}<span class="badge-n">${BADGES.indexOf(b) + 1}</span></span>`;
+  // Earned Solo badges on a profile or the team detail page: all of them, earned ones filled. Your own link to each badge's page.
+  function badgeCard(u) {
+    const got = badgesOf(u), self = u.id === me().id && solo(u), first = esc(u.name.split(" ")[0]);
+    const one = (b) => { const tip = `${esc(b.title)}${got[b.id] ? `, earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : ", not yet earned"}`;
+      return self ? `<a class="pp-badge" href="#/solo/${b.id}" title="${tip}" aria-label="${tip}">${medal(b, u, "md")}</a>` : `<span class="pp-badge" title="${tip}" role="img" aria-label="${tip}">${medal(b, u, "md")}</span>`; };
+    return `<div class="card">${cardHead("medal", "Badges", self ? "#/solo" : null)}<p class="muted pp-badges-note">${u.id === me().id ? "You've" : `${first} has`} earned ${Object.keys(got).length} of ${BADGES.length} Master Your Week Solo badges.</p>
+      <div class="pp-badges">${BADGES.map(one).join("")}</div></div>`;
+  }
   const badgeStrip = (u = me()) => `<div class="badge-strip" role="img" aria-label="${Object.keys(badgesOf(u)).length} of ${BADGES.length} badges earned">${BADGES.map((b) => `<span class="${badgesOf(u)[b.id] ? "on" : ""}"></span>`).join("")}</div>`;
   // Profile picture with three badges beneath it: phase (left), Weekly Planning Meeting streak (middle), Daily Review Meeting streak (right)
   function profileBadges(u) {
@@ -992,7 +1000,7 @@
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Live" : solo(x.m) ? "Solo" : "Choosing Live or Solo") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span></td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Live" : solo(x.m) ? "Solo" : "Choosing Live or Solo") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Solo, ${Object.keys(badgesOf(x.m)).length} of ${BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock when they join the cohort</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
     const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
@@ -1110,6 +1118,7 @@
     }
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">Back to ${esc(company(m.companyId)?.name || "Team")}</a>
       <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)}, ${esc(m.email)}, Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
+      ${m.mywSolo ? badgeCard(m) : ""}
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock when they start Master Your Week</h3><p class="muted">${esc(m.name.split(" ")[0])} ${phaseOf(m) === 1 ? `is in Unlock Your Week and hasn't ${customWorkshop(m) ? "watched the custom workshop" : "attended the live workshop"} yet` : "finished the workshop and hasn't enrolled in the cohort yet"}. Weekly Planning Meeting and Daily Review Meeting streaks show here once they enroll.</p></div>` : `<div class="grid stats">
         <div class="card stat"><span class="muted">Weekly Planning streak</span>${streakStat("weekly", m.id)}</div>
         ${DAILY_STREAKS ? `<div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>` : ""}
@@ -1436,7 +1445,7 @@
         ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${PHASES[phaseOf(p) - 1].name}</span>`}
         ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
       </section>
-      ${habits}${courses}`;
+      ${habits}${p.mywSolo && !isCoachP && visibleTo(p) ? badgeCard(p) : ""}${courses}`;
   };
 
   V.profile = () => {
