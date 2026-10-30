@@ -1134,7 +1134,7 @@
     if (!unlocked(c)) return lockedView();
     const d = done(me().id), p = courseProgress(me().id, c);
     return `<a class="back" href="#/learn">Back to Courses</a>
-      <header class="page-head"><div><span class="tag">${c.kind === "workshop" ? "Unlock Your Week Workshop" : c.kind === "cohort" ? "Master Your Week Cohort Review" : "Maximize Your Week Mini Course"}</span><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
+      <header class="page-head"><div><h1>${esc(c.title)}</h1><p class="muted">${esc(c.blurb)}</p></div></header>
       <div class="card">${bar(p.pct)}<small>${p.n} of ${p.total} lessons done</small>
         <ol class="lessons">${c.lessons.map((l) => `<li class="${d[l.id] ? "done" : ""}"><a href="#/learn/${c.id}/${l.id}"><span class="check">${d[l.id] ? "✓" : ""}</span><span><b>${esc(l.title)}</b><small>${l.question ? esc(l.question) + ", " : ""}${l.mins} min</small></span></a></li>`).join("")}</ol></div>`;
   }
