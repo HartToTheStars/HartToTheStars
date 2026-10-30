@@ -10,7 +10,7 @@ window.TB_SEED = {
     { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com" }, // an individual leader on their own, without their team
   ],
 
-  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (enrolled: true = in the current cohort; otherwise ready to enroll), 3 = Maximize Your Week (completed the cohort)
+  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (enrolled: true = in the current Live cohort; solo: true = earning badges, with the ones earned; otherwise choosing Live or Solo), 3 = Maximize Your Week (completed the cohort)
   // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
     { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
@@ -39,7 +39,7 @@ window.TB_SEED = {
     { id: "u_kenji", name: "Kenji Sato", title: "Data Engineer", companyId: "acme", role: "member", phase: 3, habit: 0.72 },
     { id: "u_sofia", name: "Sofia Rossi", title: "Operations Coordinator", companyId: "acme", role: "member", phase: 3, habit: 0.87 },
     { id: "u_caleb", name: "Caleb Johnson", title: "Account Executive", companyId: "acme", role: "member", phase: 2, habit: 0.5 },
-    { id: "u_leah", name: "Leah Goldberg", title: "Billing Specialist", companyId: "acme", role: "member", phase: 2, habit: 0.77 },
+    { id: "u_leah", name: "Leah Goldberg", title: "Billing Specialist", companyId: "acme", role: "member", phase: 2, solo: true, badges: ["focus-reactive", "daily-review", "parking-lot", "backlog"], habit: 0.77 },
     { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.64 },
     { id: "u_mei", name: "Mei Lin", title: "Product Manager", companyId: "acme", role: "member", phase: 3, habit: 0.89 },
     { id: "u_zoe", name: "Zoe Bennett", title: "Recruiter", companyId: "acme", role: "member", phase: 1, habit: 0.42 },
@@ -250,6 +250,36 @@ window.TB_SEED = {
     { title: "AI-Infused Productivity", desc: "Build an AI chief of staff that plans your week, triages your inbox, and preps your meetings." },
     { title: "Leading a Time Boss Team", desc: "Install weekly planning and diversion defenses across your whole team." },
     { title: "Q1 Goal Setting Intensive", desc: "Leave with three quarterly outcomes and a 13-week plan." },
+  ],
+
+  // Master Your Week Solo: merit badges, earned in any order at your own pace. Earning all of them completes Master Your Week.
+  // A requirement is a check the member ticks (check), or one the app tracks: watch a session recording (watch),
+  // run the Daily Review Meeting on n of the last 10 workdays (drm), or the Weekly Planning Meeting n weeks in a row (wpm).
+  badges: [
+    { id: "focus-reactive", group: "system", icon: "clock", title: "Focus Time / Reactive Time", earn: "You've added Whirlwind to your calendar.",
+      reqs: [{ check: "Whirlwind (reactive time) is blocked on my calendar every workday" }, { check: "The rest of my workday is set aside as focus time" }] },
+    { id: "daily-review", group: "system", icon: "daily", title: "Daily Review Meeting", earn: "You use the Daily Review Meeting to close down your day and plan tomorrow.",
+      reqs: [{ drm: 5, label: "Run the Daily Review Meeting on 5 of your last 10 workdays" }] },
+    { id: "parking-lot", group: "system", icon: "parking", title: "Parking Lot in Use", earn: "You actively use your Parking Lot to protect your focus time.",
+      reqs: [{ watch: "diversions" }, { check: "New requests go to my Parking Lot instead of interrupting my focus time" }, { check: "I clear my Parking Lot during Whirlwind" }] },
+    { id: "focus-hour", group: "system", icon: "target", title: "Focus Hour Blocked", earn: "At least one hour of focus time is blocked every day.",
+      reqs: [{ check: "At least one hour of focus time is on my calendar every workday" }] },
+    { id: "calendar-todo", group: "system", icon: "calcheck", title: "Calendar is Your To-do List", earn: "Your calendar drives your day.",
+      reqs: [{ check: "I work from my calendar, not a separate to-do list" }, { check: "When something new comes up, I give it a time on my calendar" }] },
+    { id: "recurring", group: "system", icon: "repeat", title: "Recurring Tasks Blocked", earn: "All of your recurring tasks are on your calendar.",
+      reqs: [{ check: "Every recurring task has a recurring block on my calendar" }] },
+    { id: "backlog", group: "system", icon: "list", title: "Backlog in Use", earn: "All of your one-time tasks are kept in your Backlog only.",
+      reqs: [{ check: "Every one-time task lives in my Backlog" }, { check: "I don't keep tasks anywhere else: no sticky notes, inbox flags, or side lists" }] },
+    { id: "weekly-planning", group: "system", icon: "weekly", title: "Weekly Planning Meeting", earn: "You use the Weekly Planning Meeting to plan out your week.",
+      reqs: [{ wpm: 3, label: "Run the Weekly Planning Meeting 3 weeks in a row" }] },
+    { id: "rc-relationships", group: "root", icon: "users", title: "Relationship Root Causes Solved", earn: "The relationship root causes of your diversions have been solved.",
+      reqs: [{ watch: "rc-relationships" }, { check: "I've named the relationships that pull me off my plan" }, { check: "I've put a fix in place for each one" }] },
+    { id: "rc-environment", group: "root", icon: "space", title: "Environment Root Causes Solved", earn: "The environment root causes of your diversions have been solved.",
+      reqs: [{ watch: "rc-environment" }, { check: "I've named what in my environment pulls me off my plan" }, { check: "I've put a fix in place for each one" }] },
+    { id: "rc-systems", group: "root", icon: "gear", title: "System Root Causes Solved", earn: "The system root causes of your diversions have been solved.",
+      reqs: [{ watch: "rc-systems" }, { check: "I've named the systems that pull me off my plan" }, { check: "I've put a fix in place for each one" }] },
+    { id: "rc-yourself", group: "root", icon: "user", title: "Your Own Root Causes Solved", earn: "Your own root causes of diversions have been solved.",
+      reqs: [{ watch: "rc-yourself" }, { check: "I've named my own habits that pull me off my plan" }, { check: "I've put a fix in place for each one" }] },
   ],
 
   cohort: {
