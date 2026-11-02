@@ -4,13 +4,14 @@
 window.TB_SEED = {
   // customWorkshop: the company booked a private workshop (10+ seats), so its new people watch that recording instead of RSVPing for the live monthly one
   companies: [
-    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com", customWorkshop: true },
-    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org", customWorkshop: true },
-    { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio" },
-    { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com" }, // an individual leader on their own, without their team
+    { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com", customWorkshop: true, track: "cohort" },
+    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org", customWorkshop: true, track: "selfserve" },
+    { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio", track: "selfserve" },
+    { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com", track: "cohort" }, // an individual leader on their own, without their team
   ],
 
-  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (enrolled: true = in the current Live cohort; solo: true = earning badges, with the ones earned; otherwise choosing Live or Solo), 3 = Maximize Your Week (completed the cohort)
+  // Each company sets its Master Your Week track: "cohort" (live, 12 weeks with a coach) or "selfserve" (badges, any order, a weekly drop-in meeting per badge)
+  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (cohort companies: enrolled: true = in the current cohort; self-serve companies: badges earned, working = the badge in progress), 3 = Maximize Your Week (completed it)
   // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
     { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
@@ -39,13 +40,13 @@ window.TB_SEED = {
     { id: "u_kenji", name: "Kenji Sato", title: "Data Engineer", companyId: "acme", role: "member", phase: 3, habit: 0.72 },
     { id: "u_sofia", name: "Sofia Rossi", title: "Operations Coordinator", companyId: "acme", role: "member", phase: 3, habit: 0.87 },
     { id: "u_caleb", name: "Caleb Johnson", title: "Account Executive", companyId: "acme", role: "member", phase: 2, habit: 0.5 },
-    { id: "u_leah", name: "Leah Goldberg", title: "Billing Specialist", companyId: "acme", role: "member", phase: 2, solo: true, badges: ["focus-reactive", "daily-review", "parking-lot", "backlog"], habit: 0.77 },
-    { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.64 },
+        { id: "u_andre", name: "Andre Thompson", title: "Maintenance Supervisor", companyId: "acme", role: "member", phase: 2, enrolled: true, habit: 0.64 },
     { id: "u_mei", name: "Mei Lin", title: "Product Manager", companyId: "acme", role: "member", phase: 3, habit: 0.89 },
     { id: "u_zoe", name: "Zoe Bennett", title: "Recruiter", companyId: "acme", role: "member", phase: 1, habit: 0.42 },
 
     { id: "u_lena", name: "Lena Fischer", title: "Clinic Director", companyId: "northwind", role: "admin", phase: 3, habit: 0.85 },
-    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, enrolled: true, habit: 0.7 },
+    { id: "u_omar", name: "Omar Haddad", title: "Practice Manager", companyId: "northwind", role: "member", phase: 2, badges: ["focus-reactive", "daily-review"], habit: 0.7 },
+    { id: "u_leah", name: "Leah Goldberg", title: "Billing Coordinator", companyId: "northwind", role: "member", phase: 2, badges: ["focus-reactive", "daily-review", "parking-lot", "backlog"], working: "focus-hour", habit: 0.77 },
     { id: "u_tess", name: "Tess Morgan", title: "Creative Director", companyId: "brightline", role: "admin", phase: 3, habit: 0.76 },
     { id: "u_jade", name: "Jade Wilson", title: "Producer", companyId: "brightline", role: "member", phase: 1, habit: 0.6 },
     { id: "u_elena", name: "Elena Brooks", title: "Founder and Principal", companyId: "hartwell", role: "member", phase: 2, enrolled: true, habit: 0.7 },
@@ -74,10 +75,10 @@ window.TB_SEED = {
   communityFill: {
     perCompany: 16,
     companies: [
-      { id: "summit", name: "Summit Partners", color: "#5a6f8f", seats: 20, domain: "summitpartners.com", background: true },
-      { id: "harbor", name: "Harbor Health Group", color: "#3f7f6a", seats: 20, domain: "harborhealth.org", background: true },
-      { id: "pinecrest", name: "Pinecrest Builders", color: "#8a6a4a", seats: 20, domain: "pinecrest.build", background: true },
-      { id: "lumen", name: "Lumen Advisory", color: "#6b5b8a", seats: 20, domain: "lumenadvisory.com", background: true },
+      { id: "summit", name: "Summit Partners", color: "#5a6f8f", seats: 20, domain: "summitpartners.com", background: true, track: "selfserve" },
+      { id: "harbor", name: "Harbor Health Group", color: "#3f7f6a", seats: 20, domain: "harborhealth.org", background: true, track: "cohort" },
+      { id: "pinecrest", name: "Pinecrest Builders", color: "#8a6a4a", seats: 20, domain: "pinecrest.build", background: true, track: "cohort" },
+      { id: "lumen", name: "Lumen Advisory", color: "#6b5b8a", seats: 20, domain: "lumenadvisory.com", background: true, track: "selfserve" },
     ],
     firstNames: ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn", "Jamie", "Drew", "Reese", "Parker", "Elena", "Marco", "Aaliyah", "Noah", "Hana", "Omari", "Lucia", "Theo", "Ines", "Kofi", "Maya", "Felix", "Rosa", "Arjun", "Nadia", "Simon", "Yara", "Ethan", "Leila", "Mateo"],
     lastNames: ["Brennan", "Castillo", "Duarte", "Ellison", "Faraday", "Garza", "Holloway", "Ibarra", "Jensen", "Kowalski", "Lindqvist", "Mendez", "Novak", "Okoro", "Petrov", "Quintero", "Reyes", "Sorensen", "Tanaka", "Underwood", "Vance", "Whitaker", "Yilmaz", "Zamora"],

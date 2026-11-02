@@ -306,9 +306,9 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .join form { margin-top: 10px; }
 
 /* Habits: the WPM + DRM chains. The one bold element; everything else stays quiet. */
-.habits { display: grid; grid-template-columns: 1fr 1fr; background: var(--navy); color: #fff; border-radius: var(--radius); padding: 28px 30px; margin-bottom: var(--gap); gap: 0; position: relative; overflow: hidden; }
+.habits { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: var(--gap); gap: var(--gap); position: relative; }
+.habits-half { background: var(--navy); color: #fff; border-radius: var(--radius); padding: 28px 30px; overflow: hidden; } /* Weekly Planning and Daily Review each get their own card */
 .habits-half { position: relative; display: flex; flex-direction: column; gap: 10px; }
-.habits-half + .habits-half { border-left: 1px solid rgba(255, 255, 255, .1); padding-left: 30px; margin-left: 30px; }
 .habits-count { display: flex; align-items: baseline; gap: 10px; }
 .habits-count b { font-family: var(--font-body); font-size: clamp(56px, 6vw, 80px); font-weight: 800; line-height: .9; letter-spacing: -.03em; color: #fff; font-variant-numeric: lining-nums; }
 .habits-count span { color: var(--teal-2); font-size: 15px; }
@@ -952,8 +952,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .habits-lock .locked-msg { text-align: center; }
   .phase-track li + li { border-left: 0; border-top: 1px solid var(--line); }
   .habits { grid-template-columns: 1fr; }
-  .habits { padding: 24px 22px; }
-  .habits-half + .habits-half { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .1); padding-left: 0; margin: 22px 0 0; padding-top: 22px; }
+  .habits-half { padding: 24px 22px; }
   .event { grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: start; }
   .event-actions { grid-column: 1 / -1; flex-direction: row; }
   .event-actions .btn { flex: 1; }
@@ -986,7 +985,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .rv-row:not(.in) > * { opacity: 1; } .rv-row.in > * { animation: none; } }
 .habits-note { margin: 4px 0 0; color: rgba(255, 255, 255, .6); font-size: 14px; }
 
-/* ---------- Master Your Week: Live or Solo ---------- */
+/* ---------- Master Your Week: Cohort or Self-Serve ---------- */
 .track h2 { display: flex; align-items: center; gap: 4px; font-size: 26px; }
 .track > p { color: var(--muted); }
 .track .checks { margin: 18px 0 22px; }
@@ -1001,27 +1000,17 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--card); border: 2px dashed var(--line-strong); color: var(--muted); }
 .badge-m > .ic { width: 42%; height: 42%; }
 .badge-m.got { background: var(--teal); border: 2px solid var(--teal); color: #fff; outline: 1.5px dashed rgba(255, 255, 255, .6); outline-offset: -8px; }
-.badge-n { position: absolute; right: -3px; bottom: -3px; min-width: 24px; height: 24px; padding: 0 5px; border-radius: 100px; display: grid; place-items: center;
-  background: var(--card); border: 1px solid var(--line-strong); color: var(--ink); font-size: 12px; font-weight: 700; font-variant-numeric: lining-nums; }
-.badge-m.got .badge-n { background: var(--navy); border-color: var(--navy); color: #fff; }
-.badge-m.sm { --s: 38px; border-width: 1.5px; }
+.badge-m.got .badge-m.sm { --s: 38px; border-width: 1.5px; }
 .badge-m.sm.got { outline-offset: -5px; outline-width: 1px; }
-.badge-m.sm .badge-n { display: none; }
-.badge-m.lg { --s: 120px; }
+.badge-m.sm .badge-m.lg { --s: 120px; }
 .badge-m.lg.got { outline-offset: -11px; outline-width: 2px; }
-.badge-m.lg .badge-n { min-width: 32px; height: 32px; font-size: 15px; }
-
+.badge-m.lg 
 .badge-strip { display: flex; gap: 4px; align-self: stretch; max-width: 420px; margin: 12px 0 16px; }
 .badge-strip span { flex: 1; height: 8px; border-radius: 100px; background: var(--line); }
 .badge-strip span.on { background: var(--teal); }
 .myw .badge-strip span { background: rgba(255, 255, 255, .25); }
 .myw .badge-strip span.on { background: #fff; }
 
-.badge-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px; }
-.badge-progress .streak-num { display: flex; align-items: baseline; gap: 10px; }
-.badge-progress .streak-num b { font-size: 40px; line-height: 1; color: var(--teal); font-variant-numeric: lining-nums; }
-.badge-progress .streak-num span { color: var(--muted); font-size: 15px; }
-.badge-progress .badge-strip { flex: 1 1 240px; margin: 0; }
 .badge-group { margin-top: calc(var(--gap) * 1.5); }
 .badge-group .section { margin: 0 0 4px; font-size: 20px; }
 .badge-group > p { margin: 0 0 18px; }
@@ -1053,10 +1042,22 @@ label.req { cursor: pointer; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .badge-m.md { --s: 48px; }
 .badge-m.md.got { outline-offset: -6px; outline-width: 1px; }
-.badge-m.md .badge-n { display: none; }
-.pp-badges-note { margin: 0 0 14px; }
+.badge-m.md .pp-badges-note { margin: 0 0 14px; }
 .pp-badges { display: grid; grid-template-columns: repeat(6, 48px); gap: 12px; }
 .pp-badge { display: block; line-height: 0; }
 a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 @media (max-width: 760px) { .pp-badges { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; } .pp-badges .badge-m { --s: 100%; aspect-ratio: 1; height: auto; } }
 .t-badges { display: block; font-size: 12.5px; color: var(--muted); }
+
+/* Option C: the phase panel is blue only for your current phase; tapping another phase shows it on the plain card */
+.phase-body.plain .myw-head { display: block; font-size: 20px; font-weight: 700; color: var(--heading); padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.phase-body.plain .row { margin-top: 6px; }
+/* Home: Office Hours and Upcoming Events side by side */
+.home-live { margin-bottom: var(--gap); align-items: stretch; }
+.home-live > .card { margin: 0; }
+/* Self-Serve: the badge you're working on, and its weekly meeting */
+.badge-tile.current { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+.badge-tile.current small { color: var(--teal); font-weight: 600; }
+.badge-meet p { margin-bottom: 12px; }
+.badge-meet .row { gap: 10px; align-items: center; }
+.badge-meet .tag .ic { width: 14px; height: 14px; vertical-align: -2px; }
