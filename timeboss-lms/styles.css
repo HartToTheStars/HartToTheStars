@@ -1061,3 +1061,6 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 .badge-meet p { margin-bottom: 12px; }
 .badge-meet .row { gap: 10px; align-items: center; }
 .badge-meet .tag .ic { width: 14px; height: 14px; vertical-align: -2px; }
+.badge-note { color: var(--muted); }
+.badge-note b { color: var(--heading); }
+.badge-group ~ .demo-link + .level-note { margin-top: 24px; }

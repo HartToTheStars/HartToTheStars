@@ -310,7 +310,7 @@
     const got = badgesOf(u), self = u.id === me().id && solo(u), first = esc(u.name.split(" ")[0]);
     const one = (b) => { const tip = `${esc(b.title)}${got[b.id] ? `, earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : ", not yet earned"}`;
       return self ? `<a class="pp-badge" href="#/solo/${b.id}" title="${tip}" aria-label="${tip}">${medal(b, u, "md")}</a>` : `<span class="pp-badge" title="${tip}" role="img" aria-label="${tip}">${medal(b, u, "md")}</span>`; };
-    return `<div class="card">${cardHead("medal", "Badges", self ? "#/solo" : null)}<p class="muted pp-badges-note">${u.id === me().id ? "You've" : `${first} has`} earned ${Object.keys(got).length} of ${BADGES.length} Master Your Week badges.</p>
+    return `<div class="card">${cardHead("medal", "Badges", self ? "#/learn" : null)}<p class="muted pp-badges-note">${u.id === me().id ? "You've" : `${first} has`} earned ${Object.keys(got).length} of ${BADGES.length} Master Your Week badges.</p>
       <div class="pp-badges">${BADGES.map(one).join("")}</div></div>`;
   }
   const badgeStrip = (u = me()) => `<div class="badge-strip" role="img" aria-label="${Object.keys(badgesOf(u)).length} of ${BADGES.length} badges earned">${BADGES.map((b) => `<span class="${badgesOf(u)[b.id] ? "on" : ""}"></span>`).join("")}</div>`;
@@ -476,7 +476,7 @@
   // ---------- layout ----------
   function nav() {
     const u = me(), c = company(u.companyId), r = location.hash;
-    const link = (href, label, ic, locked = false) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") ? "active" : ""} ${locked ? "locked" : ""}">${icon(ic)}<span>${label}</span>${locked ? icon("lock", "ic lock nav-lock") : ""}</a>`;
+    const link = (href, label, ic, locked = false) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") || (href === "#/learn" && r.startsWith("#/solo")) ? "active" : ""} ${locked ? "locked" : ""}">${icon(ic)}<span>${label}</span>${locked ? icon("lock", "ic lock nav-lock") : ""}</a>`;
     const lockH = !hasHabits(u);
     return `
       <div class="brand-wrap">${logo()}</div>
@@ -487,7 +487,6 @@
         ${isCoach() ? link("#/companies", "Companies", "company") : ""}
         <div class="navlabel">Learn</div>
         ${link("#/learn", "Courses", "learn")}
-        ${showsBadges(u) ? link("#/solo", "Your Badges", "medal") : ""}
         <div class="navlabel">Live</div>
         ${link("#/events", "Upcoming Events", "events", lockH)}
         ${link("#/office-hours", "Office Hours", "office")}
@@ -518,10 +517,10 @@
     if (solo(u)) {
       const b = workingOn(u), n = Object.keys(badgesOf(u)).length;
       if (!b) return { h: "Pick the Badge You're Working On", p: `${n} of ${BADGES.length} badges earned, in any order. Each badge has a weekly drop-in meeting with a coach. Pick the one you're working on and its next meeting shows here.`, extra: badgeStrip(u),
-        btns: [{ href: "#/solo", label: "Pick a Badge" }] };
+        btns: [{ href: "#/learn", label: "Pick a Badge" }] };
       const e = badgeMeeting(b);
       return { h: `Working On: ${esc(b.title)}`, p: `${n} of ${BADGES.length} badges earned. Next meeting for this badge: ${meetWhen(e)}, ${e.mins} minutes with a Time Boss coach. Bring whatever is getting in the way.`, extra: badgeStrip(u),
-        btns: [rsvpd(e.id) ? { href: icsHref(e), download: `${e.id}.ics`, label: "Add to Calendar" } : { action: "rsvp", id: e.id, label: "RSVP for the Meeting" }, { href: `#/solo/${b.id}`, label: "Open Badge" }, { href: "#/solo", label: "Change Badge" }] };
+        btns: [rsvpd(e.id) ? { href: icsHref(e), download: `${e.id}.ics`, label: "Add to Calendar" } : { action: "rsvp", id: e.id, label: "RSVP for the Meeting" }, { href: `#/solo/${b.id}`, label: "Open Badge" }, { href: "#/learn", label: "Change Badge" }] };
     }
     if (ph === 2 && enrolled(u)) return { h: "You're in the Master Your Week Cohort", p: `Week ${c.currentWeek} of ${c.weeks} of the Group Coaching Cohort. Your habits are open: run your Weekly Planning Meeting before each work week and your Daily Review Meeting at the end of each workday. Completing the cohort unlocks Maximize Your Week.`,
       btns: [{ href: "#/tools/weekly", label: "Run Weekly Planning Meeting" }, { href: "#/cohort", label: "View Cohort" }] };
@@ -1186,7 +1185,7 @@
     return `
       <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${workshopTile(u)}</div>`)}
-      ${level(2, `${solo(u) ? `<div class="card level-cohort"><div><h3>Master Your Week Self-Serve</h3><p class="muted">${Object.keys(badgesOf(u)).length} of ${BADGES.length} badges earned, at your own pace.</p>${badgeStrip(u)}</div><a class="btn" href="#/solo">View Your Badges</a></div>
+      ${level(2, `${solo(u) ? `${badgeBoard(u)}
         <p class="muted level-note">Self-Serve includes every session recording. Watch them in any order.</p>`
         : `<div class="card level-cohort"><div><h3>${enrolled(u) || !selfServe(u) ? "Master Your Week Cohort" : "Master Your Week Self-Serve"}</h3><p class="muted">${ph === 2 && enrolled(u) ? `${c.weeks} weeks, live with a Time Boss coach.` : selfServe(u) ? `${BADGES.length} badges at your own pace, with a weekly drop-in meeting for each.` : `${c.weeks} weeks with a Time Boss coach. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.`}</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in the Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled, Week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete</span>`}</div>
@@ -1261,7 +1260,7 @@
     };
     const wb = solo() && workingOn();
     return `<header class="page-head"><div><h1>Upcoming Events</h1><p class="muted">Live sessions with the Time Boss team. RSVP and we'll send a calendar invite to ${esc(me().email)}.</p></div></header>
-      ${wb ? `<h2 class="section">Your Badge Meeting</h2><p class="muted">The weekly drop-in for the badge you're working on. <a href="#/solo">Change Badge</a></p>${ev(badgeMeeting(wb))}` : ""}
+      ${wb ? `<h2 class="section">Your Badge Meeting</h2><p class="muted">The weekly drop-in for the badge you're working on. <a href="#/learn">Change Badge</a></p>${ev(badgeMeeting(wb))}` : ""}
       <h2 class="section">Monthly Masterclass</h2>${masterclassEvents().map(ev).join("")}
       <h2 class="section">Live Weekly Planning Meetings</h2><p class="muted">Plan next week alongside other Time Bosses, with a coach on hand. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map((e) => ev({ ...e, desc: "" })).join("")}`;
   }
@@ -1386,21 +1385,22 @@
       <p class="muted">${phaseOf(u) === 1 ? "It opens once you complete the Unlock Your Week Workshop." : "You completed Master Your Week."}</p>`;
   };
 
-  // Master Your Week Self-Serve: the badge board, and one page per badge with what it takes to earn it and its weekly meeting
+  // Master Your Week Self-Serve is Phase 2 of Courses: the badges, in two groups, with the one you're working on marked
+  function badgeBoard(u = me()) {
+    const got = badgesOf(u), n = Object.keys(got).length, cur = workingOn(u);
+    const tile = (b) => `<a class="badge-tile ${got[b.id] ? "got" : ""} ${cur === b ? "current" : ""}" href="#/solo/${b.id}">${medal(b, u)}<b>${esc(b.title)}</b><small>${got[b.id] ? `Earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : cur === b ? "Working On" : "Not Yet"}</small></a>`;
+    const group = (g, title, sub) => `<section class="badge-group"><h3 class="section">${title}</h3><p class="muted">${sub}</p><div class="badge-grid">${BADGES.filter((b) => b.group === g).map(tile).join("")}</div></section>`;
+    return `<p class="level-note badge-note"><b>${n} of ${BADGES.length} badges earned.</b> Earn all ${BADGES.length}, in any order, to unlock Maximize Your Week. ${cur ? `Working on <a href="#/solo/${cur.id}">${esc(cur.title)}</a>, next meeting ${meetWhen(badgeMeeting(cur))}.` : "Open a badge and choose Work on This Badge to see its weekly meeting."}</p>
+      ${group("system", "Build Your System", "The tools and habits that run your week.")}
+      ${group("root", "Solve Your Root Causes", "Remove what keeps pulling you off your plan. Each one starts with its session recording.")}
+      ${n < BADGES.length - 1 ? `<button class="link demo-link" data-action="demo-badges">Demo: Earn All but One Badge</button>` : ""}`;
+  }
+  // One page per badge: what it takes to earn it, and its weekly meeting
   V.solo = (id) => {
     const u = me();
     if (!showsBadges(u)) return V.master();
     const got = badgesOf(u), n = Object.keys(got).length;
-    if (!id) {
-      const cur = workingOn(u);
-      const tile = (b) => `<a class="badge-tile ${got[b.id] ? "got" : ""} ${cur === b ? "current" : ""}" href="#/solo/${b.id}">${medal(b, u)}<b>${esc(b.title)}</b><small>${got[b.id] ? `Earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : cur === b ? "Working On" : "Not Yet"}</small></a>`;
-      const group = (g, title, sub) => `<section class="badge-group"><h2 class="section">${title}</h2><p class="muted">${sub}</p><div class="badge-grid">${BADGES.filter((b) => b.group === g).map(tile).join("")}</div></section>`;
-      return `<header class="page-head"><div><h1>Your Badges</h1><p class="lead">${n} of ${BADGES.length} earned. Earn all ${BADGES.length}, in any order, to unlock Maximize Your Week.</p>
-        <p class="muted">${!solo(u) ? "" : cur ? `Working on <a href="#/solo/${cur.id}">${esc(cur.title)}</a>. Next meeting: ${meetWhen(badgeMeeting(cur))}.` : "Open a badge and choose Work on This Badge to see its weekly meeting."}</p></div></header>
-        ${group("system", "Build Your System", "The tools and habits that run your week.")}
-        ${group("root", "Solve Your Root Causes", "Remove what keeps pulling you off your plan. Each one starts with its session recording.")}
-        ${solo(u) && n < BADGES.length - 1 ? `<button class="link demo-link" data-action="demo-badges">Demo: Earn All but One Badge</button>` : ""}`;
-    }
+    if (!id) return V.learn(); // the badges live in Courses, Phase 2
     const b = BADGES.find((x) => x.id === id);
     if (!b) return notFound();
     const at = got[b.id], ready = badgeReady(b, u);
@@ -1411,7 +1411,7 @@
       const href = r.watch ? courseHref(courseById(r.watch)) : `#/tools/${r.drm ? "daily" : "weekly"}`;
       return `<li><div class="req auto ${met ? "met" : ""}">${met ? icon("check") : `<span class="req-dot"></span>`}<span><a href="${href}">${r.watch ? `Watch ${esc(courseById(r.watch).title)}` : esc(r.label)}</a><small>${prog}. Tracked for you.</small></span></div></li>`;
     };
-    return `<a class="back" href="#/solo">Back to Your Badges</a>
+    return `<a class="back" href="#/learn">Back to Courses</a>
       <div class="card badge-hero">${medal(b, u, "lg")}<div><h1>${esc(b.title)}</h1><p class="lead">${esc(b.earn)}</p>${at ? `<p class="earned">${icon("check")} Earned ${longDate(new Date(at))}</p>` : ""}</div></div>
       ${at || !solo(u) ? "" : badgeMeetCard(b, u)}
       <div class="card"><h2 class="section first">${at ? "What You Did" : "To Earn This Badge"}</h2><ul class="reqs">${b.reqs.map(req).join("")}</ul>
