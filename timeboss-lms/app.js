@@ -1185,12 +1185,11 @@
     return `
       <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${workshopTile(u)}</div>`)}
-      ${level(2, `${solo(u) ? `${badgeBoard(u)}
-        <p class="muted level-note">Self-Serve includes every session recording. Watch them in any order.</p>`
+      ${level(2, `${solo(u) ? `${badgeBoard(u)}`
         : `<div class="card level-cohort"><div><h3>${enrolled(u) || !selfServe(u) ? "Master Your Week Cohort" : "Master Your Week Self-Serve"}</h3><p class="muted">${ph === 2 && enrolled(u) ? `${c.weeks} weeks, live with a Time Boss coach.` : selfServe(u) ? `${BADGES.length} badges at your own pace, with a weekly drop-in meeting for each.` : `${c.weeks} weeks with a Time Boss coach. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.`}</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in the Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled, Week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete</span>`}</div>
         ${ph === 3 ? `<p class="muted level-note">Every session's recording and slides, open for review any time.</p>` : ""}`}
-        <div class="grid three">${sessions().map(sessionTile).join("")}</div>`)}
+        ${solo(u) ? "" : `<div class="grid three">${sessions().map(sessionTile).join("")}</div>`}`)}
       ${level(3, `${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete Master Your Week: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
   };
