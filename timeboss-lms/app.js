@@ -544,7 +544,8 @@
     const nx = nextLessonIn(u, SEED.courses.filter((x) => x.kind === "mini")), mc = masterclassEvents()[0], wp = weeklyPlanningEvents()[0];
     const rsvpBtn = (e, label) => (rsvpd(e.id) ? { href: "#/events", label: `✓ Going ${fmtDate(e.start, { month: "short", day: "numeric" })}` } : { action: "rsvp", id: e.id, label });
     const rc = selfDirected(u) && earnedIn(ROOT_BADGES, u) < ROOT_BADGES.length;
-    if (rc) return { h: "Solve Your Root Causes", p: `Your system is in place. ${earnedIn(ROOT_BADGES, u)} of ${ROOT_BADGES.length} root cause badges earned, in any order.`, btns: [{ href: "#/learn", label: "View Root Cause Badges" }] };
+    if (rc) return { h: "Solve Your Root Causes", p: `Your system is in place. ${earnedIn(ROOT_BADGES, u)} of ${ROOT_BADGES.length} root cause badges earned, in any order. Your weekly cohort has ended: drop into a live Weekly Planning Meeting or the Monthly Masterclass when you want one.`,
+      btns: [{ href: "#/learn", label: "View Root Cause Badges" }, rsvpBtn(wp, "RSVP for Weekly Planning Meeting"), rsvpBtn(mc, "RSVP for Next Masterclass")] };
     return { h: "Maximize Your Week", p: `Ongoing education: mini courses, a monthly masterclass, and live Weekly Planning Meetings.${nx ? ` Up next: ${esc(nx.c.title)}.` : ""}`,
       btns: [nx ? { href: `#/learn/${nx.c.id}/${nx.l.id}`, label: "Watch Next Course" } : { href: "#/learn", label: "Browse Courses" }, rsvpBtn(mc, "RSVP for Next Masterclass"), rsvpBtn(wp, "RSVP for Weekly Planning Meeting")] };
   }
