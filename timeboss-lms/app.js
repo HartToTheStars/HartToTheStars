@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v15";
+  const KEY = "tb_lms_v16";
   // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
   // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
   const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
@@ -474,6 +474,7 @@
     calcheck: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
     repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    listcheck: '<path d="M11 6h10M11 12h10M11 18h10"/><path d="m3 6 1.5 1.5L7 5M3 12l1.5 1.5L7 11M3 18l1.5 1.5L7 17"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
     space: '<path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
@@ -1411,7 +1412,7 @@
     const tile = (b) => (locked ? `<div class="badge-tile locked">${inner(b, "Opens in Maximize Your Week")}</div>`
       : `<a class="badge-tile ${got[b.id] ? "got" : ""} ${cur === b ? "current" : ""}" href="#/solo/${b.id}">${inner(b, got[b.id] ? `Earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : cur === b ? "Working On" : "Not Yet")}</a>`);
     const [title, sub] = g === "system" ? ["Build Your System", "The tools and habits that run your week."] : ["Solve Your Root Causes", "Remove what keeps pulling you off your plan. Each one starts with its session recording."];
-    return `<section class="badge-group"><h3 class="section">${title}</h3><p class="muted">${sub}</p><div class="badge-grid">${BADGES.filter((b) => b.group === g).map(tile).join("")}</div></section>`;
+    return `<section class="badge-group"><h3 class="section">${title}</h3><p class="muted">${sub}</p><div class="badge-grid ${g}">${BADGES.filter((b) => b.group === g).map(tile).join("")}</div></section>`;
   }
   function badgeBoard(u = me()) {
     const n = earnedIn(MYW_BADGES, u), cur = workingOn(u);
@@ -1741,7 +1742,7 @@
         (S.badges[me().id] ||= {})[b.id] = Date.now();
         if (S.working[me().id] === b.id) delete S.working[me().id];
         if (solo() && earnedIn(MYW_BADGES) === MYW_BADGES.length) { const p = podOf(); p.members = p.members.filter((x) => x !== me().id); me().mywDone = true; save(); location.hash = "#/home"; render(); toast(`All ${MYW_BADGES.length} badges earned. Master Your Week is complete, and Maximize Your Week is unlocked.`); return; }
-        save(); render(); toast(`Badge earned: ${b.title}.`, solo() ? "Pick the next badge you're working on." : undefined);
+        save(); render(); toast(`Badge earned: ${b.title}.`, solo() && !workingOn() ? "Pick the next badge you're working on." : undefined);
         if (!matchMedia("(prefers-reduced-motion: reduce)").matches) confetti(document.querySelector(".badge-hero"));
       },
       "demo-badges": () => { const g = (S.badges[me().id] ||= {}); MYW_BADGES.slice(0, -1).forEach((b) => (g[b.id] ||= Date.now())); save(); render(); },
