@@ -5,13 +5,13 @@ window.TB_SEED = {
   // customWorkshop: the company booked a private workshop (10+ seats), so its new people watch that recording instead of RSVPing for the live monthly one
   companies: [
     { id: "acme", name: "Acme Logistics", color: "#3c768d", seats: 30, domain: "acmelogistics.com", customWorkshop: true, track: "cohort" },
-    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org", customWorkshop: true, track: "selfserve" },
-    { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio", track: "selfserve" },
+    { id: "northwind", name: "Northwind Health", color: "#2f8f6f", seats: 12, domain: "northwindhealth.org", customWorkshop: true, track: "selfdirected" },
+    { id: "brightline", name: "Brightline Studio", color: "#b5733a", seats: 8, domain: "brightline.studio", track: "selfdirected" },
     { id: "hartwell", name: "Hartwell Advisory", color: "#7a6a9a", seats: 1, domain: "hartwelladvisory.com", track: "cohort" }, // an individual leader on their own, without their team
   ],
 
-  // Each company sets its Master Your Week track: "cohort" (live, 12 weeks with a coach) or "selfserve" (badges, any order, a weekly drop-in meeting per badge)
-  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (cohort companies: enrolled: true = in the current cohort; self-serve companies: badges earned, working = the badge in progress), 3 = Maximize Your Week (completed it)
+  // Each company sets its Master Your Week track: "cohort" (live, 12 weeks with a coach) or "selfdirected" (badges, any order, in a small cohort that meets weekly)
+  // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (cohort companies: enrolled: true = in the current cohort; self-directed companies: badges earned, working = the badge in progress), 3 = Maximize Your Week (completed it)
   // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
     { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
@@ -75,10 +75,10 @@ window.TB_SEED = {
   communityFill: {
     perCompany: 16,
     companies: [
-      { id: "summit", name: "Summit Partners", color: "#5a6f8f", seats: 20, domain: "summitpartners.com", background: true, track: "selfserve" },
+      { id: "summit", name: "Summit Partners", color: "#5a6f8f", seats: 20, domain: "summitpartners.com", background: true, track: "selfdirected" },
       { id: "harbor", name: "Harbor Health Group", color: "#3f7f6a", seats: 20, domain: "harborhealth.org", background: true, track: "cohort" },
       { id: "pinecrest", name: "Pinecrest Builders", color: "#8a6a4a", seats: 20, domain: "pinecrest.build", background: true, track: "cohort" },
-      { id: "lumen", name: "Lumen Advisory", color: "#6b5b8a", seats: 20, domain: "lumenadvisory.com", background: true, track: "selfserve" },
+      { id: "lumen", name: "Lumen Advisory", color: "#6b5b8a", seats: 20, domain: "lumenadvisory.com", background: true, track: "selfdirected" },
     ],
     firstNames: ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Avery", "Quinn", "Jamie", "Drew", "Reese", "Parker", "Elena", "Marco", "Aaliyah", "Noah", "Hana", "Omari", "Lucia", "Theo", "Ines", "Kofi", "Maya", "Felix", "Rosa", "Arjun", "Nadia", "Simon", "Yara", "Ethan", "Leila", "Mateo"],
     lastNames: ["Brennan", "Castillo", "Duarte", "Ellison", "Faraday", "Garza", "Holloway", "Ibarra", "Jensen", "Kowalski", "Lindqvist", "Mendez", "Novak", "Okoro", "Petrov", "Quintero", "Reyes", "Sorensen", "Tanaka", "Underwood", "Vance", "Whitaker", "Yilmaz", "Zamora"],
@@ -253,7 +253,8 @@ window.TB_SEED = {
     { title: "Q1 Goal Setting Intensive", desc: "Leave with three quarterly outcomes and a 13-week plan." },
   ],
 
-  // Master Your Week Solo: merit badges, earned in any order at your own pace. Earning all of them completes Master Your Week.
+  // Self-Directed merit badges, earned in any order at your own pace. group "system" is Master Your Week (skill equipping): earning all of them completes it.
+  // group "root" is Maximize Your Week: solving root causes, once the system is in place.
   // A requirement is a check the member ticks (check), or one the app tracks: watch a session recording (watch),
   // run the Daily Review Meeting on n of the last 10 workdays (drm), or the Weekly Planning Meeting n weeks in a row (wpm).
   badges: [
@@ -282,6 +283,9 @@ window.TB_SEED = {
     { id: "rc-yourself", group: "root", icon: "user", title: "Your Own Root Causes Solved", earn: "Your own root causes of diversions have been solved.",
       reqs: [{ watch: "rc-yourself" }, { check: "I've named my own habits that pull me off my plan" }, { check: "I've put a fix in place for each one" }] },
   ],
+
+  // Self-Directed members drop into a small cohort of 4 to 6. It meets at the same time every week, for group coaching and peer coaching.
+  selfDirected: { maxSize: 6, mins: 60, host: "u_coach2", zoomUrl: "https://zoom.us/", slots: [{ day: 4, hour: 10 }, { day: 2, hour: 14 }, { day: 3, hour: 11 }] }, // zoomUrl is a placeholder
 
   cohort: {
     name: "Master Your Week",

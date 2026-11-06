@@ -985,7 +985,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .rv-row:not(.in) > * { opacity: 1; } .rv-row.in > * { animation: none; } }
 .habits-note { margin: 4px 0 0; color: rgba(255, 255, 255, .6); font-size: 14px; }
 
-/* ---------- Master Your Week: Cohort or Self-Serve ---------- */
+/* ---------- Master Your Week: Cohort or Self-Directed ---------- */
 .track h2 { display: flex; align-items: center; gap: 4px; font-size: 26px; }
 .track > p { color: var(--muted); }
 .track .checks { margin: 18px 0 22px; }
@@ -1005,11 +1005,6 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 .badge-m.sm .badge-m.lg { --s: 120px; }
 .badge-m.lg.got { outline-offset: -11px; outline-width: 2px; }
 .badge-m.lg 
-.badge-strip { display: flex; gap: 4px; align-self: stretch; max-width: 420px; margin: 12px 0 16px; }
-.badge-strip span { flex: 1; height: 8px; border-radius: 100px; background: var(--line); }
-.badge-strip span.on { background: var(--teal); }
-.myw .badge-strip span { background: rgba(255, 255, 255, .25); }
-.myw .badge-strip span.on { background: #fff; }
 
 .badge-group { margin-top: calc(var(--gap) * 1.5); }
 .badge-group .section { margin: 0 0 4px; font-size: 20px; }
@@ -1055,12 +1050,19 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 /* Home: Office Hours and Upcoming Events side by side */
 .home-live { margin-bottom: var(--gap); align-items: stretch; }
 .home-live > .card { margin: 0; }
-/* Self-Serve: the badge you're working on, and its weekly meeting */
+/* Self-Directed: the badge you're working on, and your small cohort's weekly meeting */
 .badge-tile.current { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
 .badge-tile.current small { color: var(--teal); font-weight: 600; }
-.badge-meet p { margin-bottom: 12px; }
-.badge-meet .row { gap: 10px; align-items: center; }
-.badge-meet .tag .ic { width: 14px; height: 14px; vertical-align: -2px; }
 .badge-note { color: var(--muted); }
 .badge-note b { color: var(--heading); }
 .badge-group ~ .demo-link + .level-note { margin-top: 24px; }
+.next-meet { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0 0 16px; color: var(--ink); }
+.next-meet span { flex-basis: 100%; font-size: 13px; font-weight: 600; color: var(--muted); }
+.next-meet b { font-size: 16px; color: var(--heading); }
+.next-meet a { font-size: 14px; font-weight: 600; color: var(--teal); text-decoration: underline; }
+.myw .next-meet span { color: rgba(255, 255, 255, .75); }
+.myw .next-meet b, .myw .next-meet a { color: #fff; }
+.sidebar .next-meet b { font-size: 14px; }
+.pod-card .next-meet { margin-top: 12px; }
+.pod-list { margin: 0; }
+.badge-tile.locked { opacity: .65; }
