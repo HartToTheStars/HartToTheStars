@@ -702,7 +702,7 @@
           ${["u_sam", "u_jade", "u_tyler", "u_dev", "u_leah", "u_maria", "u_elena"].map((id) => { const u = user(id); return `<button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>Phase ${phaseOf(u)}: ${phaseLabel(u)}</small></span></button>`; }).join("")}
         </div></div>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
-          <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} (${teamOf(cid).length})` : "Time Boss Coaches"}</h4><div class="picks">
+          <div class="login-group"><h4>${cid ? `${esc(company(cid).name)} (${teamOf(cid).length})<span class="tag">${company(cid).track === "selfdirected" ? "Self-Directed" : "Cohort"}</span>` : "Time Boss Coaches"}</h4><div class="picks">
           ${S.users.filter((u) => u.companyId === cid).map((u) => `
             <button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>${esc(u.title)}${u.role !== "member" ? ", " + u.role[0].toUpperCase() + u.role.slice(1) : ""}${u.role === "coach" ? "" : `, Phase ${phaseOf(u)}`}</small></span></button>`).join("")}
           </div></div>`).join("")}
