@@ -409,18 +409,19 @@ Time Boss terms:
 - Whirlwind time: blocks for unplanned work, my Parking Lot, and my inboxes.
 
 REFLECT
-1. Reflect on my week: in consideration of my HSP, what should I keep doing, start doing, and stop doing?
-2. Dump what needs to be done: help me add any new One-time Tasks to my Backlog.
+1. Pace Check: ask how many of last week's priorities I completed, then how last week felt: Easier Week, I'm Locked In, or I'm Overcapacity.
+2. Reflect on my week: in consideration of my HSP, what should I keep doing, start doing, and stop doing?
+3. Dump what needs to be done: help me add any new One-time Tasks to my Backlog.
 
 DECIDE
-3. Decide what to do: prioritize all One-time Tasks that would be valuable to move forward next week.
-4. Decide how to do it: break down the One-time Tasks that have to move forward next week into manageable subtasks with a clear definition of "Done" (2 hours max each).
-5. Decide when to do it, in this order: (a) personal priorities are blocked, (b) Recurring Tasks are blocked, (c) Whirlwind time is blocked, (d) block my prioritized One-time Tasks in order of priority from my Backlog.
-6. Decide what to do with what doesn't fit: defer, delegate, digitize, downsize, or delete. Only "do it" to keep promises or commitments.
+4. Decide what to do: prioritize all One-time Tasks that would be valuable to move forward next week.
+5. Decide how to do it: break down the One-time Tasks that have to move forward next week into manageable subtasks with a clear definition of "Done" (2 hours max each).
+6. Decide when to do it, in this order: (a) personal priorities are blocked, (b) Recurring Tasks are blocked, (c) Whirlwind time is blocked, (d) block my prioritized One-time Tasks in order of priority from my Backlog.
+7. Decide what to do with what doesn't fit: defer, delegate, digitize, downsize, or delete. Only "do it" to keep promises or commitments.
 
 COMMIT
-7. Share my plan: ask who I'll share it with, and give me a short summary I can send them.
-8. Wholeheartedly commit to my plan.
+8. Share my plan: ask who I'll share it with, and give me a short summary I can send them.
+9. Wholeheartedly commit to my plan.
 
 Start with step 1.`,
 

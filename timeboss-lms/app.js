@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v16";
+  const KEY = "tb_lms_v17";
   // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
   // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
   const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
@@ -40,6 +40,9 @@
   // A Weekly Planning Meeting run Fri to Sun plans the following week; Mon to Thu plans the current week
   const plannedWeek = (t) => { const d = new Date(t), m = mondayOf(t); if (d.getDay() === 0 || d.getDay() >= 5) m.setDate(m.getDate() + 7); return dateKey(m); };
 
+  // Pace Check: Peace is one of three answers, kept as 1, 3 or 5
+  const PEACE = { 1: "Easier Week", 3: "I'm Locked In", 5: "I'm Overcapacity" }, PEACE_SHORT = { 1: "Easier", 3: "Locked In", 5: "Overcapacity" };
+
   // ---------- tools (Time Boss "Checklist for Your Week") ----------
   const TOOLS = {
     weekly: {
@@ -49,6 +52,8 @@
       sub: "1 hour, prior to the beginning of your work week.", // page subtitle
       prompt: window.TB_PROMPTS.weekly,
       steps: [
+        { phase: "Reflect", title: "Pace Check", guide: "Before you plan the next week, check how the last one went.", pace: true,
+          fields: [{ k: "paceDone", label: "Priorities completed last week", type: "pace" }, { k: "paceTotal", label: "Priorities planned for last week", type: "pace" }, { k: "peace", label: "How last week felt", type: "pace" }] },
         { phase: "Reflect", title: "Reflect on your week", guide: "In consideration of your Highest Sustainable Pace, what should you keep doing, start doing, and/or stop doing?",
           fields: [{ k: "keep", label: "Keep doing", type: "textarea", rows: 2 }, { k: "start", label: "Start doing", type: "textarea", rows: 2 }, { k: "stop", label: "Stop doing", type: "textarea", rows: 2 }] },
         { phase: "Reflect", title: "Dump what needs to be done", guide: "Add any new One-time Tasks to your Backlog.",
@@ -92,7 +97,7 @@
     const t = TOOLS[tool];
     let md = `# ${t.title}: ${fmtDate(ts, { weekday: "long", month: "long", day: "numeric" })}\n`;
     t.steps.forEach((s) => {
-      const lines = s.fields.filter((f) => answers[f.k]).map((f) => f.type === "check" ? `- [x] ${f.label}` : `- **${f.label}:** ${String(answers[f.k]).replace(/\n/g, "\n  ")}`);
+      const lines = s.fields.filter((f) => answers[f.k]).map((f) => f.type === "check" ? `- [x] ${f.label}` : `- **${f.label}:** ${String(f.k === "peace" ? PEACE[answers[f.k]] : answers[f.k]).replace(/\n/g, "\n  ")}`);
       if (lines.length) md += `\n## ${s.phase}: ${s.title}\n${lines.join("\n")}\n`;
     });
     return md;
@@ -157,12 +162,19 @@
       // Each person plans at a habitual time: Friday afternoon, Saturday morning, Sunday evening, or Monday early
       const slot = pick(r, [[-3, 15], [-2, 9], [-1, 17], [0, 7]]);
       prev = true;
+      let lastPlan = null; // the Pace Check looks back at the priorities in the plan before it
       for (let k = weeksBack; k >= -1; k--) {
         const target = mondayOf(now); target.setDate(target.getDate() - 7 * k + slot[0]);
         const ts = at(target, slot[1], Math.floor(r() * 50));
         if (ts > now) continue;
         prev = r() < (prev ? Math.min(0.94, base + 0.02) : Math.max(0.2, base - 0.2));
-        if (prev) toolRuns.push({ id: uid(), userId: u.id, tool: "weekly", ts, answers: answersFor("weekly", r) });
+        if (prev) {
+          const answers = answersFor("weekly", r), feel = r(), total = lastPlan ? lastPlan.split("\n").filter(Boolean).length : 0;
+          if (total) { answers.paceTotal = String(total); answers.paceDone = String(Math.min(total, Math.round(total * (base - 0.15 + r() * 0.35)))); }
+          answers.peace = String(feel < 0.1 + (1 - base) * 0.45 ? 5 : feel > 0.8 ? 1 : 3);
+          toolRuns.push({ id: uid(), userId: u.id, tool: "weekly", ts, answers });
+          lastPlan = answers.priorities;
+        }
       }
     });
 
@@ -391,6 +403,20 @@
     return n;
   }
   // Past month completion: Daily Review Meetings over the last 30 days of workdays, Weekly Planning Meetings over the last 4 weeks
+  // Pace Check totals: the last four weeks of Weekly Planning Meetings, newest first. Progress counts priorities across everyone who ran one.
+  const paceWeeks = () => [0, 1, 2, 3].map((i) => { const d = mondayOf(Date.now()); d.setDate(d.getDate() - 7 * i); return dateKey(d); });
+  const lastRunIn = (id, week) => runsOf(id, "weekly").filter((r) => plannedWeek(r.ts) === week).sort((a, b) => b.ts - a.ts)[0];
+  function paceTally(people, weeks) {
+    const t = { ran: 0, possible: people.length * weeks.length, done: 0, total: 0, peace: { 1: 0, 3: 0, 5: 0 } };
+    people.forEach((m) => weeks.forEach((w) => {
+      const a = lastRunIn(m.id, w)?.answers; if (!a) return;
+      t.ran++; t.done += +a.paceDone || 0; t.total += +a.paceTotal || 0;
+      if (a.peace) t.peace[a.peace]++;
+    }));
+    t.progress = t.total ? Math.round((t.done / t.total) * 100) : null;
+    return t;
+  }
+  const lastPeace = (id) => +runsOf(id, "weekly").filter((r) => r.answers.peace).sort((a, b) => b.ts - a.ts)[0]?.answers.peace || null;
   function monthStats(id) {
     const days = drmDays(id), weeks = wpmWeeks(id);
     let de = 0, dg = 0, we = 0, wg = 0;
@@ -1025,20 +1051,43 @@
     ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
     ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
     ["mwpm", "Weekly Planning<br>past month", (x) => (hasHabits(x.m) ? x.ms.wpm : -1)], ["mdrm", "Daily Review<br>past month", (x) => (hasHabits(x.m) ? x.ms.drm : -1)],
+    ["prog", "Progress<br>past month", (x) => x.pace.progress ?? -1], ["peace", "Peace<br>last check", (x) => x.peace ?? -1],
     ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
   ];
   function rosterRows(cid) {
-    const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct }));
+    const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct, pace: paceTally([m], paceWeeks()), peace: lastPeace(m.id) }));
     const q = roster$.q.trim().toLowerCase(), key = ROSTER_COLS.find((c) => c[0] === roster$.sort)[2];
     const list = all.filter((x) => !q || `${x.m.name} ${x.m.email} ${x.m.title}`.toLowerCase().includes(q))
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td>` : `<td colspan="${DAILY_STREAKS ? 4 : 3}" class="muted t-wide">Habits unlock after the workshop</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
-    const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f));
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past month">${pctCell(x.ms.wpm)}</td><td data-label="Daily Review, past month">${pctCell(x.ms.drm)}</td><td data-label="Progress, past month">${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td data-label="Peace, last check">${peaceTag(x.peace)}</td>` : `<td colspan="${DAILY_STREAKS ? 6 : 5}" class="muted t-wide">Habits unlock after the workshop</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 9 : 8}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+    const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f)), teamPace = paceTally(hab.map((x) => x.m), paceWeeks());
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past month">${avg((x) => x.ms.wpm)}%</td><td data-label="Daily Review, past month">${avg((x) => x.ms.drm)}%</td><td data-label="Progress, past month">${teamPace.progress ?? 0}%</td><td data-label="Peace, last check">${hab.filter((x) => x.peace === 5).length} Overcapacity</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
+  }
+  const peaceTag = (p) => (p ? `<span class="peace-tag p${p}">${PEACE_SHORT[p]}</span>` : `<span class="muted">None yet</span>`);
+  // Peace as a split of who said what: an average would hide the one person who is overcapacity
+  function peaceBar(t) {
+    const seg = (n) => (t.peace[n] ? `<span class="p${n}" style="flex:${t.peace[n]}"></span>` : "");
+    return `<div class="peace-bar" role="img" aria-label="${t.peace[1]} Easier, ${t.peace[3]} Locked In, ${t.peace[5]} Overcapacity">${seg(1)}${seg(3)}${seg(5)}</div>`;
+  }
+  // Manage: the team's Pace Check. Three measures, last month's totals on top and each week below.
+  function paceCard(cid) {
+    const people = teamOf(cid).filter((m) => m.role !== "coach" && hasHabits(m)), weeks = paceWeeks(), t = paceTally(people, weeks);
+    if (!people.length) return "";
+    const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+    const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
+      return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}<small>${x.peace[5]} Overcapacity</small></td></tr>`; };
+    return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
+      <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
+      <div class="pace-stats">
+        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${plural(people.length, "person", "people")}</small></div>
+        <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by those who ran it</small></div>
+        <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
+      </div>
+      <div class="table-wrap"><table class="team pace-table"><thead><tr><th>Week</th><th>Weekly Planning completed</th><th>Progress</th><th>Peace</th></tr></thead><tbody>${weeks.map(row).join("")}</tbody></table></div></div>`;
   }
   function roster(cid) {
     const r = rosterRows(cid), arrow = (k) => (roster$.sort === k ? (roster$.dir === 1 ? " ↑" : " ↓") : "");
@@ -1135,13 +1184,14 @@
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
       ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}</a></nav>` : ""}
-      ${tab === "manage" ? roster(cid) : `<div class="team-grid">
+      ${tab === "manage" ? paceCard(cid) + roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
         <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
       </div>`}`;
   }
   function memberView(id) {
     const m = S.users.find((x) => x.id === id);
+    const mp = m && paceTally([m], paceWeeks());
     if (!m || !(canManage(m.companyId) || m.id === me().id)) return notFound();
     const ms = monthStats(m.id), op = overallProgress(m.id), days = drmDays(m.id), weeks = wpmWeeks(m.id);
     const runs = S.toolRuns.filter((r) => r.userId === m.id).sort((a, b) => b.ts - a.ts);
@@ -1158,6 +1208,7 @@
         ${DAILY_STREAKS ? `<div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>` : ""}
         <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}%, Daily Review Meeting ${ms.drm}%</small></div>
         <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
+        <div class="card stat"><span class="muted">Pace Check</span><b>${mp.progress ?? 0}%</b>${bar(mp.progress ?? 0)}<small>Priorities completed, past month. Last check: ${lastPeace(m.id) ? PEACE_SHORT[lastPeace(m.id)] : "none yet"}</small></div>
       </div>
       <div class="card"><div class="card-head"><h3>Last 30 Days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
         <div class="days">${cells.join("")}</div></div>`}
@@ -1359,6 +1410,16 @@
         </div><div class="feed-glb">${tool === "daily" && !DAILY_STREAKS ? "" : streakCard}</div><aside class="side">${aiPanel}</aside></div>`;
     }
     const s = t.steps[draft.step], last = draft.step === t.steps.length - 1;
+    // Pace Check: last week's priorities come from your last plan
+    const paceFields = () => {
+      const a = draft.answers, items = (runsOf(me().id, "weekly").sort((x, y) => y.ts - x.ts)[0]?.answers.priorities || "").split("\n").map((x) => x.replace(/^\s*\d+[.)]\s*/, "").trim()).filter(Boolean);
+      const opt = (name, value, label, on) => `<label class="pace-opt"><input type="radio" name="${name}" value="${value}" ${on ? "checked" : ""} required><span>${label}</span></label>`;
+      return `${items.length ? `<fieldset class="pace-set"><legend>How many of last week's priorities did you complete?</legend><ol class="pace-list">${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+          <div class="pace-opts count">${Array.from({ length: items.length + 1 }, (_, n) => opt("paceDone", n, n, a.paceDone === String(n))).join("")}</div><input type="hidden" name="paceTotal" value="${items.length}"></fieldset>`
+        : `<p class="muted">Your priorities from this plan show up here next week.</p>`}
+        <fieldset class="pace-set"><legend>How did last week feel?</legend><div class="pace-opts">${[1, 3, 5].map((n) => opt("peace", n, PEACE[n], a.peace === String(n))).join("")}</div></fieldset>
+        <small class="muted">Your team leaders and coach can see your Pace Check.</small>`;
+    };
     const field = (f) => {
       const v = draft.answers[f.k] ?? "";
       if (f.type === "textarea") return `<label>${esc(f.label)}<textarea name="${f.k}" rows="${f.rows || 4}" placeholder="${esc(f.ph || "")}">${esc(v)}</textarea></label>`;
@@ -1371,7 +1432,7 @@
       <div class="feed-wrap"><div class="feed-main">
         <form class="card tool-step" data-form="tool-step" data-tool="${tool}">
           <p class="guide">${esc(s.guide)}</p>
-          ${s.fields.map(field).join("")}
+          ${s.pace ? paceFields() : s.fields.map(field).join("")}
           ${s.share ? `<button type="button" class="btn ghost sm share-btn" data-action="copy-draft" data-tool="${tool}">Copy My Plan to Share</button>` : ""}
           <div class="row between">
             <span>${draft.step > 0 ? `<button type="button" class="ghost" data-action="tool-back" data-tool="${tool}">Back</button>` : ""}<button type="button" class="ghost danger" data-action="tool-abandon" data-tool="${tool}">Discard</button></span>

@@ -1071,3 +1071,38 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 .course-series .section { margin: 0 0 4px; font-size: 20px; }
 .course-series > p { margin: 0 0 16px; }
 @media (min-width: 1300px) { .course-series .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } } /* four root causes in one row */
+
+/* Pace Check: the first step of the Weekly Planning Meeting, and the team's totals on Manage */
+.pace-set { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.pace-set legend { padding: 0; margin-bottom: 10px; font-weight: 600; color: var(--heading); }
+.pace-list { margin: 0 0 12px; padding-left: 20px; color: var(--muted); }
+.pace-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pace-opts.count { display: flex; flex-wrap: wrap; }
+.pace-opt { position: relative; display: block; margin: 0; cursor: pointer; }
+.pace-opt input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; }
+.pace-opt span { display: block; padding: 12px 10px; min-width: 46px; box-sizing: border-box; text-align: center; font-weight: 600; font-size: 15px; border: 1px solid var(--line-strong); border-radius: 12px; }
+.pace-opt input:checked + span { background: var(--navy); border-color: var(--navy); color: #fff; }
+.pace-opt input:focus-visible + span { outline: 3px solid var(--teal-2); outline-offset: 2px; }
+.peace-bar { display: flex; gap: 2px; height: 12px; border-radius: 100px; overflow: hidden; background: var(--line); }
+.peace-bar .p1, .peace-key .p1 { background: var(--teal-2); }
+.peace-bar .p3, .peace-key .p3 { background: var(--teal); }
+.peace-bar .p5, .peace-key .p5 { background: var(--danger); }
+.peace-key { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.peace-key i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.peace-tag { font-weight: 600; color: var(--muted); }
+.peace-tag.p3 { color: var(--teal); }
+.peace-tag.p5 { color: var(--danger); }
+.pace-card { margin-bottom: var(--gap); }
+.pace-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 18px 0; }
+.pace-stats span { display: block; font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.pace-stats b { display: block; font-size: 40px; line-height: 1.1; font-weight: 800; color: var(--navy); font-variant-numeric: lining-nums; }
+.pace-stats small { color: var(--muted); }
+.pace-stats .peace-bar { margin-top: 14px; }
+.pace-table .t-peace { min-width: 180px; }
+.pace-table .t-peace small { padding-left: 0; display: block; margin-top: 4px; color: var(--muted); }
+@media (max-width: 760px) {
+  .pace-stats { grid-template-columns: 1fr; gap: 18px; }
+  .pace-opts:not(.count) { grid-template-columns: 1fr; }
+  .pace-table tr { grid-template-columns: 1fr 1fr; }
+  .pace-table td.t-name, .pace-table td.t-peace { grid-column: 1 / -1; }
+}
