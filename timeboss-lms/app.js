@@ -1191,6 +1191,10 @@
       const inner = `<div class="row between"><small class="muted">${head}</small></div><h3>${esc(x.title)}</h3>${x.series ? `<small class="series">${esc(x.series)}</small>` : ""}<p class="muted">${esc(x.blurb)}</p><small>${foot}</small>`;
       return href ? `<a class="card course" href="${href}">${inner}</a>` : `<div class="card course locked" aria-disabled="true">${inner}</div>`;
     };
+    // Self-Directed root causes: a series in Maximize Your Week, one course card per root cause badge
+    const rootTile = (b) => { const x = courseById(b.reqs[0].watch), at = badgesOf(u)[b.id], tileCopy = { title: x.title, blurb: x.blurb };
+      return ph < 3 ? card(tileCopy, `${icon("lock", "ic lock")} Locked`, "Unlocks after Master Your Week") : card(tileCopy, at ? `Earned ${fmtDate(at, { month: "short", day: "numeric" })}` : "Not Yet", at ? "Review" : "Start", `#/solo/${b.id}`); };
+    const rootSeries = () => `<section class="course-series"><h3 class="section">Series :: Solve Your Root Causes</h3><p class="muted">Remove what keeps pulling you off your plan. Each one starts with its session recording.</p><div class="grid three">${ROOT_BADGES.map(rootTile).join("")}</div></section>`;
     // Cohort sessions: done weeks open as recordings, this week is live, later weeks wait their turn
     const sessionTile = (x) => {
       const n = weekOf(x), now = ph === 2 && enrolled(u) && n === c.currentWeek, lock = `${icon("lock", "ic lock")} Week ${n}`;
@@ -1204,12 +1208,12 @@
     return `
       <header class="page-head"><div><h1>Courses</h1></div></header>
       ${level(1, `<div class="grid two">${workshopTile(u)}</div>`)}
-      ${level(2, `${solo(u) ? `${podCard(u)}${badgeBoard(u)}` : earning(u) ? `<p class="level-note badge-note"><b>All ${MYW_BADGES.length} badges earned.</b></p>${badgeGroup(u, "system")}`
+      ${level(2, `${solo(u) ? `${podCard(u)}${badgeBoard(u)}` : earning(u) ? `<p class="level-note badge-note"><b>All ${MYW_BADGES.length} badges earned.</b></p>${badgeGroup(u)}`
         : `<div class="card level-cohort"><div><h3>${enrolled(u) || !selfDirected(u) ? "Master Your Week Cohort" : "Master Your Week Self-Directed"}</h3><p class="muted">${ph === 2 && enrolled(u) ? `${c.weeks} weeks, live with a Time Boss coach.` : selfDirected(u) ? `${MYW_BADGES.length} badges at your own pace, in a small cohort that meets weekly with a coach.` : `${c.weeks} weeks with a Time Boss coach. The next cohort starts ${fmtDate(c.startsOn + "T12:00", { month: "long", day: "numeric" })}.`}</p></div>
         ${ph === 1 ? `<small class="muted">${icon("lock", "ic lock")} Complete the workshop first</small>` : ph === 2 && !enrolled(u) ? `<button class="btn" data-action="enroll">Enroll in the Cohort</button>` : ph === 2 ? `<span class="tag">Enrolled, Week ${c.currentWeek} of ${c.weeks}</span>` : `<span class="tag">Complete</span>`}</div>
         ${ph === 3 ? `<p class="muted level-note">Every session's recording and slides, open for review any time.</p>` : ""}`}
         ${selfDirected(u) ? "" : `<div class="grid three">${sessions().map(sessionTile).join("")}</div>`}`)}
-      ${level(3, `${selfDirected(u) && u.companyId ? badgeGroup(u, "root", { locked: ph < 3 }) : ""}${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete Master Your Week: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
+      ${level(3, `${selfDirected(u) && u.companyId ? rootSeries() : ""}${ph < 3 ? `<p class="muted level-note">Ongoing education unlocks when you complete Master Your Week: mini courses, a monthly masterclass, and live Weekly Planning Meetings.</p>` : `<p class="muted level-note">Mini courses to keep sharpening your week, plus a monthly masterclass and live Weekly Planning Meetings in <a href="#/events">Events</a>.</p>`}
         <div class="grid three">${SEED.courses.filter((x) => x.kind === "mini").map(tile).join("")}</div>`)}`;
   };
   // Phase 1 on Courses: the live RSVP, the custom recording, or (once done) Review the Workshop
@@ -1405,19 +1409,16 @@
       <p class="muted">${phaseOf(u) === 1 ? "It opens once you complete the Unlock Your Week Workshop." : "You completed Master Your Week."}</p>`;
   };
 
-  // Self-Directed badges live in Courses: the system badges in Phase 2, the root cause badges in Phase 3
-  function badgeGroup(u, g, { locked = false } = {}) {
+  // Self-Directed badges live in Courses: the system badges here in Phase 2, the root cause series in Phase 3
+  function badgeGroup(u) {
     const got = badgesOf(u), cur = workingOn(u);
-    const inner = (b, note) => `${medal(b, u)}<b>${esc(b.title)}</b><small>${note}</small>`;
-    const tile = (b) => (locked ? `<div class="badge-tile locked">${inner(b, "Opens in Maximize Your Week")}</div>`
-      : `<a class="badge-tile ${got[b.id] ? "got" : ""} ${cur === b ? "current" : ""}" href="#/solo/${b.id}">${inner(b, got[b.id] ? `Earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : cur === b ? "Working On" : "Not Yet")}</a>`);
-    const [title, sub] = g === "system" ? ["Build Your System", "The tools and habits that run your week."] : ["Solve Your Root Causes", "Remove what keeps pulling you off your plan. Each one starts with its session recording."];
-    return `<section class="badge-group"><h3 class="section">${title}</h3><p class="muted">${sub}</p><div class="badge-grid ${g}">${BADGES.filter((b) => b.group === g).map(tile).join("")}</div></section>`;
+    const tile = (b) => `<a class="badge-tile ${got[b.id] ? "got" : ""} ${cur === b ? "current" : ""}" href="#/solo/${b.id}">${medal(b, u)}<b>${esc(b.title)}</b><small>${got[b.id] ? `Earned ${fmtDate(got[b.id], { month: "short", day: "numeric" })}` : cur === b ? "Working On" : "Not Yet"}</small></a>`;
+    return `<section class="badge-group"><h3 class="section">Build Your System</h3><p class="muted">The tools and habits that run your week.</p><div class="badge-grid system">${MYW_BADGES.map(tile).join("")}</div></section>`;
   }
   function badgeBoard(u = me()) {
     const n = earnedIn(MYW_BADGES, u), cur = workingOn(u);
     return `<p class="level-note badge-note"><b>${n} of ${MYW_BADGES.length} badges earned.</b> Earn all ${MYW_BADGES.length}, in any order, to unlock Maximize Your Week. ${cur ? `Working on <a href="#/solo/${cur.id}">${esc(cur.title)}</a>.` : "Open a badge and choose Work on This Badge."}</p>
-      ${badgeGroup(u, "system")}
+      ${badgeGroup(u)}
       ${n < MYW_BADGES.length - 1 ? `<button class="link demo-link" data-action="demo-badges">Demo: Earn All but One Badge</button>` : ""}`;
   }
   // Your small cohort: who's in it, when it meets, and what each person is working on

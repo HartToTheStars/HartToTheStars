@@ -1065,6 +1065,9 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 .sidebar .next-meet b { font-size: 14px; }
 .pod-card .next-meet { margin-top: 12px; }
 .pod-list { margin: 0; }
-.badge-tile.locked { opacity: .65; }
 .login-group h4 .tag { font-size: 12px; padding: 2px 9px; margin-left: 8px; }
 @media (min-width: 761px) { .badge-grid.system { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 690px; } } /* nine badges, three rows of three */
+.course-series { margin-bottom: 26px; }
+.course-series .section { margin: 0 0 4px; font-size: 20px; }
+.course-series > p { margin: 0 0 16px; }
+@media (min-width: 1300px) { .course-series .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } } /* four root causes in one row */
