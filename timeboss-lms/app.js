@@ -1080,7 +1080,7 @@
     if (!people.length) return "";
     const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
-      return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
+      return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress, `${x.done} of ${x.total} priorities completed`)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
       <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
       <div class="pace-stats">
@@ -1115,7 +1115,7 @@
       </div>`;
   }
 
-  const pctCell = (p) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}">${p}%</span>`;
+  const pctCell = (p, tip) => `<span class="pct ${p >= 80 ? "good" : p < 50 ? "low" : ""}"${tip ? ` data-tip="${tip}" tabindex="0"` : ""}>${p}%</span>`;
   // Latest Activity: what the team did in the last two weeks (posts, comments, prompt answers,
   // finished phases and courses, and habit runs grouped per meeting per day)
   let actLimit = 20, actGroups = {};
@@ -1732,10 +1732,10 @@
     showTip(el);
   });
   document.addEventListener("scroll", hideTip, true);
-  // A tap hides any tip; tapping a Peace bar segment shows its count, since phones have no hover
+  // A tap hides any tip; tapping a Pace Check bar color or weekly Progress shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".peace-bar [data-tip]");
+    const el = e.target.closest?.(".pace-card [data-tip]");
     if (el) showTip(el);
   }, true);
 
