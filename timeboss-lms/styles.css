@@ -1086,7 +1086,7 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
 .peace-bar .p1, .peace-key .p1 { background: var(--teal-2); }
 .peace-bar .p3, .peace-key .p3 { background: var(--teal); }
 .peace-bar .p5, .peace-key .p5 { background: var(--danger); }
-.peace-key { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.peace-key { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .peace-key i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
 .peace-tag { font-weight: 600; color: var(--muted); }
 .peace-tag.p3 { color: var(--teal); }
