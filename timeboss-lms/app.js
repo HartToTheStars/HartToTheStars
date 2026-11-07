@@ -680,7 +680,7 @@
       <div class="modal prompt-modal" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
         <div class="modal-head"><h2 id="prompt-title">${t.title} Prompt</h2><button class="ghost sm" data-action="close-prompt" aria-label="Close">Close</button></div>
         <pre class="prompt-text">${esc(t.prompt)}</pre>
-        <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${promptFor_}">Copy System Prompt</button><span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="478" height="120" alt="Gemini, Claude, or ChatGPT"></span></div>
+        <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${promptFor_}">Copy System Prompt</button><span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div>
       </div>`;
   }
   function ranModalView() {
@@ -1058,6 +1058,19 @@
   ];
   // Phone cards label each value with its column name and the same (?) help as the desktop header
   const cellLab = (k) => { const label = ROSTER_COLS.find((c) => c[0] === k)[1]; return `<span class="t-lab">${label.replace(/<br>/g, " ")}</span>`; };
+  // Member detail: courses split into Completed and Pending, each grouped by phase
+  function courseLists(m) {
+    const d = S.progress[m.id] || {}, groups = [[PHASES[0], "workshop"], [PHASES[1], "cohort"], [PHASES[2], "mini"]].map(([ph, k]) => [ph, SEED.courses.filter((x) => x.kind === k)]);
+    const isDone = (x) => x.lessons.every((l) => d[l.id]);
+    const card = (title, keep, ic) => `<div class="card">${cardHead("learn", title)}${groups.map(([ph, list]) => {
+      const shown = list.filter((x) => keep(x));
+      return `<div class="pp-group"><div class="row between"><b>${ph.name}</b><small class="muted">${shown.length} of ${list.length}</small></div>
+        ${shown.length ? `<ul class="pp-courses">${shown.map((x) => `<li>${ic}${esc(x.title)}</li>`).join("")}</ul>` : `<p class="muted sm">None</p>`}</div>`;
+    }).join("")}</div>`;
+    return card("Completed Courses", isDone, icon("daily", "ic pp-check")) + card("Pending Courses", (x) => !isDone(x), `<i class="pp-open" aria-hidden="true"></i>`);
+  }
+  // Member summary cards use the same names and (?) help as the Team Members columns
+  const statHead = (k) => ROSTER_COLS.find((c) => c[0] === k)[1].replace(/<br>/g, " ");
   function rosterRows(cid) {
     const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), pace: paceTally([m], paceWeeks()), peace: lastPeace(m.id), peaceTs: lastPeaceRun(m.id)?.ts }));
     const q = roster$.q.trim().toLowerCase(), key = ROSTER_COLS.find((c) => c[0] === roster$.sort)[2];
@@ -1108,12 +1121,14 @@
     return `<div class="modal-backdrop" data-action="close-add-users"></div>
       <div class="modal add-users" role="dialog" aria-modal="true" aria-labelledby="add-title">
         <div class="modal-head"><h2 id="add-title">Add People</h2><button class="ghost sm" data-action="close-add-users" aria-label="Close">Close</button></div>
-        <form data-form="add-users" class="add-users-form">
+        <div class="add-users-body"><form data-form="add-users" class="add-users-form">
           <div class="row add-one"><label>Name<input name="name" autocomplete="off" placeholder="Jordan Smith"></label><label>Email<input name="email" type="email" autocomplete="off" placeholder="jordan@company.com"></label></div>
           <label>Or paste a list<textarea name="list" rows="6" placeholder="Jordan Smith, jordan@company.com&#10;Casey Lee, casey@company.com"></textarea><small class="muted">One person per line: name, comma, email.</small></label>
           <label>Role<select name="role"><option value="member">Standard User</option><option value="admin">Admin</option></select><small class="muted">Applies to everyone you add here. Admins can see the Manage page.</small></label>
           <div class="row"><button class="btn">Add People</button></div>
         </form>
+        <div class="add-ai"><h3>Or add via your AI Tools.</h3><p class="muted">Simply type <span class="nowrap">"Add user to Time Boss"</span></p>
+          <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></div></div>
       </div>`;
   }
 
@@ -1121,8 +1136,9 @@
   // Latest Activity: what the team did in the last two weeks (posts, comments, prompt answers,
   // finished phases and courses, and habit runs grouped per meeting per day)
   let actLimit = 20, actGroups = {};
-  function teamActivity(cid) {
-    const c = company(cid), team = teamOf(cid), ids = new Set(team.map((m) => m.id)), since = Date.now() - 14 * DAY, items = [];
+  // With only set, the same feed filtered to one team member (their detail page)
+  function teamActivity(cid, only) {
+    const c = company(cid), team = only ? [user(only)] : teamOf(cid), ids = new Set(team.map((m) => m.id)), since = Date.now() - 14 * DAY, items = [];
     const meId = me().id, name = (m) => `<a class="act-name" href="#/people/${m.id}">${m.id === meId ? "You" : esc(m.name)}</a>`;
     const add = (ts, who, html, href, snippet = "", group = "") => ts >= since && items.push({ ts, who, html, href, snippet, group });
     S.posts.forEach((p) => {
@@ -1175,7 +1191,7 @@
     items.sort((a, b) => b.ts - a.ts);
     const row = (it) => `<li class="act ${it.group ? "act-group" : ""}"${it.group ? ` data-action="show-group" data-id="${it.group}" role="button" tabindex="0" aria-label="See who completed it"` : ""}>${it.who.length > 1 ? avatarStack(it.who.map((u) => ({ u })), 4) : `<a href="#/people/${it.who[0].id}" class="act-av" aria-hidden="true" tabindex="-1">${avatar(it.who[0], "md")}</a>`}
       <div class="act-main"><p>${it.html}</p>${it.snippet ? `<a class="act-snip" href="${it.href}">${esc(it.snippet)}</a>` : ""}<a class="act-when" href="${it.href}">${ago(it.ts)}</a></div></li>`;
-    return `<div class="card team-activity">${cardHead("company", `Latest Activity at ${esc(c.name)}`)}
+    return `<div class="card team-activity">${cardHead("company", only ? "Latest Activity" : `Latest Activity at ${esc(c.name)}`)}
       ${items.length ? `<ul class="act-list">${items.slice(0, actLimit).map(row).join("")}</ul>${items.length > actLimit ? `<button class="btn ghost sm" data-action="more-activity">Show More Activity</button>` : ""}` : `<p class="muted">No activity in the last two weeks.</p>`}</div>`;
   }
   // Team space: Activity for everyone; team leaders and coaches also get a Manage tab with the Team Members table
@@ -1202,32 +1218,20 @@
     const m = S.users.find((x) => x.id === id);
     const mp = m && paceTally([m], paceWeeks());
     if (!m || !(canManage(m.companyId) || m.id === me().id)) return notFound();
-    const ms = monthStats(m.id), op = overallProgress(m.id), days = drmDays(m.id), weeks = wpmWeeks(m.id);
-    const runs = S.toolRuns.filter((r) => r.userId === m.id).sort((a, b) => b.ts - a.ts);
-    const cells = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = startOfDay(Date.now() - i * DAY), k = dateKey(d), planned = runs.some((r) => r.tool === "weekly" && dateKey(new Date(r.ts)) === k);
-      cells.push(`<span class="day-cell ${!isWorkday(d) ? "off" : days.has(k) ? "on" : i === 0 ? "" : "miss"} ${planned ? "plan" : ""}" title="${fmtDate(d)}${days.has(k) ? ", Daily Review Meeting" : ""}${planned ? ", Weekly Planning Meeting" : ""}"></span>`);
-    }
+    const ms = monthStats(m.id);
     return `<a class="back" href="${isCoach() ? `#/companies/${m.companyId}` : "#/company"}">Back to ${esc(company(m.companyId)?.name || "Team")}</a>
-      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)}, ${esc(m.email)}, Phase ${phaseOf(m)}: ${phaseLabel(m)}</p></div></div></header>
+      <header class="page-head member-head"><div class="row">${profileAvatar(m, "lg", { link: false })}<div><h1>${esc(m.name)}</h1><p class="muted">${esc(m.title)}</p><span class="phase-pill p${phaseOf(m)}">Phase ${phaseOf(m)}: ${phaseLabel(m)}</span></div></div></header>
       ${showsBadges(m) ? badgeCard(m) : ""}
       ${!hasHabits(m) ? `<div class="card"><h3>Habits unlock after the workshop</h3><p class="muted">${esc(m.name.split(" ")[0])} is in Unlock Your Week and hasn't ${customWorkshop(m) ? "watched the custom workshop" : "attended the live workshop"} yet. Weekly Planning Meeting and Daily Review Meeting streaks show here once they finish it.</p></div>` : `<div class="grid stats">
-        <div class="card stat"><span class="muted">Weekly Planning streak</span>${streakStat("weekly", m.id)}</div>
+        <div class="card stat"><span class="muted">${statHead("wpm")}</span>${streakStat("weekly", m.id)}</div>
         ${DAILY_STREAKS ? `<div class="card stat"><span class="muted">Daily Review streak</span>${streakStat("daily", m.id)}</div>` : ""}
-        <div class="card stat"><span class="muted">Past month</span><b>${ms.all}%</b>${bar(ms.all)}<small>Weekly Planning Meeting ${ms.wpm}%, Daily Review Meeting ${ms.drm}%</small></div>
-        <div class="card stat"><span class="muted">Courses</span><b>${op.pct}%</b>${bar(op.pct)}<small>${op.n} of ${op.total} lessons</small></div>
-        <div class="card stat"><span class="muted">Pace Check</span><b>${mp.progress ?? 0}%</b>${bar(mp.progress ?? 0)}<small>Priorities completed, past month. Last check: ${lastPeace(m.id) ? PEACE_SHORT[lastPeace(m.id)] : "none yet"}</small></div>
-      </div>
-      <div class="card"><div class="card-head"><h3>Last 30 Days</h3><small class="muted"><i class="day-cell on key"></i> Daily Review Meeting <i class="day-cell plan key"></i> Weekly Planning Meeting <i class="day-cell miss key"></i> missed</small></div>
-        <div class="days">${cells.join("")}</div></div>`}
+        <div class="card stat"><span class="muted">${statHead("mwpm")}</span><b>${ms.wpm}%</b>${bar(ms.wpm)}<small>${Math.round(ms.wpm / 25)} of 4 Weekly Planning Meetings</small></div>
+        <div class="card stat"><span class="muted">${statHead("prog")}</span>${mp.progress === null ? `<b class="stat-word muted">None yet</b><small>No Pace Check in the last 4 weeks</small>` : `<b>${mp.progress}%</b>${bar(mp.progress)}<small>${mp.done} of ${mp.total} priorities completed</small>`}</div>
+        <div class="card stat"><span class="muted">${statHead("peace")}</span>${lastPeace(m.id) ? `<b class="stat-word peace-tag p${lastPeace(m.id)}">${PEACE_SHORT[lastPeace(m.id)]}</b><small>Last reported ${new Date(lastPeaceRun(m.id).ts).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : `<b class="stat-word muted">None yet</b>`}</div>
+      </div>`}
       <div class="grid two">
-        <div class="card"><h3>Recent Meetings</h3>
-          ${runs.slice(0, 10).map((r) => `<details class="run"><summary><b>${TOOLS[r.tool].title}</b> ${fmtDate(r.ts, { weekday: "short", month: "short", day: "numeric" })} <small class="muted">${fmtTime(r.ts)}</small></summary><pre>${esc(runToMarkdown(r.tool, r.answers, r.ts))}</pre></details>`).join("") || `<p class="muted">No meetings yet.</p>`}
-        </div>
-        <div class="card"><h3>Course Progress</h3>
-          ${SEED.courses.map((c) => { const p = courseProgress(m.id, c); return `<div class="course-row"><div class="row between"><span>${esc(c.title)}</span><small class="muted">${p.n}/${p.total}</small></div>${bar(p.pct, "thin")}</div>`; }).join("")}
-        </div>
+        ${teamActivity(m.companyId, m.id)}
+        <div class="col-stack">${courseLists(m)}</div>
       </div>`;
   }
   V.company = (mid) => (!me().companyId ? V.companies() : mid === "manage" ? teamView(me().companyId, "manage") : mid ? memberView(mid) : teamView(me().companyId));
@@ -1406,7 +1410,7 @@
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
       <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
-      <span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="478" height="120" alt="Gemini, Claude, or ChatGPT"></span></div></div>`;
+      <span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div></div>`;
 
     if (!draft) {
       let lastPhase = "";
@@ -1744,7 +1748,7 @@
   // A tap hides any tip; tapping a Pace Check bar color, weekly Progress or a phone card (?) shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip], .sub-lock");
+    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip], .stat [data-tip], .sub-lock");
     if (el) { if (el.matches(".sub-lock")) e.preventDefault(); showTip(el); }
   }, true);
 
