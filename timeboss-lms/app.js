@@ -1180,6 +1180,12 @@
       ${items.length ? `<ul class="act-list">${items.slice(0, actLimit).map(row).join("")}</ul>${items.length > actLimit ? `<button class="btn ghost sm" data-action="more-activity">Show More Activity</button>` : ""}` : `<p class="muted">No activity in the last two weeks.</p>`}</div>`;
   }
   // Team space: Activity for everyone; team leaders and coaches also get a Manage tab with the Team Members table
+  // Manage page notice: who can see it. The (?) names the company's admins.
+  function adminBar(cid) {
+    const c = company(cid), admins = teamOf(cid).filter((m) => m.role === "admin").map((m) => m.name);
+    const tip = `${c.name} admin: ${admins.join(", ") || "none yet"}. Time Boss coaches can also see this page.`;
+    return `<div class="admin-bar">${icon("lock", "ic lock")}<span>This page is only visible to ${esc(c.name)} admin <span class="th-help" data-tip="${esc(tip)}" aria-label="${esc(tip)}" tabindex="0">?</span></span></div>`;
+  }
   function teamView(cid, tab = "activity") {
     const c = company(cid), team = teamOf(cid), u = me().companyId === cid ? me() : null, manage = canManage(cid);
     const base = isCoach() ? `#/companies/${cid}` : "#/company";
@@ -1188,7 +1194,7 @@
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
       <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
       ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock" data-tip="Only visible to Admin" aria-label="Only visible to Admin">${icon("lock", "ic lock")}</span></a></nav>` : ""}
-      ${tab === "manage" ? paceCard(cid) + roster(cid) : `<div class="team-grid">
+      ${tab === "manage" ? adminBar(cid) + paceCard(cid) + roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
         <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
       </div>`}`;
@@ -1735,10 +1741,11 @@
     showTip(el);
   });
   document.addEventListener("scroll", hideTip, true);
+  addEventListener("resize", hideTip);
   // A tap hides any tip; tapping a Pace Check bar color, weekly Progress or a phone card (?) shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .sub-lock");
+    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip], .sub-lock");
     if (el) { if (el.matches(".sub-lock")) e.preventDefault(); showTip(el); }
   }, true);
 
