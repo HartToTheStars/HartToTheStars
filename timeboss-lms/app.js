@@ -680,7 +680,7 @@
       <div class="modal prompt-modal" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
         <div class="modal-head"><h2 id="prompt-title">${t.title} Prompt</h2><button class="ghost sm" data-action="close-prompt" aria-label="Close">Close</button></div>
         <pre class="prompt-text">${esc(t.prompt)}</pre>
-        <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${promptFor_}">Copy System Prompt</button><span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div>
+        <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${promptFor_}">Copy System Prompt</button><span class="ai-paste">and paste in <img src="assets/ai-logos-4.webp" width="605" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div>
       </div>`;
   }
   function ranModalView() {
@@ -1128,7 +1128,7 @@
           <div class="row"><button class="btn">Add Team Members</button></div>
         </form>
         <div class="add-ai"><h3>Or add via your AI Tools.</h3><p class="muted">Simply type <span class="nowrap">"Add user to Time Boss"</span></p>
-          <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></div></div>
+          <img src="assets/ai-logos-4.webp" width="605" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></div></div>
       </div>`;
   }
 
@@ -1410,7 +1410,7 @@
       <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
       <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
-      <span class="ai-paste">and paste in <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div></div>`;
+      <span class="ai-paste">and paste in <img src="assets/ai-logos-4.webp" width="605" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div></div>`;
 
     if (!draft) {
       let lastPhase = "";
