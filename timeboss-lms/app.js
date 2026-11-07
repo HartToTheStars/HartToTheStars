@@ -657,8 +657,8 @@
     if (!n) return "";
     const period = periodLabel(tool), planned = period === "for next week" ? "next week" : "this week";
     const did = tool === "weekly" ? `already planned ${planned}` : `already run their Daily Review Meeting ${period}`;
-    const text = p.iRan ? (tool === "weekly" ? `You and ${n} other${n === 1 ? "" : "s"} ${p.where} have planned ${planned}.` : `You and ${n} other${n === 1 ? "" : "s"} ${p.where} ran it ${period}.`)
-      : `Join ${n} Time Boss${n === 1 ? "" : "es"} ${p.where} who've ${compact && tool === "daily" ? `run theirs ${period}` : did}.`;
+    const text = p.iRan ? (tool === "weekly" ? `You and ${n} other team member${n === 1 ? "" : "s"} ${p.where} have planned ${planned}.` : `You and ${n} other team member${n === 1 ? "" : "s"} ${p.where} ran it ${period}.`)
+      : `Join ${n} team member${n === 1 ? "" : "s"} ${p.where} who've ${compact && tool === "daily" ? `run theirs ${period}` : did}.`;
     return `<div class="proof ${compact ? "compact" : ""}">${avatarStack(p.list)}<span class="proof-text">${esc(text)} <button class="link proof-all" data-action="show-ran" data-tool="${tool}" data-id="${p.scope}">View All</button></span></div>`;
   }
   let ranModal = null; // {tool, scope}
@@ -1243,7 +1243,7 @@
     return `<header class="page-head"><div><h1>Companies</h1><p class="muted">Coach view across teams.</p></div></header>
       <div class="grid three">${S.companies.filter((c) => !c.background).map((c) => {
         const ms = teamOf(c.id), avg = Math.round(avgOf(ms, (m) => monthStats(m.id).all));
-        return `<a class="card company-tile" href="#/companies/${c.id}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "member", "members")}</p>${bar(avg)}<small>${avg}% past month Weekly Planning Meeting and Daily Review Meeting completion</small></a>`;
+        return `<a class="card company-tile" href="#/companies/${c.id}"><h3>${esc(c.name)}</h3><p class="muted">${plural(ms.length, "team member", "team members")}</p>${bar(avg)}<small>${avg}% past month Weekly Planning Meeting and Daily Review Meeting completion</small></a>`;
       }).join("")}</div>`;
   };
 
@@ -1393,7 +1393,7 @@
     if (!TOOLS[tool]) tool = "weekly";
     const n = Math.max(1, Math.min(999, parseInt(count, 10) || (tool === "weekly" ? 4 : 7)));
     const link = (t, c, label) => `<a class="btn ghost sm ${t === tool && (c ?? "") === (count ?? "") ? "on" : ""}" href="#/preview/${t}${c ? `/${c}` : ""}">${label}</a>`;
-    return `<div class="preview-bar card"><div><b>Celebration preview</b><small class="muted">Nothing is saved. This is what members see after finishing a meeting.</small></div>
+    return `<div class="preview-bar card"><div><b>Celebration preview</b><small class="muted">Nothing is saved. This is what team members see after finishing a meeting.</small></div>
         <div class="row">${link("weekly", null, "Weekly Planning Meeting")}${link("daily", null, "Daily Review Meeting")}${link(tool, "10", "Milestone (10)")}${link(tool, "1", "Day One")}
         <button class="btn sm" data-action="replay">Replay</button></div></div>
       ${celebrate(tool, n - 1, { preview: n })}`;
@@ -1406,8 +1406,8 @@
     const streakCard = `<div class="card stat">${cardHead(tool, "Your Streak")}${sample
       ? `<div class="streak-num"><b>${SAMPLE[tool].n}</b><span>${tool === "weekly" ? "weeks in a row" : "workdays in a row"}</span></div>${sampleChain(tool, true)}<small>${tool === "weekly" ? "Last 10 weeks" : "Last 10 workdays"}</small>`
       : streakStat(tool, me().id)}</div>`;
-    const aiPanel = `<div class="card ai"><h4>Run This in Your AI Tool of Choice</h4>
-      <p class="muted">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
+    const aiPanel = `<div class="card ai">${cardHead("gear", "Run This in Your AI Tool of Choice")}
+      <p class="muted ai-note">Copy the system prompt, paste it into a new chat, and say "start". It walks you through the same steps.</p>
       <button class="link ai-preview" data-action="prompt-preview" data-tool="${tool}">Preview Prompt</button>
       <div class="row ai-actions"><button class="btn sm" data-action="copy-prompt" data-tool="${tool}">Copy System Prompt</button>
       <span class="ai-paste">and paste in <img src="assets/ai-logos-4.webp" width="605" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></span></div></div>`;
