@@ -1056,6 +1056,8 @@
     ["prog", `Progress <span class="th-help" data-tip="Priorities completed over the last month" aria-label="Priorities completed over the last month">?</span>`, (x) => x.pace.progress ?? -1], ["peace", `Peace <span class="th-help" data-tip="Last reported Peace status" aria-label="Last reported Peace status">?</span>`, (x) => x.peace ?? -1],
     ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
   ];
+  // Phone cards label each value with its column name and the same (?) help as the desktop header
+  const cellLab = (k) => { const label = ROSTER_COLS.find((c) => c[0] === k)[1]; return `<span class="t-lab">${label.replace(/<br>/g, " ")}</span>`; };
   function rosterRows(cid) {
     const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), pace: paceTally([m], paceWeeks()), peace: lastPeace(m.id), peaceTs: lastPeaceRun(m.id)?.ts }));
     const q = roster$.q.trim().toLowerCase(), key = ROSTER_COLS.find((c) => c[0] === roster$.sort)[2];
@@ -1063,9 +1065,9 @@
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Past 4 Weeks">${pctCell(x.ms.wpm)}</td><td data-label="Progress">${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td data-label="Peace">${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td>${cellLab("wpm")}${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td>${cellLab("mwpm")}${pctCell(x.ms.wpm)}</td><td>${cellLab("prog")}${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td>${cellLab("peace")}${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f)), teamPace = paceTally(hab.map((x) => x.m), paceWeeks());
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Past 4 Weeks">${avg((x) => x.ms.wpm)}%</td><td data-label="Progress">${teamPace.progress ?? 0}%</td><td data-label="Peace">${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td>${cellLab("wpm")}${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td>${cellLab("mwpm")}${avg((x) => x.ms.wpm)}%</td><td>${cellLab("prog")}${teamPace.progress ?? 0}%</td><td>${cellLab("peace")}${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
   }
@@ -1733,10 +1735,10 @@
     showTip(el);
   });
   document.addEventListener("scroll", hideTip, true);
-  // A tap hides any tip; tapping a Pace Check bar color or weekly Progress shows its tip, since phones have no hover
+  // A tap hides any tip; tapping a Pace Check bar color, weekly Progress or a phone card (?) shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".pace-card [data-tip]");
+    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip]");
     if (el) showTip(el);
   }, true);
 
