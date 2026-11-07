@@ -488,7 +488,6 @@ body.lightbox-open { overflow: hidden; }
 .tg-side { grid-area: side; }
 .vs-label { display: grid; line-height: 1.3; }
 .vs-label small { color: var(--muted); font-size: 13px; }
-.vs-key { display: block; margin-top: 4px; }
 .vs-next { display: grid; gap: 4px; justify-items: start; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 .vs-next .muted { font-size: 13px; }
 .vs-next b { color: var(--heading); line-height: 1.35; }
@@ -540,9 +539,8 @@ table.team td.t-name .avatar { flex: none; }
 .vs .row > span { white-space: nowrap; }
 .vs-bar { position: relative; overflow: visible; margin-top: 8px; }
 .vs-bar .avg-fill { background: var(--teal-2); }
-.vs-bar i, .avg-key { position: absolute; top: -4px; width: 3px; height: 14px; background: var(--navy); border-radius: 2px; transform: translateX(-1px); }
+.vs-bar i { position: absolute; top: -4px; width: 3px; height: 14px; background: var(--navy); border-radius: 2px; transform: translateX(-1px); }
 .vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
-.avg-key { position: static; display: inline-block; vertical-align: middle; transform: none; margin-right: 4px; }
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
 /* Team space sub menu: Activity | Manage (company) */
 .subnav { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; margin: -6px 0 22px; background: #fff; border: 1px solid var(--line); border-radius: 100px; max-width: 100%; }

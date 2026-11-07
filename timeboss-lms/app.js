@@ -1043,8 +1043,7 @@
         return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${solo ? `<b>${Math.round(you)}%</b>` : u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
           <div class="bar vs-bar">${u ? `<span style="width:${you}%" data-tip="You: ${Math.round(you)}% of ${what.toLowerCase()} done"></span>${solo ? "" : `<i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of ${what.toLowerCase()} done" aria-label="Team average: ${Math.round(avg)}%"></i>`}` : `<span class="avg-fill" style="width:${avg}%" data-tip="Team average: ${Math.round(avg)}%"></span>`}</div></div>`;
       }).join("")}
-      ${u ? `${solo ? "" : `<small class="muted vs-key"><i class="avg-key"></i> marks the average across all ${all.length} people at ${esc(company(u.companyId).name)}.</small>`}
-      <div class="vs-next"><span class="muted">Your Next Step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
+      ${u ? `<div class="vs-next"><span class="muted">Your Next Step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
   }
 
   // Team Members: search, sort by any column, 10 per page, and Add People (leaders and coaches only)
