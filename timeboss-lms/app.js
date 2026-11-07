@@ -1037,14 +1037,14 @@
       [2, "Cohort sessions", lessons(["cohort"])],
       [3, "Mini courses", lessons(["mini"])],
     ];
-    const step = u && nextStep(u), solo = u && all.length < 2; // nobody to compare with on a one-person team
+    const solo = u && all.length < 2; // nobody to compare with on a one-person team
     return `<div class="card vs-card"><h3>${solo ? "Your Progress" : u ? "You vs. the Team" : "Team Progress"}</h3>
       ${rows.map(([n, what, ids]) => {
         const avg = avgOf(all, (m) => pctDone(m.id, ids)), you = u ? pctDone(u.id, ids) : null, ph = PHASES[n - 1];
         return `<div class="vs"><div class="row between"><span class="vs-label"><b>${ph.name}</b><small>${what}</small></span><span>${solo ? `<b>${Math.round(you)}%</b>` : u ? `<b>${Math.round(you)}%</b> <span class="muted">vs ${Math.round(avg)}%</span>` : `<b>${Math.round(avg)}%</b>`}</span></div>
           <div class="bar vs-bar">${u ? `<span style="width:${you}%" data-tip="You: ${Math.round(you)}% of ${what.toLowerCase()} done"></span>${solo ? "" : `<i style="left:${avg}%" data-tip="Team average: ${Math.round(avg)}% of ${what.toLowerCase()} done" aria-label="Team average: ${Math.round(avg)}%"></i>`}` : `<span class="avg-fill" style="width:${avg}%" data-tip="Team average: ${Math.round(avg)}%"></span>`}</div></div>`;
       }).join("")}
-      ${u ? `<div class="vs-next"><span class="muted">Your Next Step</span><b>${step.h}</b>${stepBtn(step.btns[0], "sm")}</div>` : ""}</div>`;
+    </div>`;
   }
 
   // Team Members: search, sort by any column, 10 per page, and Add People (leaders and coaches only)
@@ -1065,9 +1065,9 @@
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td>${cellLab("wpm")}${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td>${cellLab("mwpm")}${pctCell(x.ms.wpm)}</td><td>${cellLab("prog")}${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td>${cellLab("peace")}${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td class="c-wp">${cellLab("wpm")}${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td class="c-wp">${cellLab("mwpm")}${pctCell(x.ms.wpm)}</td><td class="c-pc">${cellLab("prog")}${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td class="c-pc">${cellLab("peace")}${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f)), teamPace = paceTally(hab.map((x) => x.m), paceWeeks());
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td>${cellLab("wpm")}${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td>${cellLab("mwpm")}${avg((x) => x.ms.wpm)}%</td><td>${cellLab("prog")}${teamPace.progress ?? 0}%</td><td>${cellLab("peace")}${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td class="c-wp">${cellLab("wpm")}${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td class="c-wp">${cellLab("mwpm")}${avg((x) => x.ms.wpm)}%</td><td class="c-pc">${cellLab("prog")}${teamPace.progress ?? 0}%</td><td class="c-pc">${cellLab("peace")}${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
   }
@@ -1672,7 +1672,7 @@
   // every other filled button switches to the outline style. The sidebar's Next Step stays filled only when the page has none.
   // The sidebar's Next Step card steps aside on pages that already show the next step (Home, your company page)
   function oneNextStep(root) {
-    if (root.querySelector("#main .phase-body, #main .vs-next, #main .track-pick")) root.querySelector(".sidebar .myw")?.remove();
+    if (root.querySelector("#main .phase-body, #main .track-pick")) root.querySelector(".sidebar .myw")?.remove();
   }
   function onePrimary(root) {
     const main = root.querySelector("#main"), filled = [...main.querySelectorAll(".btn:not(.ghost)")];
