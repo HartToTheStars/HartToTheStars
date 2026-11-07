@@ -539,13 +539,11 @@ table.team td.t-name .avatar { flex: none; }
 .vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
 /* Team space sub menu: Activity | Manage (company) */
-.subnav-wrap { display: inline-grid; max-width: 100%; margin: -6px 0 22px; }
-.subnav-notes { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 6px 4px 0; text-align: center; font-size: 12px; line-height: 1.35; color: var(--muted); }
 .subnav { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; margin: -6px 0 22px; background: #fff; border: 1px solid var(--line); border-radius: 100px; max-width: 100%; }
 .subnav a { padding: 9px 20px; border: 0; border-radius: 100px; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .subnav a.on { background: var(--navy); color: #fff; }
 @media (hover: hover) { .subnav a:not(.on):hover { color: var(--heading); background: var(--paper); } }
-@media (max-width: 760px) { .subnav { display: flex; width: 100%; } .subnav a { flex: 1 1 auto; padding: 10px 14px; } .subnav-wrap { display: grid; width: 100%; } .subnav-wrap .subnav { display: grid; } .subnav-wrap .subnav a { padding: 10px 6px; font-size: 13px; } .subnav-wrap .sub-lock { display: none; } }
+@media (max-width: 760px) { .subnav { display: flex; width: 100%; } .subnav a { flex: 1 1 auto; padding: 10px 14px; } }
 .roster-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .roster-head h3 { margin: 0; }
 .roster-tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
@@ -556,8 +554,7 @@ table.team td.t-name .avatar { flex: none; }
 .t-lab { display: none; }
 .admin-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--line); color: var(--heading); font-size: 14px; font-weight: 500; }
 .admin-bar .ic { width: 16px; height: 16px; flex: none; }
-.sub-lock { display: inline-flex; vertical-align: -2px; margin-left: 6px; }
-.subnav-wrap .subnav { margin: 0; }
+.sub-lock { display: inline-flex; vertical-align: -2px; margin-left: 6px; cursor: help; }
 .th-help { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 3px; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 700; line-height: 1; vertical-align: 1px; cursor: help; }
 @media (hover: hover) { .th-sort:hover { color: var(--teal); } }
 .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }

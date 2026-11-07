@@ -1190,9 +1190,8 @@
     if (tab === "manage" && !manage) tab = "activity";
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
-      ${manage ? "" : `<p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p>`}</div></header>
-      ${manage ? `<div class="subnav-wrap"><nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock">${icon("lock", "ic lock")}</span></a></nav>
-        <div class="subnav-notes"><small>Visible only to ${esc(c.name)}</small><small>Visible only to Admin at ${esc(c.name)}.</small></div></div>` : ""}
+      <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
+      ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock" data-tip="Only visible to Admin" aria-label="Only visible to Admin">${icon("lock", "ic lock")}</span></a></nav>` : ""}
       ${tab === "manage" ? adminBar(cid) + paceCard(cid) + roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
         <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
@@ -1744,8 +1743,8 @@
   // A tap hides any tip; tapping a Pace Check bar color, weekly Progress or a phone card (?) shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip]");
-    if (el) showTip(el);
+    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip], .sub-lock");
+    if (el) { if (el.matches(".sub-lock")) e.preventDefault(); showTip(el); }
   }, true);
 
   let timerInt;
