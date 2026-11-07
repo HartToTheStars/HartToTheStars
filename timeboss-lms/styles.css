@@ -569,6 +569,7 @@ table.team td { padding: 8px 6px; border-bottom: 1px solid var(--line); white-sp
 table.team td a { color: var(--heading); font-weight: 600; }
 table.team td a:hover { color: var(--teal); }
 table.team td small { padding-left: 32px; }
+table.team td small.t-when { display: block; padding-left: 0; margin-top: 2px; font-size: 12px; color: var(--muted); }
 table.team tfoot td { font-weight: 700; color: var(--heading); border-bottom: 0; border-top: 2px solid var(--line-strong); }
 .pct.good { color: var(--teal); font-weight: 700; }
 .pct.low { color: var(--danger); font-weight: 700; }

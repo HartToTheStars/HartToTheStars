@@ -418,7 +418,8 @@
     t.people = who.size;
     return t;
   }
-  const lastPeace = (id) => +runsOf(id, "weekly").filter((r) => r.answers.peace).sort((a, b) => b.ts - a.ts)[0]?.answers.peace || null;
+  const lastPeaceRun = (id) => runsOf(id, "weekly").filter((r) => r.answers.peace).sort((a, b) => b.ts - a.ts)[0] || null;
+  const lastPeace = (id) => +lastPeaceRun(id)?.answers.peace || null;
   function monthStats(id) {
     const days = drmDays(id), weeks = wpmWeeks(id);
     let de = 0, dg = 0, we = 0, wg = 0;
@@ -1053,18 +1054,18 @@
     ["wpm", `Streak <span class="th-help" data-tip="Weekly Planning Meeting Streak" aria-label="Weekly Planning Meeting Streak">?</span>`, (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
     ["mwpm", `Past 4 Weeks <span class="th-help" data-tip="Weekly Planning Meetings completed, last 4 weeks" aria-label="Weekly Planning Meetings completed, last 4 weeks">?</span>`, (x) => (hasHabits(x.m) ? x.ms.wpm : -1)],
     ["prog", `Progress <span class="th-help" data-tip="Priorities completed over the last month" aria-label="Priorities completed over the last month">?</span>`, (x) => x.pace.progress ?? -1], ["peace", `Peace <span class="th-help" data-tip="Last reported Peace status" aria-label="Last reported Peace status">?</span>`, (x) => x.peace ?? -1],
-    ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
+    ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
   ];
   function rosterRows(cid) {
-    const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), op: overallProgress(m.id).pct, pace: paceTally([m], paceWeeks()), peace: lastPeace(m.id) }));
+    const all = teamOf(cid).map((m) => ({ m, wpm: wpmStreak(m.id), drm: drmStreak(m.id), ms: monthStats(m.id), pace: paceTally([m], paceWeeks()), peace: lastPeace(m.id), peaceTs: lastPeaceRun(m.id)?.ts }));
     const q = roster$.q.trim().toLowerCase(), key = ROSTER_COLS.find((c) => c[0] === roster$.sort)[2];
     const list = all.filter((x) => !q || `${x.m.name} ${x.m.email} ${x.m.title}`.toLowerCase().includes(q))
       .sort((a, b) => { const va = key(a), vb = key(b); return (va < vb ? -1 : va > vb ? 1 : 0) * roster$.dir || a.m.name.localeCompare(b.m.name); });
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
-          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past 4 weeks">${pctCell(x.ms.wpm)}</td><td data-label="Progress, past month">${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td data-label="Peace, last check">${peaceTag(x.peace)}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}<td data-label="Courses">${x.op}%</td></tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 8 : 7}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
+          <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td data-label="Weekly Planning streak">${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td data-label="Weekly Planning, past 4 weeks">${pctCell(x.ms.wpm)}</td><td data-label="Progress, past month">${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td data-label="Peace, last check">${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
     const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f)), teamPace = paceTally(hab.map((x) => x.m), paceWeeks());
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past 4 weeks">${avg((x) => x.ms.wpm)}%</td><td data-label="Progress, past month">${teamPace.progress ?? 0}%</td><td data-label="Peace, last check">${hab.filter((x) => x.peace === 5).length} Overcapacity</td><td data-label="Courses">${Math.round(avgOf(all, (x) => x.op))}%</td></tr>`;
+    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td data-label="Weekly Planning streak">${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td data-label="Weekly Planning, past 4 weeks">${avg((x) => x.ms.wpm)}%</td><td data-label="Progress, past month">${teamPace.progress ?? 0}%</td><td data-label="Peace, last check">${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
     return { rows, foot, pager };
   }
@@ -1081,7 +1082,7 @@
     const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
       return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress, `${x.done} of ${x.total} priorities completed`)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
-    return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
+    return `<div class="card pace-card"><div class="card-head"><h3>Pace Check</h3></div>
       <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
       <div class="pace-stats">
         <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.people} of ${plural(all.length, "person", "people")} completed at least one Weekly Planning Meeting</small></div>
