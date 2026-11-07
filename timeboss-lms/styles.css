@@ -68,7 +68,7 @@ small { display: block; font-size: 13px; color: var(--muted); line-height: 1.5; 
 .brand small { color: rgba(255, 255, 255, .5); font-size: 12px; letter-spacing: .04em; }
 .brand .logo { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--teal); display: grid; place-items: center; color: #fff; }
 .brand .logo .ic { width: 22px; height: 22px; }
-.brand-wrap { padding: 0 6px; margin-bottom: 16px; }
+.brand-wrap { display: block; width: fit-content; padding: 0 6px; margin-bottom: 16px; border-radius: var(--radius-sm); }
 /* Let the sidebar scroll rather than squeeze (and clip) the cards inside it */
 .sidebar > * { flex-shrink: 0; }
 @supports (height: 100dvh) { .sidebar { height: 100dvh; } }
@@ -404,7 +404,7 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 
 /* footer (mirrors timeboss.us) */
 .site-footer { background: var(--navy-deep); padding: 36px clamp(16px, 3vw, 48px); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
-.footer-logo { margin-right: auto; opacity: .6; }
+.footer-logo { display: block; margin-right: auto; opacity: .6; border: 0; }
 .footer-logo .brand-img { width: 120px; }
 .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
 .footer-links a { font-size: 13px; color: rgba(255, 255, 255, .5); }

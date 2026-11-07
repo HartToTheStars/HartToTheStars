@@ -527,7 +527,7 @@
     const link = (href, label, ic, locked = false) => `<a href="${href}" class="${r === href || r.startsWith(href + "/") || (href === "#/learn" && r.startsWith("#/solo")) ? "active" : ""} ${locked ? "locked" : ""}">${icon(ic)}<span>${label}</span>${locked ? icon("lock", "ic lock nav-lock") : ""}</a>`;
     const lockH = !hasHabits(u);
     return `
-      <div class="brand-wrap">${logo()}</div>
+      <a class="brand-wrap" href="#/home" aria-label="Time Boss home">${logo()}</a>
       <nav>
         ${link("#/home", "Home", "home")}
         ${link("#/community", "Community", "community")}
@@ -617,7 +617,7 @@
   };
   // Mirrors the www.timeboss.us footer
   const footer = () => `<footer class="site-footer">
-      <div class="footer-logo">${logo()}</div>
+      <a class="footer-logo" href="#/home" aria-label="Time Boss home">${logo()}</a>
       <div class="footer-links"><a href="https://www.timeboss.us" target="_blank" rel="noopener">timeboss.us</a><a href="https://www.timeboss.us/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a><a href="https://www.timeboss.us/contact/" target="_blank" rel="noopener">Contact</a></div>
       <div class="footer-copy">&copy; ${new Date().getFullYear()} Time Boss</div>
       <div class="footer-social">${Object.entries(SOCIAL).map(([n, [href, path]]) => `<a href="${href}" aria-label="${n}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></a>`).join("")}</div>
