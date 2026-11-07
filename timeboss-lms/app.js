@@ -1689,7 +1689,7 @@
     filled.forEach((b) => { if (b !== keep) { b.style.transition = "none"; b.classList.add("ghost"); } }); // no fade from filled to outline
     void main.offsetHeight; // apply the outline style now, then restore the hover fade
     filled.forEach((b) => b.style.removeProperty("transition"));
-    if (keep) root.querySelectorAll(".sidebar .btn:not(.ghost)").forEach((b) => b.classList.add("ghost"));
+    root.querySelectorAll(".sidebar .btn:not(.ghost)").forEach((b) => b.classList.add("ghost")); // the sidebar Next Step stays outlined on every page
   }
   // Count the streak up from the previous number on the completion screen
   let celebrateFresh = true;
