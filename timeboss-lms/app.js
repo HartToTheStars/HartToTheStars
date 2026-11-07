@@ -1191,7 +1191,7 @@
     if (tab === "manage" && !manage) tab = "activity";
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
-      <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
+      <p class="private-team muted">This page is only visible to ${esc(c.name)}${isCoach() ? " and Time Boss coaches" : ""}</p></div></header>
       ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock" data-tip="Only visible to Admin" aria-label="Only visible to Admin">${icon("lock", "ic lock")}</span></a></nav>` : ""}
       ${tab === "manage" ? adminBar(cid) + paceCard(cid) + roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
