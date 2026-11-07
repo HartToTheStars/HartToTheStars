@@ -1,7 +1,7 @@
 // Time Boss Community prototype. No backend: state lives in localStorage.
 (() => {
   const SEED = window.TB_SEED;
-  const KEY = "tb_lms_v17";
+  const KEY = "tb_lms_v18";
   // Daily Review Meeting streaks are hidden for now (members found them too much mental tax). The meeting itself stays.
   // Set to true to bring the streaks back everywhere: avatar badge, Home, leaderboards, team table, profiles, the meeting page.
   const DAILY_STREAKS = false; // bump when the saved data shape changes so browsers reload the demo data
@@ -131,10 +131,11 @@
       }
     });
     // Each person gets a stored random avatar color, and most demo members a placeholder photo
-    const colorRng = rng(777), photoQueue = Array.from({ length: SEED.demoPhotos.count }, (_, i) => `assets/avatars/${String(i + 1).padStart(2, "0")}.jpg`);
+    const colorRng = rng(777), DP = SEED.demoPhotos;
     users.forEach((u) => {
       u.color = pick(colorRng, SEED.avatarColors);
-      if (u.role !== "coach" && !SEED.demoPhotos.initialsOnly.includes(u.id) && photoQueue.length && (!u.fill || colorRng() < 0.25)) u.photo = photoQueue.shift();
+      const n = DP.assign[u.id];
+      if (n && !DP.initialsOnly.includes(u.id)) u.photo = `assets/avatars/${String(n).padStart(2, "0")}.jpg`;
     });
     const members = users.filter((u) => u.role !== "coach");
     const likers = (n, seed, exclude) => { const r = rng(seed); return users.filter((u) => u.id !== exclude).map((u) => [r(), u.id]).sort((a, b) => a[0] - b[0]).slice(0, n).map((x) => x[1]); };

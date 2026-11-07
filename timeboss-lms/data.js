@@ -14,7 +14,7 @@ window.TB_SEED = {
   // phase: 1 = Unlock Your Week (workshop), 2 = Master Your Week (cohort companies: enrolled: true = in the current cohort; self-directed companies: badges earned, working = the badge in progress), 3 = Maximize Your Week (completed it)
   // habit (0 to 1) is how consistent each person is; it drives the generated Weekly Planning / Daily Review history; omit for a random one
   users: [
-    { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us" },
+    { id: "u_andrew", name: "Andrew Hartman", title: "Founder, Time Boss", companyId: null, role: "coach", email: "andrew@timeboss.us", photo: "assets/avatars/andrew.jpg" },
     { id: "u_coach2", name: "Jordan Reyes", title: "Time Boss Coach", companyId: null, role: "coach", email: "jordan@timeboss.us" },
 
     { id: "u_maria", name: "Maria Chen", title: "VP Operations", companyId: "acme", role: "admin", phase: 3, habit: 0.93 },
@@ -54,8 +54,8 @@ window.TB_SEED = {
 
   coaches: ["u_andrew", "u_coach2"],
 
-  // Demo profile photos (assets/avatars, Unsplash placeholders). Members get them in order, except these, who stay on initials
-  // so the stored random avatar colors show. Coaches never get one (Andrew is a real person).
+  // Demo profile photos (assets/avatars, Unsplash placeholders). Members get the one set in demoPhotos.assign; those in initialsOnly stay on initials
+  // so the stored random avatar colors show. Coaches never get a demo photo. Andrew uses his own (assets/avatars/andrew.jpg, from timeboss.us).
   // GIF picker (prototype stickers; production would search Giphy or Tenor)
   gifs: [
     { src: "assets/gifs/nice-work.gif", label: "Nice work!" },
@@ -65,7 +65,13 @@ window.TB_SEED = {
     { src: "assets/gifs/you-got-this.gif", label: "You got this" },
     { src: "assets/gifs/week-planned.gif", label: "Week planned" },
   ],
-  demoPhotos: { count: 33, initialsOnly: ["u_sam", "u_ben", "u_owen", "u_zoe", "u_kenji"] },
+  // assign: photo number (assets/avatars/NN.jpg) per person, matched to each name's likely gender and background. Grace Kim stays on
+  // initials (no photo in the set fits). 29.jpg is unused.
+  demoPhotos: { initialsOnly: ["u_sam", "u_ben", "u_owen", "u_zoe", "u_kenji", "u_grace"],
+    assign: { u_maria: 15, u_victor: 23, u_patrick: 32, u_dev: 31, u_priya: 4, u_marcus: 7, u_hannah: 1, u_luis: 8, u_tyler: 17,
+      u_aisha: 25, u_chloe: 3, u_jamal: 2, u_erin: 5, u_diego: 14, u_nina: 22, u_rachel: 11, u_sofia: 33, u_caleb: 26, u_andre: 9,
+      u_mei: 20, u_lena: 19, u_omar: 12, u_leah: 6, u_tess: 13, u_jade: 18, u_elena: 28, u_summit0: 27, u_summit4: 21,
+      u_summit8: 24, u_summit15: 30, u_harbor7: 10, u_harbor14: 16 } },
   // Random avatar background colors, picked once per person and stored with them
   avatarColors: ["#3c768d", "#5e8497", "#2f6b5f", "#4a6fa5", "#7a6a9a", "#8a5a6e", "#b0612a", "#a07a2c", "#6b7f3a", "#2f4f6f", "#7d5a3c", "#3f7f6a"],
 
