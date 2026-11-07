@@ -1050,7 +1050,7 @@
   const roster$ = { q: "", sort: "name", dir: 1, page: 0 };
   const ROSTER_COLS = [
     ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
-    ["wpm", "Weekly Planning<br>Meeting streak", (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
+    ["wpm", `Streak <span class="th-help" data-tip="Weekly Planning Meeting Streak" aria-label="Weekly Planning Meeting Streak">?</span>`, (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
     ["mwpm", "Weekly Planning<br>past month", (x) => (hasHabits(x.m) ? x.ms.wpm : -1)], ["mdrm", "Daily Review<br>past month", (x) => (hasHabits(x.m) ? x.ms.drm : -1)],
     ["prog", "Progress<br>past month", (x) => x.pace.progress ?? -1], ["peace", "Peace<br>last check", (x) => x.peace ?? -1],
     ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
