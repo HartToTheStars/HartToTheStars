@@ -41,7 +41,7 @@
   const plannedWeek = (t) => { const d = new Date(t), m = mondayOf(t); if (d.getDay() === 0 || d.getDay() >= 5) m.setDate(m.getDate() + 7); return dateKey(m); };
 
   // Pace Check: Peace is one of three answers, kept as 1, 3 or 5
-  const PEACE = { 1: "Easier Week", 3: "I'm Locked In", 5: "I'm Overcapacity" }, PEACE_SHORT = { 1: "Easier", 3: "Locked In", 5: "Overcapacity" };
+  const PEACE = { 1: "Easier Week", 3: "I'm Locked In", 5: "I'm Overcapacity" }, PEACE_SHORT = { 1: "Easier Week", 3: "Locked In", 5: "Overcapacity" };
 
   // ---------- tools (Time Boss "Checklist for Your Week") ----------
   const TOOLS = {
@@ -1072,7 +1072,7 @@
   // Peace as a split of who said what: an average would hide the one person who is overcapacity
   function peaceBar(t) {
     const seg = (n) => (t.peace[n] ? `<span class="p${n}" style="flex:${t.peace[n]}"></span>` : "");
-    return `<div class="peace-bar" role="img" aria-label="${t.peace[1]} Easier, ${t.peace[3]} Locked In, ${t.peace[5]} Overcapacity">${seg(1)}${seg(3)}${seg(5)}</div>`;
+    return `<div class="peace-bar" role="img" aria-label="${t.peace[1]} Easier Week, ${t.peace[3]} Locked In, ${t.peace[5]} Overcapacity">${seg(1)}${seg(3)}${seg(5)}</div>`;
   }
   // Manage: the team's Pace Check. Three measures, last month's totals on top and each week below.
   function paceCard(cid) {
@@ -1086,7 +1086,7 @@
       <div class="pace-stats">
         <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${plural(people.length, "person", "people")}</small></div>
         <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by those who ran it</small></div>
-        <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
+        <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
       <div class="table-wrap"><table class="team pace-table"><thead><tr><th>Week</th><th>Weekly Planning completed</th><th>Progress</th><th>Peace</th></tr></thead><tbody>${weeks.map(row).join("")}</tbody></table></div></div>`;
   }
