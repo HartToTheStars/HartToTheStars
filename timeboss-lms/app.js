@@ -436,7 +436,7 @@
     d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7 || 7)); // next Friday
     for (let i = 0; i < 4; i++) {
       const start = at(d, 14, 0);
-      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Live Weekly Planning Meeting", desc: "Plan next week alongside other Time Bosses, with a coach on hand.", start, mins: 45, host: "u_coach2" });
+      out.push({ id: "wp-" + dateKey(new Date(start)), type: "weekly", title: "Live Weekly Planning Meeting", desc: "Plan next week alongside other team members, with a coach on hand.", start, mins: 45, host: "u_coach2" });
       d.setDate(d.getDate() + 7);
     }
     return out;
@@ -596,7 +596,7 @@
       : { head: "Completed", h: "You completed Master Your Week", p: selfDirected(u) ? `All ${MYW_BADGES.length} Master Your Week badges earned. Your system is in place, so root causes are next.` : "All six session recordings and slide decks are open for review: Dealing with Diversions, the four Solving the Root Cause sessions, and Your Highest Sustainable Pace.", btns: [{ href: "#/learn", label: selfDirected(u) ? "View Your Badges" : "Review Cohort Sessions" }] };
     return n === 2
       ? selfDirected(u)
-        ? { head: "Coming Up", h: "Master Your Week Self-Directed", p: `Earn ${MYW_BADGES.length} badges at your own pace, in any order, in a cohort of 4 to 6 people that meets weekly with a coach. It opens, along with your Weekly Planning and Daily Review Meetings, when you complete the Unlock Your Week Workshop.`, btns: [{ href: "#/master", label: "See the Badges" }] }
+        ? { head: "Coming Up", h: "Master Your Week Self-Directed", p: `Earn ${MYW_BADGES.length} badges at your own pace, in any order, in a cohort of 4 to 6 team members that meets weekly with a coach. It opens, along with your Weekly Planning and Daily Review Meetings, when you complete the Unlock Your Week Workshop.`, btns: [{ href: "#/master", label: "See the Badges" }] }
         : { head: "Coming Up", h: "Master Your Week Cohort", p: `${SEED.cohort.weeks} weeks live with a Time Boss coach and a small cohort. It opens, along with your Weekly Planning and Daily Review Meetings, when you complete the Unlock Your Week Workshop.`, btns: [{ href: "#/cohort", label: "About the Cohort" }] }
       : { head: "Coming Up", h: "Maximize Your Week: Continuing Education", p: `${selfDirected(u) ? "Root cause badges, mini" : "Mini"} courses, a monthly masterclass, and live Weekly Planning Meetings. It unlocks when you complete Master Your Week.`, btns: [{ href: "#/learn", label: "See What's Included" }] };
   }
@@ -715,7 +715,7 @@
       <div class="locked-overlay"><div class="locked-msg" role="note">
         <span class="locked-badge">${icon("lock", "ic lock")} Example</span>
         <h2>${esc(title)}</h2>
-        ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} people in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
+        ${ran.length ? `<div class="proof center">${avatarStack(ran)}<span class="proof-text">${ran.length} team members in the community ran their ${TOOLS[proofTool].title} ${periodLabel(proofTool)}.</span></div>` : ""}
         ${compact ? "" : `<p class="muted">${ph === 1 ? "First, complete the Unlock Your Week Workshop." : "Habits and Events unlock when you enroll."}</p>`}
         ${ph === 1 ? stepBtn(nextStep().btns[0], "") : `<button class="btn" data-action="enroll">Enroll in Cohort</button>`}
       </div></div></div>`;
@@ -729,7 +729,7 @@
       <div class="login-card">
         <div class="login-top">${logo("Community Prototype")}</div>
         <p class="muted">Pick a demo user. Each company sees its own private team space; everyone shares the Community.</p>
-        <div class="login-group"><h4>One person at each step</h4><div class="picks">
+        <div class="login-group"><h4>One team member at each step</h4><div class="picks">
           ${["u_sam", "u_jade", "u_tyler", "u_dev", "u_leah", "u_maria", "u_elena"].map((id) => { const u = user(id); return `<button class="user-pick" data-action="login" data-id="${u.id}">${avatar(u)}<span><b>${esc(u.name)}</b><small>Phase ${phaseOf(u)}: ${phaseLabel(u)}</small></span></button>`; }).join("")}
         </div></div>
         ${[null, ...SEED.companies.map((c) => c.id)].map((cid) => `
@@ -800,10 +800,10 @@
     if (team.length) {
       const pool = team.some((x) => x.photo) ? team.filter((x) => x.photo) : team, lead = pool[Math.floor(homeSeed * pool.length)];
       return `<section class="faces-strip">${faces([lead, ...photosFirst(team.filter((x) => x.id !== lead.id))], team.length)}
-        <p><b>${esc(lead.name)}</b>${team.length > 1 ? ` and ${plural(team.length - 1, "other", "others")}` : ""} at ${esc(company(u.companyId).name)} ${team.length > 1 ? "are" : "is"} on Time Boss.</p></section>`;
+        <p><b>${esc(lead.name)}</b>${team.length > 1 ? ` and ${plural(team.length - 1, "other team member", "other team members")}` : ""} at ${esc(company(u.companyId).name)} ${team.length > 1 ? "are" : "is"} on Time Boss.</p></section>`;
     }
     return `<section class="faces-strip">${faces(photosFirst(S.users.filter((x) => x.id !== u.id && x.role !== "coach")), SEED.communitySize)}
-      <p><b>${SEED.communitySize.toLocaleString()} people</b> are on Time Boss. <a href="#/community">Check Out the Community</a></p></section>`;
+      <p><b>${SEED.communitySize.toLocaleString()} team members</b> are on Time Boss. <a href="#/community">Check Out the Community</a></p></section>`;
   }
 
   V.home = () => {
@@ -985,7 +985,7 @@
   V.notifications = () => {
     const list = notifications(), seen = seenAt();
     (S.notifSeen ||= {})[me().id] = Date.now(); save();
-    const who = (ids) => { const names = ids.map((id) => `<b>${esc(user(id).name)}</b>`); return ids.length === 1 ? names[0] : ids.length === 2 ? `${names[0]} and ${names[1]}` : `${names[0]} and ${ids.length - 1} others`; };
+    const who = (ids) => { const names = ids.map((id) => `<b>${esc(user(id).name)}</b>`); return ids.length === 1 ? names[0] : ids.length === 2 ? `${names[0]} and ${names[1]}` : `${names[0]} and ${ids.length - 1} other team members`; };
     const row = (n) => `<a class="notif ${n.ts > seen ? "unread" : ""}" href="${n.href}"><span class="notif-av">${avatar(user(n.who[0]), "md")}<span class="notif-ic ${n.kind}">${icon(n.kind === "like" ? "heart" : "reply")}</span></span>
       <span class="notif-main"><span class="notif-text">${who(n.who)} ${n.text}</span><span class="notif-snip">${esc(n.snippet)}</span><small class="muted">${ago(n.ts)}</small></span>${n.ts > seen ? `<span class="notif-dot" aria-label="Unread"></span>` : ""}</a>`;
     return `<header class="page-head"><div><h1>Notifications</h1><p class="muted">Likes, comments, and replies on your posts and comments.</p></div></header>
@@ -1079,7 +1079,7 @@
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
           <td class="t-phase">${cellLab("phase")}<span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td class="c-wp">${cellLab("wpm")}${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td class="c-wp">${cellLab("mwpm")}${pctCell(x.ms.wpm)}</td><td class="c-pc">${cellLab("prog")}${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td class="c-pc">${cellLab("peace")}${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
-    const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
+    const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "team member" : "team members"}</span></div>`;
     return { rows, pager };
   }
   const peaceTag = (p) => (p ? `<span class="peace-tag p${p}">${PEACE_SHORT[p]}</span>` : `<span class="muted">None yet</span>`);
@@ -1096,10 +1096,10 @@
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
       return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning Meeting Completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress, `${x.done} of ${x.total} priorities completed`)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check</h3></div>
-      <small class="muted">Reported during each person's Weekly Planning Meeting.</small>
+      <small class="muted">Reported during each team member's Weekly Planning Meeting.</small>
       <div class="pace-stats">
-        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.people} of ${plural(all.length, "person", "people")} completed at least one<br>Weekly Planning Meeting</small></div>
-        <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by ${plural(t.people, "person", "people")}</small></div>
+        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.people} of ${plural(all.length, "team member", "team members")} completed at least one<br>Weekly Planning Meeting</small></div>
+        <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by ${plural(t.people, "team member", "team members")}</small></div>
         <div><span>Peace <span class="th-help" data-tip="Average over the last 4 weeks" aria-label="Average over the last 4 weeks" tabindex="0">?</span></span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
       <div class="table-wrap"><table class="team pace-table"><thead><tr><th>Week</th><th>Weekly Planning Meeting Completed</th><th>Progress</th><th>Peace</th></tr></thead><tbody>${weeks.map(row).join("")}</tbody></table></div></div>`;
@@ -1107,7 +1107,7 @@
   function roster(cid) {
     const r = rosterRows(cid), arrow = (k) => (roster$.sort === k ? (roster$.dir === 1 ? " ↑" : " ↓") : "");
     const head = ROSTER_COLS.filter((c) => c[1]).map(([k, label]) => `<th><button class="th-sort ${roster$.sort === k ? "on" : ""}" data-action="roster-sort" data-id="${k}" aria-sort="${roster$.sort === k ? (roster$.dir === 1 ? "ascending" : "descending") : "none"}">${label}${arrow(k)}</button></th>`).join("");
-    return `<div class="card roster" data-cid="${cid}"><div class="card-head roster-head"><h3>Team Members</h3><button class="btn sm" data-action="add-users">Add People</button></div>
+    return `<div class="card roster" data-cid="${cid}"><div class="card-head roster-head"><h3>Team Members</h3><button class="btn sm" data-action="add-users">Add Team Members</button></div>
       <small class="muted">Only team leaders and coaches see this. Select a name for detail.</small>
       <div class="roster-tools"><input type="search" id="roster-q" placeholder="Search by name, email, or role" value="${esc(roster$.q)}" aria-label="Search team members">
         <select id="roster-sort" aria-label="Sort by">${ROSTER_COLS.map(([k, label]) => `<option value="${k}" ${roster$.sort === k ? "selected" : ""}>Sort: ${k === "month" ? "Past month completion" : label.replace(/ <span class="th-help".*$/, "").replace("<br>", " ")}</option>`).join("")}</select></div>
@@ -1120,12 +1120,12 @@
     if (!addUsersOpen) return "";
     return `<div class="modal-backdrop" data-action="close-add-users"></div>
       <div class="modal add-users" role="dialog" aria-modal="true" aria-labelledby="add-title">
-        <div class="modal-head"><h2 id="add-title">Add People</h2><button class="ghost sm" data-action="close-add-users" aria-label="Close">Close</button></div>
+        <div class="modal-head"><h2 id="add-title">Add Team Members</h2><button class="ghost sm" data-action="close-add-users" aria-label="Close">Close</button></div>
         <div class="add-users-body"><form data-form="add-users" class="add-users-form">
           <div class="row add-one"><label>Name<input name="name" autocomplete="off" placeholder="Jordan Smith"></label><label>Email<input name="email" type="email" autocomplete="off" placeholder="jordan@company.com"></label></div>
-          <label>Or paste a list<textarea name="list" rows="6" placeholder="Jordan Smith, jordan@company.com&#10;Casey Lee, casey@company.com"></textarea><small class="muted">One person per line: name, comma, email.</small></label>
+          <label>Or paste a list<textarea name="list" rows="6" placeholder="Jordan Smith, jordan@company.com&#10;Casey Lee, casey@company.com"></textarea><small class="muted">One team member per line: name, comma, email.</small></label>
           <label>Role<select name="role"><option value="member">Standard User</option><option value="admin">Admin</option></select><small class="muted">Applies to everyone you add here. Admins can see the Manage page.</small></label>
-          <div class="row"><button class="btn">Add People</button></div>
+          <div class="row"><button class="btn">Add Team Members</button></div>
         </form>
         <div class="add-ai"><h3>Or add via your AI Tools.</h3><p class="muted">Simply type <span class="nowrap">"Add user to Time Boss"</span></p>
           <img src="assets/ai-logos.webp" width="604" height="120" alt="Gemini, Claude, ChatGPT, or Copilot"></div></div>
@@ -1181,7 +1181,7 @@
       const t = TOOLS[g.tool].title;
       if (g.who.length === 1) { (solo[`${g.tool}|${g.who[0].id}|${mondayOf(g.ts).getTime()}`] ||= []).push(g); return; }
       actGroups[key] = { tool: g.tool, title: `Completed their ${t} on ${longDate(new Date(g.day + "T12:00"))}`, list: g.runs.sort((a, b) => b.ts - a.ts) };
-      add(g.ts, g.who, `${g.who.length} people completed their ${t}`, `#/tools/${g.tool}`, "", key);
+      add(g.ts, g.who, `${g.who.length} team members completed their ${t}`, `#/tools/${g.tool}`, "", key);
     });
     Object.values(solo).forEach((gs) => {
       const m = gs[0].who[0], t = TOOLS[gs[0].tool].title, ts = Math.max(...gs.map((g) => g.ts)), whose = m.id === meId ? "your" : "their";
@@ -1350,7 +1350,7 @@
         <div class="event-body"><h3>${esc(pm.title)}</h3><p class="muted">${podTime(podOf())}, ${pm.mins} min<br>With ${esc(user(pm.host).name)}</p><p>${esc(pm.desc)}</p></div>
         <div class="event-actions"><a class="btn ghost" href="${esc(SEED.selfDirected.zoomUrl)}" target="_blank" rel="noopener">Open Zoom</a></div></div>` : ""}
       <h2 class="section">Monthly Masterclass</h2>${masterclassEvents().map(ev).join("")}
-      <h2 class="section">Live Weekly Planning Meetings</h2><p class="muted">Plan next week alongside other Time Bosses, with a coach on hand. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map((e) => ev({ ...e, desc: "" })).join("")}`;
+      <h2 class="section">Live Weekly Planning Meetings</h2><p class="muted">Plan next week alongside other team members, with a coach on hand. Prefer solo? Run the <a href="#/tools/weekly">Weekly Planning Meeting</a> tool.</p>${weeklyPlanningEvents().map((e) => ev({ ...e, desc: "" })).join("")}`;
   }
 
   // office hours: Calendly inline embed, prefilled with the member's name and email
@@ -1478,7 +1478,7 @@
     if (solo(u)) return V.solo();
     if (!selfDirected(u)) return V.cohort();
     return `<header class="page-head"><div><h1>Master Your Week Self-Directed</h1><p class="lead">Step 2 of 3. ${esc(company(u.companyId).name)} runs Master Your Week as Self-Directed: earn ${MYW_BADGES.length} badges at your own pace, in any order.</p></div></header>
-      <div class="card track"><ul class="checks"><li>Start right after the workshop, no schedule</li><li>A cohort of 4 to 6 people that meets at the same time every week</li><li>Group coaching with a Time Boss coach, and peer coaching with each other</li><li>Office Hours with a coach when you're stuck</li></ul>
+      <div class="card track"><ul class="checks"><li>Start right after the workshop, no schedule</li><li>A cohort of 4 to 6 team members that meets at the same time every week</li><li>Group coaching with a Time Boss coach, and peer coaching with each other</li><li>Office Hours with a coach when you're stuck</li></ul>
         <div class="badge-preview">${MYW_BADGES.map((b) => medal(b, u, "sm")).join("")}</div></div>
       <p class="muted">${phaseOf(u) === 1 ? "It opens once you complete the Unlock Your Week Workshop." : "You completed Master Your Week."}</p>`;
   };
@@ -1500,7 +1500,7 @@
     const p = podOf(u), e = podMeeting(p), people = p.members.map(user);
     const row = (x) => { const b = visibleTo(x) && workingOn(x);
       return `<li>${profileAvatar(x)}<div><b>${esc(x.name)}${x.id === u.id ? " (you)" : ""}</b><small>${esc(company(x.companyId)?.name || "")}${!visibleTo(x) ? "" : b ? `, working on ${esc(b.title)}` : `, ${earnedIn(MYW_BADGES, x)} of ${MYW_BADGES.length} badges`}</small></div></li>`; };
-    return `<div class="card pod-card">${cardHead("community", "Your Cohort")}<p class="muted">${people.length} people, ${podTime(p)}, ${e.mins} minutes. Group coaching with ${esc(user(e.host).name)} and peer coaching with each other.</p>
+    return `<div class="card pod-card">${cardHead("community", "Your Cohort")}<p class="muted">${people.length} team members, ${podTime(p)}, ${e.mins} minutes. Group coaching with ${esc(user(e.host).name)} and peer coaching with each other.</p>
       ${nextMeet(e)}<ul class="ran-list pod-list">${people.map(row).join("")}</ul></div>`;
   }
   // One page per badge: what it takes to earn it
@@ -1563,7 +1563,7 @@
       <section class="card pp-hero"><button class="pp-photo" data-action="photo" data-id="${p.id}" aria-label="View ${esc(p.name)}'s photo larger">${avatar(p, "xl")}</button>
         <div><h1>${esc(p.name)}</h1><p class="muted">${esc(p.title)}${c ? `, ${esc(c.name)}` : p.title.includes("Time Boss") ? "" : ", Time Boss"}</p>
         ${isCoachP ? `<span class="phase-pill p3">Time Boss Coach</span>` : `<span class="phase-pill p${phaseOf(p)}">Phase ${phaseOf(p)}: ${PHASES[phaseOf(p) - 1].name}</span>`}
-        ${isMe ? `<p class="pp-note">This is how others see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
+        ${isMe ? `<p class="pp-note">This is how team members see you. <a href="#/profile">Edit Profile</a></p>` : !isCoachP && canManage(p.companyId) ? `<p class="pp-note"><a href="${memberHref(p)}">See team detail</a></p>` : ""}</div>
       </section>
       ${habits}${showsBadges(p) && !isCoachP && visibleTo(p) ? badgeCard(p) : ""}${courses}`;
   };
@@ -1869,9 +1869,9 @@
         const u = { id: "u_" + uid(), name, email, title: "Member", companyId: cid, role: v.role === "admin" ? "admin" : "member", color: SEED.avatarColors[Math.floor(Math.random() * SEED.avatarColors.length)] };
         S.users.push(u); added.push(u);
       });
-      if (!added.length) return toast(bad.length ? `Check the format: "Name, email" on each line.` : "Those people are already on the team.");
+      if (!added.length) return toast(bad.length ? `Check the format: "Name, email" on each line.` : "They're already team members.");
       addUsersOpen = false; save(); render();
-      return toast(`Added ${added.length} ${added.length === 1 ? "person" : "people"}${bad.length ? `. Skipped ${bad.length} line${bad.length === 1 ? "" : "s"} that didn't match "Name, email".` : "."}`);
+      return toast(`Added ${added.length} ${added.length === 1 ? "team member" : "team members"}${bad.length ? `. Skipped ${bad.length} line${bad.length === 1 ? "" : "s"} that didn't match "Name, email".` : "."}`);
     }
     const att = v.att ? JSON.parse(v.att) : undefined;
     if (["post", "comment", "reply", "note-reply"].includes(kind) && !v.body.trim() && !att) return f.querySelector("textarea").focus();
