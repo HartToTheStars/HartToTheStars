@@ -1076,7 +1076,7 @@
   }
   // Manage: the team's Pace Check. Three measures, last month's totals on top and each week below.
   function paceCard(cid) {
-    const people = teamOf(cid).filter((m) => m.role !== "coach" && hasHabits(m)), weeks = paceWeeks(), t = paceTally(people, weeks);
+    const all = teamOf(cid).filter((m) => m.role !== "coach"), people = all.filter(hasHabits), weeks = paceWeeks(), t = paceTally(people, weeks);
     if (!people.length) return "";
     const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
@@ -1084,7 +1084,7 @@
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
       <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
       <div class="pace-stats">
-        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${plural(people.length, "person", "people")}</small></div>
+        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${people.length} of ${plural(all.length, "person", "people")}</small></div>
         <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by those who ran it</small></div>
         <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
