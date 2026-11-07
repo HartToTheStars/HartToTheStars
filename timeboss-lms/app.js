@@ -1085,11 +1085,11 @@
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
       return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress, `${x.done} of ${x.total} priorities completed`)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check</h3></div>
-      <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
+      <small class="muted">Reported during each person's Weekly Planning Meeting.</small>
       <div class="pace-stats">
         <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.people} of ${plural(all.length, "person", "people")} completed at least one<br>Weekly Planning Meeting</small></div>
         <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by ${plural(t.people, "person", "people")}</small></div>
-        <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
+        <div><span>Peace <span class="th-help" data-tip="Average over the last 4 weeks" aria-label="Average over the last 4 weeks" tabindex="0">?</span></span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
       <div class="table-wrap"><table class="team pace-table"><thead><tr><th>Week</th><th>Weekly Planning completed</th><th>Progress</th><th>Peace</th></tr></thead><tbody>${weeks.map(row).join("")}</tbody></table></div></div>`;
   }
