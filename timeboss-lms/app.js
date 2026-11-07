@@ -1066,10 +1066,8 @@
     const pages = Math.max(1, Math.ceil(list.length / 10)), page = Math.min(roster$.page, pages - 1), shown = list.slice(page * 10, page * 10 + 10);
     const rows = shown.map((x) => `<tr><td class="t-name"><a href="${memberHref(x.m)}" title="${esc(x.m.title)}">${avatar(x.m, "sm")} ${esc(x.m.name)}</a></td>
           <td class="t-phase"><span title="${phaseOf(x.m) === 2 ? (enrolled(x.m) ? "Cohort" : solo(x.m) ? "Self-Directed" : "Cohort, not enrolled yet") : PHASES[phaseOf(x.m) - 1].sub}">${PHASES[phaseOf(x.m) - 1].name}</span>${solo(x.m) ? `<small class="t-badges">Self-Directed, ${earnedIn(MYW_BADGES, x.m)} of ${MYW_BADGES.length} badges</small>` : ""}</td>${hasHabits(x.m) ? `<td class="c-wp">${cellLab("wpm")}${x.wpm} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${x.drm} day</td>` : ""}<td class="c-wp">${cellLab("mwpm")}${pctCell(x.ms.wpm)}</td><td class="c-pc">${cellLab("prog")}${x.pace.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.pace.progress)}</td><td class="c-pc">${cellLab("peace")}${peaceTag(x.peace)}${x.peaceTs ? `<small class="t-when">Last reported ${new Date(x.peaceTs).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</small>` : ""}</td>` : `<td colspan="${DAILY_STREAKS ? 5 : 4}" class="muted t-wide">Habits unlock after the workshop</td>`}</tr>`).join("") || `<tr><td colspan="${DAILY_STREAKS ? 7 : 6}" class="muted t-wide">Nobody matches "${esc(roster$.q)}".</td></tr>`;
-    const hab = all.filter((x) => hasHabits(x.m)), avg = (f) => Math.round(avgOf(hab, f)), teamPace = paceTally(hab.map((x) => x.m), paceWeeks());
-    const foot = `<tr><td class="t-name">Team average</td><td class="t-phase"></td><td class="c-wp">${cellLab("wpm")}${Math.round(avgOf(hab, (x) => x.wpm))} wk</td>${DAILY_STREAKS ? `<td data-label="Daily Review streak">${Math.round(avgOf(hab, (x) => x.drm))} day</td>` : ""}<td class="c-wp">${cellLab("mwpm")}${avg((x) => x.ms.wpm)}%</td><td class="c-pc">${cellLab("prog")}${teamPace.progress ?? 0}%</td><td class="c-pc">${cellLab("peace")}${hab.filter((x) => x.peace === 5).length} Overcapacity</td></tr>`;
     const pager = list.length > 10 ? `<div class="pager"><span class="muted">${page * 10 + 1} to ${Math.min(list.length, page * 10 + 10)} of ${list.length}</span><button class="btn ghost sm" data-action="roster-page" data-id="-1" ${page === 0 ? "disabled" : ""}>Previous</button><button class="btn ghost sm" data-action="roster-page" data-id="1" ${page >= pages - 1 ? "disabled" : ""}>Next</button></div>` : `<div class="pager"><span class="muted">${list.length} ${list.length === 1 ? "person" : "people"}</span></div>`;
-    return { rows, foot, pager };
+    return { rows, pager };
   }
   const peaceTag = (p) => (p ? `<span class="peace-tag p${p}">${PEACE_SHORT[p]}</span>` : `<span class="muted">None yet</span>`);
   // Peace as a split of who said what: an average would hide the one person who is overcapacity
@@ -1100,7 +1098,7 @@
       <small class="muted">Only team leaders and coaches see this. Select a name for detail.</small>
       <div class="roster-tools"><input type="search" id="roster-q" placeholder="Search by name, email, or role" value="${esc(roster$.q)}" aria-label="Search team members">
         <select id="roster-sort" aria-label="Sort by">${ROSTER_COLS.map(([k, label]) => `<option value="${k}" ${roster$.sort === k ? "selected" : ""}>Sort: ${k === "month" ? "Past month completion" : label.replace(/ <span class="th-help".*$/, "").replace("<br>", " ")}</option>`).join("")}</select></div>
-      <div class="table-wrap"><table class="team"><thead><tr>${head}</tr></thead><tbody id="roster-body">${r.rows}</tbody><tfoot>${r.foot}</tfoot></table></div>
+      <div class="table-wrap"><table class="team"><thead><tr>${head}</tr></thead><tbody id="roster-body">${r.rows}</tbody></table></div>
       <div id="roster-pager">${r.pager}</div></div>`;
   }
   // Add people to the team: one by name and email, or a pasted list, one "Name, email" per line
@@ -1192,8 +1190,9 @@
     if (tab === "manage" && !manage) tab = "activity";
     return `
       <header class="page-head"><div><h1>${esc(c.name)}</h1>
-      <p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p></div></header>
-      ${manage ? `<nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock" data-tip="Only visible to Admin" aria-label="Only visible to Admin">${icon("lock", "ic lock")}</span></a></nav>` : ""}
+      ${manage ? "" : `<p class="private-team muted">${isCoach() ? "Visible only to this team and Time Boss coaches" : "Visible only to your team"}</p>`}</div></header>
+      ${manage ? `<div class="subnav-wrap"><nav class="subnav" aria-label="${esc(c.name)} sections"><a href="${base}" class="${tab === "activity" ? "on" : ""}" ${tab === "activity" ? 'aria-current="page"' : ""}>Activity</a><a href="${base}/manage" class="${tab === "manage" ? "on" : ""}" ${tab === "manage" ? 'aria-current="page"' : ""}>Manage ${esc(c.name)}<span class="sub-lock">${icon("lock", "ic lock")}</span></a></nav>
+        <div class="subnav-notes"><small>Visible only to ${esc(c.name)}</small><small>Visible only to Admin at ${esc(c.name)}.</small></div></div>` : ""}
       ${tab === "manage" ? adminBar(cid) + paceCard(cid) + roster(cid) : `<div class="team-grid">
         <aside class="tg-side">${vsTeam(u, team)}</aside>
         <div class="tg-act">${leaderboard(cid)}${teamActivity(cid)}</div>
@@ -1745,8 +1744,8 @@
   // A tap hides any tip; tapping a Pace Check bar color, weekly Progress or a phone card (?) shows its tip, since phones have no hover
   document.addEventListener("click", (e) => {
     hideTip();
-    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip], .sub-lock");
-    if (el) { if (el.matches(".sub-lock")) e.preventDefault(); showTip(el); }
+    const el = e.target.closest?.(".pace-card [data-tip], .t-lab [data-tip], .admin-bar [data-tip]");
+    if (el) showTip(el);
   }, true);
 
   let timerInt;
@@ -1943,7 +1942,7 @@
   const refreshRoster = () => {
     const card = document.querySelector(".roster"); if (!card) return;
     const r = rosterRows(card.dataset.cid);
-    card.querySelector("#roster-body").innerHTML = r.rows; card.querySelector("tfoot").innerHTML = r.foot; card.querySelector("#roster-pager").innerHTML = r.pager;
+    card.querySelector("#roster-body").innerHTML = r.rows; card.querySelector("#roster-pager").innerHTML = r.pager;
   };
   document.addEventListener("input", (e) => { if (e.target.id === "roster-q") { roster$.q = e.target.value; roster$.page = 0; refreshRoster(); } });
   document.addEventListener("change", (e) => { if (e.target.id === "roster-sort") { roster$.sort = e.target.value; roster$.dir = e.target.value === "name" || e.target.value === "phase" ? 1 : -1; roster$.page = 0; render(); } });

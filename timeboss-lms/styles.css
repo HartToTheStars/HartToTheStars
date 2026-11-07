@@ -539,11 +539,13 @@ table.team td.t-name .avatar { flex: none; }
 .vs-bar i::before { content: ""; position: absolute; inset: -6px -8px; } /* bigger hover target for the thin marker */
 .table-wrap { overflow-x: auto; margin: 0 -4px; }
 /* Team space sub menu: Activity | Manage (company) */
+.subnav-wrap { display: inline-grid; max-width: 100%; margin: -6px 0 22px; }
+.subnav-notes { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 6px 4px 0; text-align: center; font-size: 12px; line-height: 1.35; color: var(--muted); }
 .subnav { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; margin: -6px 0 22px; background: #fff; border: 1px solid var(--line); border-radius: 100px; max-width: 100%; }
 .subnav a { padding: 9px 20px; border: 0; border-radius: 100px; font-weight: 700; font-size: 14px; color: var(--muted); text-decoration: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .subnav a.on { background: var(--navy); color: #fff; }
 @media (hover: hover) { .subnav a:not(.on):hover { color: var(--heading); background: var(--paper); } }
-@media (max-width: 760px) { .subnav { display: flex; width: 100%; } .subnav a { flex: 1 1 auto; padding: 10px 14px; } }
+@media (max-width: 760px) { .subnav { display: flex; width: 100%; } .subnav a { flex: 1 1 auto; padding: 10px 14px; } .subnav-wrap { display: grid; width: 100%; } .subnav-wrap .subnav { display: grid; } .subnav-wrap .subnav a { padding: 10px 6px; font-size: 13px; } .subnav-wrap .sub-lock { display: none; } }
 .roster-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .roster-head h3 { margin: 0; }
 .roster-tools { display: flex; gap: 10px; margin: 14px 0 6px; flex-wrap: wrap; }
@@ -554,7 +556,8 @@ table.team td.t-name .avatar { flex: none; }
 .t-lab { display: none; }
 .admin-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--line); color: var(--heading); font-size: 14px; font-weight: 500; }
 .admin-bar .ic { width: 16px; height: 16px; flex: none; }
-.sub-lock { display: inline-flex; vertical-align: -2px; margin-left: 6px; cursor: help; }
+.sub-lock { display: inline-flex; vertical-align: -2px; margin-left: 6px; }
+.subnav-wrap .subnav { margin: 0; }
 .th-help { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 3px; border: 1px solid currentColor; border-radius: 50%; font-size: 10px; font-weight: 700; line-height: 1; vertical-align: 1px; cursor: help; }
 @media (hover: hover) { .th-sort:hover { color: var(--teal); } }
 .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 12px; }
@@ -570,7 +573,6 @@ table.team td a { color: var(--heading); font-weight: 600; }
 table.team td a:hover { color: var(--teal); }
 table.team td small { padding-left: 32px; }
 table.team td small.t-when { display: block; padding-left: 0; margin-top: 2px; font-size: 12px; color: var(--muted); }
-table.team tfoot td { font-weight: 700; color: var(--heading); border-bottom: 0; border-top: 2px solid var(--line-strong); }
 .pct.good { color: var(--teal); font-weight: 700; }
 .pct.low { color: var(--danger); font-weight: 700; }
 .member-head .row { gap: 16px; flex-wrap: nowrap; }
@@ -918,7 +920,7 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   /* Team members table becomes one card per person */
   table.team thead { display: none; }
   .roster-tools select { display: block; flex: 1 1 100%; }
-  table.team, table.team tbody, table.team tfoot { display: block; }
+  table.team, table.team tbody { display: block; }
   table.team tr { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
   table.team td { padding: 0; border: 0; white-space: normal; font-size: 14px; }
   table.team td.t-name { grid-column: 1; font-size: 15px; }
@@ -933,8 +935,6 @@ a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
   .stat .pip { width: 9px; height: 9px; border-width: 1.5px; }
   .stat .pip.on + .pip.on::before { width: 2px; }
   table.team tr { gap: 8px 12px; padding: 12px 2px; }
-  table.team tfoot tr { border-top: 2px solid var(--line-strong); border-bottom: 0; }
-  table.team tfoot td { border-top: 0; }
   .seg button { font-size: 12.5px; line-height: 1.2; padding: 7px 8px; border-radius: 100px; }
   .seg { border-radius: 100px; }
   .remind-time { border-left: 0; border-top: 1px solid var(--line); padding: 12px 0 0; }
