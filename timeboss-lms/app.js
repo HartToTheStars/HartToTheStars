@@ -1084,7 +1084,7 @@
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
       <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
       <div class="pace-stats">
-        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${people.length} of ${plural(all.length, "person", "people")}</small></div>
+        <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.people} of ${plural(all.length, "person", "people")} completed at least one Weekly Planning Meeting</small></div>
         <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by ${plural(t.people, "person", "people")}</small></div>
         <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
