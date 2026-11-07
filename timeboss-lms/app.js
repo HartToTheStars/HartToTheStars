@@ -1052,7 +1052,7 @@
     ["name", "Member", (x) => x.m.name.toLowerCase()], ["phase", "Phase", (x) => phaseOf(x.m)],
     ["wpm", `Streak <span class="th-help" data-tip="Weekly Planning Meeting Streak" aria-label="Weekly Planning Meeting Streak">?</span>`, (x) => (hasHabits(x.m) ? x.wpm : -1)], ...(DAILY_STREAKS ? [["drm", "Daily Review<br>Meeting streak", (x) => (hasHabits(x.m) ? x.drm : -1)]] : []),
     ["mwpm", `Past 4 Weeks <span class="th-help" data-tip="Weekly Planning Meetings completed, last 4 weeks" aria-label="Weekly Planning Meetings completed, last 4 weeks">?</span>`, (x) => (hasHabits(x.m) ? x.ms.wpm : -1)],
-    ["prog", "Progress<br>past month", (x) => x.pace.progress ?? -1], ["peace", "Peace<br>last check", (x) => x.peace ?? -1],
+    ["prog", `Progress <span class="th-help" data-tip="Priorities completed over the last month" aria-label="Priorities completed over the last month">?</span>`, (x) => x.pace.progress ?? -1], ["peace", `Peace <span class="th-help" data-tip="Last reported Peace status" aria-label="Last reported Peace status">?</span>`, (x) => x.peace ?? -1],
     ["op", "Courses", (x) => x.op], ["month", "", (x) => (hasHabits(x.m) ? x.ms.all : -1)],
   ];
   function rosterRows(cid) {
