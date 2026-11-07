@@ -1111,6 +1111,7 @@
         <form data-form="add-users" class="add-users-form">
           <div class="row add-one"><label>Name<input name="name" autocomplete="off" placeholder="Jordan Smith"></label><label>Email<input name="email" type="email" autocomplete="off" placeholder="jordan@company.com"></label></div>
           <label>Or paste a list<textarea name="list" rows="6" placeholder="Jordan Smith, jordan@company.com&#10;Casey Lee, casey@company.com"></textarea><small class="muted">One person per line: name, comma, email.</small></label>
+          <label>Role<select name="role"><option value="member">Standard User</option><option value="admin">Admin</option></select><small class="muted">Applies to everyone you add here. Admins can see the Manage page.</small></label>
           <div class="row"><button class="btn">Add People</button></div>
         </form>
       </div>`;
@@ -1861,7 +1862,7 @@
         const i = l.lastIndexOf(","), name = l.slice(0, i).trim(), email = l.slice(i + 1).trim();
         if (i < 0 || !name || !ok.test(email)) return bad.push(l);
         if (S.users.some((u) => u.email?.toLowerCase() === email.toLowerCase())) return;
-        const u = { id: "u_" + uid(), name, email, title: "Member", companyId: cid, role: "member", color: SEED.avatarColors[Math.floor(Math.random() * SEED.avatarColors.length)] };
+        const u = { id: "u_" + uid(), name, email, title: "Member", companyId: cid, role: v.role === "admin" ? "admin" : "member", color: SEED.avatarColors[Math.floor(Math.random() * SEED.avatarColors.length)] };
         S.users.push(u); added.push(u);
       });
       if (!added.length) return toast(bad.length ? `Check the format: "Name, email" on each line.` : "Those people are already on the team.");
