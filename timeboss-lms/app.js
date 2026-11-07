@@ -408,13 +408,14 @@
   const paceWeeks = () => [0, 1, 2, 3].map((i) => { const d = mondayOf(Date.now()); d.setDate(d.getDate() - 7 * i); return dateKey(d); });
   const lastRunIn = (id, week) => runsOf(id, "weekly").filter((r) => plannedWeek(r.ts) === week).sort((a, b) => b.ts - a.ts)[0];
   function paceTally(people, weeks) {
-    const t = { ran: 0, possible: people.length * weeks.length, done: 0, total: 0, peace: { 1: 0, 3: 0, 5: 0 } };
+    const t = { ran: 0, possible: people.length * weeks.length, done: 0, total: 0, peace: { 1: 0, 3: 0, 5: 0 } }, who = new Set();
     people.forEach((m) => weeks.forEach((w) => {
       const a = lastRunIn(m.id, w)?.answers; if (!a) return;
-      t.ran++; t.done += +a.paceDone || 0; t.total += +a.paceTotal || 0;
+      t.ran++; who.add(m.id); t.done += +a.paceDone || 0; t.total += +a.paceTotal || 0;
       if (a.peace) t.peace[a.peace]++;
     }));
     t.progress = t.total ? Math.round((t.done / t.total) * 100) : null;
+    t.people = who.size;
     return t;
   }
   const lastPeace = (id) => +runsOf(id, "weekly").filter((r) => r.answers.peace).sort((a, b) => b.ts - a.ts)[0]?.answers.peace || null;
@@ -1071,7 +1072,7 @@
   const peaceTag = (p) => (p ? `<span class="peace-tag p${p}">${PEACE_SHORT[p]}</span>` : `<span class="muted">None yet</span>`);
   // Peace as a split of who said what: an average would hide the one person who is overcapacity
   function peaceBar(t) {
-    const seg = (n) => (t.peace[n] ? `<span class="p${n}" style="flex:${t.peace[n]}"></span>` : "");
+    const seg = (n) => (t.peace[n] ? `<span class="p${n}" style="flex:${t.peace[n]}" data-tip="${t.peace[n]} ${PEACE_SHORT[n]}" tabindex="0"></span>` : "");
     return `<div class="peace-bar" role="img" aria-label="${t.peace[1]} Easier Week, ${t.peace[3]} Locked In, ${t.peace[5]} Overcapacity">${seg(1)}${seg(3)}${seg(5)}</div>`;
   }
   // Manage: the team's Pace Check. Three measures, last month's totals on top and each week below.
@@ -1080,12 +1081,12 @@
     if (!people.length) return "";
     const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
     const row = (w) => { const x = paceTally(people, [w]), d = new Date(w + "T12:00"); d.setDate(d.getDate() - 7);
-      return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}<small>${x.peace[5]} Overcapacity</small></td></tr>`; };
+      return `<tr><td class="t-name">Week of ${fmtDate(d, { month: "short", day: "numeric" })}</td><td data-label="Weekly Planning completed">${x.ran} of ${x.possible}</td><td data-label="Progress">${x.progress === null ? `<span class="muted">None yet</span>` : pctCell(x.progress)}</td><td data-label="Peace" class="t-peace">${x.ran ? peaceBar(x) : ""}</td></tr>`; };
     return `<div class="card pace-card"><div class="card-head"><h3>Pace Check, Last Month</h3></div>
       <small class="muted">From each person's Weekly Planning Meeting over the last four weeks.</small>
       <div class="pace-stats">
         <div><span>Weekly Planning Completed</span><b>${pct(t.ran, t.possible)}%</b><small>${t.ran} of ${t.possible} meetings, ${people.length} of ${plural(all.length, "person", "people")}</small></div>
-        <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by those who ran it</small></div>
+        <div><span>Progress</span><b>${t.progress ?? 0}%</b><small>${t.done} of ${t.total} priorities completed by ${plural(t.people, "person", "people")}</small></div>
         <div><span>Peace</span>${peaceBar(t)}<ul class="peace-key"><li><i class="p1"></i>${t.peace[1]} Easier Week</li><li><i class="p3"></i>${t.peace[3]} Locked In</li><li><i class="p5"></i>${t.peace[5]} Overcapacity</li></ul></div>
       </div>
       <div class="table-wrap"><table class="team pace-table"><thead><tr><th>Week</th><th>Weekly Planning completed</th><th>Progress</th><th>Peace</th></tr></thead><tbody>${weeks.map(row).join("")}</tbody></table></div></div>`;
@@ -1719,17 +1720,25 @@
   tip.setAttribute("role", "tooltip");
   document.body.appendChild(tip);
   const hideTip = () => { tip.hidden = true; };
-  document.addEventListener("mouseover", (e) => {
-    const el = e.target.closest?.("[data-tip]");
-    if (!el || !matchMedia("(hover: hover)").matches) return hideTip();
+  const showTip = (el) => {
     tip.textContent = el.dataset.tip;
     tip.hidden = false;
     const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), above = r.top - t.height - 8 >= 8;
     tip.style.left = `${Math.max(8, Math.min(innerWidth - t.width - 8, r.left + r.width / 2 - t.width / 2))}px`;
     tip.style.top = `${above ? r.top - t.height - 8 : r.bottom + 8}px`;
+  };
+  document.addEventListener("mouseover", (e) => {
+    const el = e.target.closest?.("[data-tip]");
+    if (!el || !matchMedia("(hover: hover)").matches) return hideTip();
+    showTip(el);
   });
   document.addEventListener("scroll", hideTip, true);
-  document.addEventListener("click", hideTip, true);
+  // A tap hides any tip; tapping a Peace bar segment shows its count, since phones have no hover
+  document.addEventListener("click", (e) => {
+    hideTip();
+    const el = e.target.closest?.(".peace-bar [data-tip]");
+    if (el) showTip(el);
+  }, true);
 
   let timerInt;
   function tickTimer() {
