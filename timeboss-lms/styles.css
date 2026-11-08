@@ -153,7 +153,8 @@ output { color: var(--teal); font-weight: 900; }
 .stat .streak-num span { font-size: 15px; color: var(--muted); }
 .stat > span.muted { font-size: 14px; font-weight: 600; color: var(--muted); }
 .stat .bar { margin: 6px 0; }
-.stat b.stat-word { font-size: clamp(24px, 2.4vw, 32px); margin: 10px 0 8px; }
+.card.stat { container-type: inline-size; }
+.stat b.stat-word { font-size: min(30px, 15cqi); margin: 10px 0 8px; } /* sized to the card so long words like Overcapacity always fit */
 .stat b.peace-tag.p1 { color: var(--muted); }
 .prompt-card { background: var(--navy); color: #fff; border: 0; }
 .prompt-card h3, .prompt-card h4 { color: #fff; margin: 8px 0 12px; }

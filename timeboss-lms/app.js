@@ -755,7 +755,7 @@
   function streakStat(tool, id) {
     const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id), len = 10;
     const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : n === 1 ? "workday in a row" : "workdays in a row";
-    return `<div class="streak-num"><b>${n}</b><span>${unit}</span></div>${chain(tool, id, len, { light: true })}<small>Last ${len} ${tool === "weekly" ? "weeks" : "workdays"}</small>`;
+    return `${n ? `<div class="streak-num"><b>${n}</b><span>${unit}</span></div>` : `<b class="stat-word">No active streak</b>`}${chain(tool, id, len, { light: true })}<small>Last ${len} ${tool === "weekly" ? "weeks" : "workdays"}</small>`;
   }
   function chain(tool, id, len, { light = false, fresh = false } = {}) {
     const out = [];
