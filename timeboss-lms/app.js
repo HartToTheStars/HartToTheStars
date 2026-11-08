@@ -816,7 +816,7 @@
       ${phaseCard()}
       ${phaseOf(u) === 1 ? officeCard() : `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
       <div class="grid two home-live">${officeCard()}${eventsCard()}</div>
-        <div class="card prompt-card">
+        <div class="card prompt-card light">
           ${cardHead("community", "Community", "#/community")}
           <span class="pinned-label">${icon("pin", "ic pin")} Today's Prompt</span>
           <h3>${esc(p.q)}</h3>

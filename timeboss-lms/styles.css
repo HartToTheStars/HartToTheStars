@@ -835,6 +835,15 @@ html:has(> body.modal-open), html:has(> body.lightbox-open) { overflow: hidden; 
 a.card-hd:hover span { text-decoration: underline; text-underline-offset: 3px; }
 .prompt-card .card-hd, .habits .card-hd { color: #fff; border-bottom-color: rgba(255, 255, 255, .14); }
 .prompt-card .card-hd .ic, .habits .card-hd .ic { color: var(--teal-2); }
+/* Home's Community card uses the light card look, like Office Hours and Upcoming Events */
+.prompt-card.light { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+.prompt-card.light h3 { color: var(--heading); }
+.prompt-card.light .muted { color: var(--muted); }
+.prompt-card.light .card-hd { color: var(--heading); border-bottom-color: var(--line); }
+.prompt-card.light .card-hd .ic { color: var(--teal); }
+.prompt-card.light .btn.ghost { color: var(--heading); border-color: var(--line-strong); }
+.prompt-card.light .btn.ghost:hover { background: var(--paper); }
+.prompt-card.light .pinned-label { color: var(--teal); }
 .habits-half .card-hd { margin-bottom: 4px; }
 
 /* Home: Upcoming Events card */
