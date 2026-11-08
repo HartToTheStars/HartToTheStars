@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habit Card Comps, Option C</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Comps only: built from the prototype's tokens so each version reads like the real Home page */
+    body { background: var(--bg); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+    .wrap > h1 { font-family: var(--font-head); font-size: clamp(30px, 4vw, 44px); margin: 0 0 6px; color: var(--heading); }
+    .lede { color: var(--muted); margin: 0 0 40px; max-width: 62ch; }
+    .comp { margin-bottom: 56px; }
+    .comp-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 4px; }
+    .comp-label b { font-size: 20px; color: var(--heading); }
+    .comp-label span { font-size: 13px; font-weight: 600; color: var(--teal); }
+    .comp-note { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; }
+    @media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+
+    .faces { display: flex; align-items: center; }
+    .faces img, .faces .more { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--card); margin-left: -6px; object-fit: cover; }
+    .faces img:first-child { margin-left: 0; }
+    .faces .more { display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 700; background: var(--paper); color: var(--heading); }
+    .dark .faces img, .dark .faces .more { border-color: var(--navy); }
+    .dark .faces .more { background: var(--navy-2); color: #fff; }
+    .proof-line { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+    .proof-line a { color: var(--teal); font-weight: 600; white-space: nowrap; }
+    .dark .proof-line { color: rgba(255, 255, 255, .62); }
+    .dark .proof-line a { color: var(--teal-2); }
+    .pips { display: flex; gap: 5px; }
+    .pips i { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); }
+    .pips i.off { background: transparent; border: 1.5px solid var(--line-strong); }
+    .dark .pips i { background: var(--teal-2); }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 100px; font-size: 12.5px; font-weight: 600; background: var(--teal-soft); color: var(--teal); white-space: nowrap; }
+    .chip.due { background: #f6ebe0; color: #8a4b1f; }
+    .dark .chip { background: rgba(159, 194, 208, .16); color: var(--teal-2); }
+    .hd { display: flex; align-items: center; gap: 10px; color: var(--heading); font-weight: 600; }
+    .hd .ic { width: 20px; height: 20px; color: var(--teal); }
+    .dark .hd { color: #fff; }
+    .dark .hd .ic { color: var(--teal-2); }
+    .hd .chip { margin-left: auto; }
+
+    /* A: light, action first */
+    .a { display: flex; flex-direction: column; gap: 14px; }
+    .a h3 { margin: 0; font-size: 22px; color: var(--heading); }
+    .a .sub { margin: -8px 0 0; color: var(--muted); font-size: 14px; }
+    .a .streak { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--heading); font-weight: 600; }
+    .a .foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+
+    /* B: one card, two rows */
+    .b-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 18px 0; border-top: 1px solid var(--line); }
+    .card-hd + .b-row { border-top: 0; padding-top: 4px; }
+    .b-row:last-child { padding-bottom: 0; }
+    .b-ic { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--teal-soft); display: grid; place-items: center; color: var(--teal); }
+    .b-ic svg { width: 22px; height: 22px; }
+    .b-main b { display: block; color: var(--heading); font-size: 16px; }
+    .b-main small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+    .b-main .proof-line { margin-top: 8px; }
+    .b-side { display: flex; align-items: center; gap: 14px; align-self: center; }
+    .b-num { text-align: right; line-height: 1.1; }
+    .b-num b { display: block; font-size: 26px; font-weight: 800; color: var(--navy); }
+    .b-num span { font-size: 12px; color: var(--muted); }
+    @media (max-width: 760px) { .b-row { grid-template-columns: 44px minmax(0, 1fr); } .b-side { grid-column: 1 / -1; justify-content: space-between; } .b-num { text-align: left; } }
+
+    /* C: navy, same structure on both */
+    .c { background: var(--navy); color: #fff; border-radius: var(--radius); padding: var(--pad); display: flex; flex-direction: column; gap: 14px; }
+    .c .big { display: flex; align-items: baseline; gap: 10px; }
+    .c .big b { font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+    .c .big span { color: rgba(255, 255, 255, .7); font-size: 15px; }
+    .c .meta { font-size: 13px; color: rgba(255, 255, 255, .55); margin-top: -6px; }
+    .c .act { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: auto; }
+    .c .act small { color: rgba(255, 255, 255, .62); font-size: 13px; }
+    .c .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .28); }
+    .c .btn:not(.ghost) { background: #fff; color: var(--navy); border-color: #fff; }
+    .c .foot { padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .14); }
+    .c .steps { display: flex; gap: 6px; }
+    .c .steps i { flex: 1; height: 6px; border-radius: 100px; background: var(--teal-2); }
+    .c .steps i.off { background: rgba(255, 255, 255, .16); }
+
+    /* D: this week at a glance */
+    .d-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 6px 0 4px; }
+    .d-day { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; background: #fff; }
+    .d-day b { display: block; font-size: 12px; color: var(--muted); font-weight: 600; }
+    .d-day span { display: grid; place-items: center; width: 26px; height: 26px; margin: 8px auto 0; border-radius: 50%; border: 1.5px solid var(--line-strong); color: #fff; }
+    .d-day.done span { background: var(--teal); border-color: var(--teal); }
+    .d-day.today { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+    .d-day.today span { border-style: dashed; border-color: var(--teal); }
+    .d-day svg { width: 14px; height: 14px; }
+    .d-rows { display: grid; gap: 0; margin-top: 18px; }
+    .d-row { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); flex-wrap: wrap; }
+    .d-row:last-child { padding-bottom: 0; }
+    .d-row .b-main { flex: 1 1 260px; }
+    .d-row .btn { margin-left: auto; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Habit Cards, Four Options</h1>
+    <p class="lede">Same data as Maria's Home today: an 18-week Weekly Planning streak, a Daily Review Meeting in progress on step 3 of 3, and the team activity under each. The Weekly Planning button is filled in the comps so the main action is clear; on Home the one-filled-button rule still applies.</p>
+
+    <section class="comp">
+      <div class="comp-label"><b>A. Light, Action First</b><span>Matches Office Hours and Events</span></div>
+      <p class="comp-note">The habit cards switch to the light card style. Each one leads with what to do now, the streak becomes one line with the dots, and the team line sits in the footer. Both cards share the same order, so the Daily Review card is no longer mostly empty.</p>
+      <div class="pair">
+        <div class="card a">
+          <div class="hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg>Weekly Planning Meeting<span class="chip due">Due Sunday</span></div>
+          <h3>Plan next week</h3>
+          <p class="sub">1 hour, before your work week starts.</p>
+          <div><a class="btn sm" href="#">Run Now</a></div>
+          <div class="streak">18-week streak <span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="foot proof-line"><span class="faces"><img src="assets/avatars/13.jpg" alt=""><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/05.jpg" alt=""><img src="assets/avatars/11.jpg" alt=""><span class="more">+3</span></span><span>7 team members have planned next week. <a href="#">View All</a></span></div>
+        </div>
+        <div class="card a">
+          <div class="hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg>Daily Review Meeting<span class="chip">In progress</span></div>
+          <h3>Finish today's review</h3>
+          <p class="sub">Step 3 of 3, about 5 minutes left.</p>
+          <div><a class="btn ghost sm" href="#">Resume</a></div>
+          <div class="streak">4 of 5 workdays this week <span class="pips"><i></i><i></i><i></i><i></i><i class="off"></i></span></div>
+          <div class="foot proof-line"><span class="faces"><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/19.jpg" alt=""><img src="assets/avatars/22.jpg" alt=""><img src="assets/avatars/23.jpg" alt=""><span class="more">+15</span></span><span>You and 19 team members ran it Friday. <a href="#">View All</a></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="comp">
+      <div class="comp-label"><b>B. One Habits Card, Two Rows</b><span>Most compact</span></div>
+      <p class="comp-note">Both meetings live in a single card, one row each: what it is, where you are, the number that matters, and the button. It reads like a checklist and takes about half the height of today's cards.</p>
+      <div class="card">
+        <div class="card-hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg><span>Your Habits</span></div>
+        <div class="b-row">
+          <span class="b-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg></span>
+          <div class="b-main"><b>Weekly Planning Meeting</b><small>Due Sunday. 1 hour, before your work week starts.</small>
+            <div class="proof-line"><span class="faces"><img src="assets/avatars/13.jpg" alt=""><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/05.jpg" alt=""><span class="more">+4</span></span><span>7 team members have planned next week. <a href="#">View All</a></span></div></div>
+          <div class="b-side"><div class="b-num"><b>18</b><span>week streak</span></div><a class="btn sm" href="#">Run Now</a></div>
+        </div>
+        <div class="b-row">
+          <span class="b-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg></span>
+          <div class="b-main"><b>Daily Review Meeting</b><small>In progress, step 3 of 3.</small>
+            <div class="proof-line"><span class="faces"><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/19.jpg" alt=""><img src="assets/avatars/22.jpg" alt=""><span class="more">+16</span></span><span>You and 19 team members ran it Friday. <a href="#">View All</a></span></div></div>
+          <div class="b-side"><div class="b-num"><b>4 of 5</b><span>workdays this week</span></div><a class="btn ghost sm" href="#">Resume</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="comp">
+      <div class="comp-label"><b>C. Navy, Balanced</b><span>Closest to today</span></div>
+      <p class="comp-note">Keeps the navy cards but gives both the same skeleton: a big number, a progress strip, the button at the bottom and the team line as a footer. Daily Review shows this week's count and a step bar, so it fills its card with real information.</p>
+      <div class="pair dark">
+        <div class="c">
+          <div class="hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg>Weekly Planning Meeting</div>
+          <div class="big"><b>18</b><span>weeks in a row</span></div>
+          <span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <div class="meta">Last 10 weeks</div>
+          <div class="act"><a class="btn sm" href="#">Run Now</a><small>Due Sunday, about 1 hour</small></div>
+          <div class="foot proof-line"><span class="faces"><img src="assets/avatars/13.jpg" alt=""><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/05.jpg" alt=""><img src="assets/avatars/11.jpg" alt=""><span class="more">+3</span></span><span>7 team members have planned next week. <a href="#">View All</a></span></div>
+        </div>
+        <div class="c">
+          <div class="hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg>Daily Review Meeting</div>
+          <div class="big"><b>4 of 5</b><span>workdays this week</span></div>
+          <span class="steps"><i></i><i></i><i class="off"></i></span>
+          <div class="meta">Today's review: step 3 of 3</div>
+          <div class="act"><a class="btn ghost sm" href="#">Resume</a><small>About 5 minutes left</small></div>
+          <div class="foot proof-line"><span class="faces"><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/19.jpg" alt=""><img src="assets/avatars/22.jpg" alt=""><img src="assets/avatars/23.jpg" alt=""><span class="more">+15</span></span><span>You and 19 team members ran it Friday. <a href="#">View All</a></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="comp">
+      <div class="comp-label"><b>D. This Week at a Glance</b><span>Most motivating</span></div>
+      <p class="comp-note">One card built around the current week: five day tiles show which Daily Reviews are done and which one is open today, and the two meetings sit below as rows with their buttons. The long streak becomes a single line instead of the headline.</p>
+      <div class="card">
+        <div class="card-hd"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span>This Week</span><span class="chip" style="margin-left:auto">18-week planning streak</span></div>
+        <div class="d-week">
+          <div class="d-day done"><b>Mon</b><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></div>
+          <div class="d-day done"><b>Tue</b><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></div>
+          <div class="d-day done"><b>Wed</b><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></div>
+          <div class="d-day done"><b>Thu</b><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></div>
+          <div class="d-day today"><b>Fri</b><span></span></div>
+        </div>
+        <div class="d-rows">
+          <div class="d-row"><div class="b-main"><b>Daily Review Meeting</b><small>Today's review is open, step 3 of 3.</small>
+            <div class="proof-line"><span class="faces"><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/19.jpg" alt=""><img src="assets/avatars/22.jpg" alt=""><span class="more">+16</span></span><span>You and 19 team members ran it Friday. <a href="#">View All</a></span></div></div><a class="btn ghost sm" href="#">Resume</a></div>
+          <div class="d-row"><div class="b-main"><b>Weekly Planning Meeting</b><small>Plan next week by Sunday, about 1 hour.</small>
+            <div class="proof-line"><span class="faces"><img src="assets/avatars/13.jpg" alt=""><img src="assets/avatars/26.jpg" alt=""><img src="assets/avatars/05.jpg" alt=""><span class="more">+4</span></span><span>7 team members have planned next week. <a href="#">View All</a></span></div></div><a class="btn sm" href="#">Run Now</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
