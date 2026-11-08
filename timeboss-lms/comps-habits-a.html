@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Habit Card Comps, Option A Variations</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { background: var(--bg); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+    .wrap > h1 { font-family: var(--font-head); font-size: clamp(30px, 4vw, 44px); margin: 0 0 6px; color: var(--heading); }
+    .lede { color: var(--muted); margin: 0 0 16px; max-width: 66ch; }
+    .back { display: inline-block; margin-bottom: 40px; color: var(--teal); font-weight: 600; font-size: 14px; }
+    .comp { margin-bottom: 56px; }
+    .comp-label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 4px; }
+    .comp-label b { font-size: 20px; color: var(--heading); }
+    .comp-label span { font-size: 13px; font-weight: 600; color: var(--teal); }
+    .comp-note { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 70ch; }
+    .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; }
+    .stack { display: grid; gap: 16px; }
+    .pair .card, .stack .card { margin-bottom: 0; }
+    @media (max-width: 760px) { .pair { grid-template-columns: 1fr; } }
+
+    .faces { display: flex; align-items: center; flex: none; }
+    .faces img, .faces .more { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--card); margin-left: -6px; object-fit: cover; }
+    .faces img:first-child { margin-left: 0; }
+    .faces .more { display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 700; background: var(--paper); color: var(--heading); }
+    .proof-line { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+    .proof-line a { color: var(--teal); font-weight: 600; white-space: nowrap; }
+    .pips { display: flex; gap: 5px; flex-wrap: wrap; }
+    .pips i { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); }
+    .pips i.off { background: transparent; border: 1.5px solid var(--line-strong); }
+    .chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 12.5px; font-weight: 600; background: var(--teal-soft); color: var(--teal); white-space: nowrap; }
+    .chip.due { background: #f6ebe0; color: #8a4b1f; }
+    .hd { display: flex; align-items: center; gap: 10px; color: var(--heading); font-weight: 600; }
+    .hd .ic { width: 20px; height: 20px; color: var(--teal); flex: none; }
+    .hd .chip, .hd .btn { margin-left: auto; }
+    .btn { white-space: nowrap; }
+    .bar { display: flex; gap: 6px; }
+    .bar i { flex: 1; height: 6px; border-radius: 100px; background: var(--teal); }
+    .bar i.off { background: var(--line); }
+
+    /* shared A pieces */
+    .a { display: flex; flex-direction: column; gap: 14px; }
+    .a h3 { margin: 0; font-size: 22px; color: var(--heading); }
+    .a .sub { margin: -8px 0 0; color: var(--muted); font-size: 14px; }
+    .a .streak { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; font-size: 14px; color: var(--heading); font-weight: 600; }
+    .a .foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+    .a .grow { margin-top: auto; }
+    .foot-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .big { display: flex; align-items: baseline; gap: 8px; }
+    .big b { font-size: 44px; font-weight: 800; line-height: 1; color: var(--navy); letter-spacing: -.02em; }
+    .big span { color: var(--muted); font-size: 14px; }
+    .meta { font-size: 13px; color: var(--muted); }
+
+    /* A9: tinted header band */
+    .band { margin: calc(-1 * var(--pad)) calc(-1 * var(--pad)) 0; padding: 14px var(--pad); background: var(--teal-soft); border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; }
+
+    .band .chip:not(.due) { background: var(--card); }
+
+    /* A8: full-width rows */
+    .row-card { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; gap: 20px; align-items: center; }
+    .row-card .txt { display: grid; gap: 6px; }
+    .row-card h3 { margin: 0; font-size: 20px; color: var(--heading); }
+    .row-card .sub { margin: 0; color: var(--muted); font-size: 14px; }
+    .row-card .mid { display: grid; gap: 8px; }
+    @media (max-width: 760px) { .row-card { grid-template-columns: 1fr; gap: 14px; } .row-card .btn { justify-self: start; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Option A, Ten Variations</h1>
+    <p class="lede">Every version keeps A's light card style and Maria's real numbers. Each one changes one or two things: what leads, where the button sits, how the streak shows, and where the team line goes. A1 is the original for comparison.</p>
+    <a class="back" href="comps-habits.html">Back to the four options</a>
+    <div id="comps"></div>
+  </main>
+  <script>
+    const ICON = {
+      cal: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg>',
+      chk: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12l3 3 5-6"/></svg>'
+    };
+    const W = { icon: ICON.cal, name: "Weekly Planning Meeting", chip: "Due Sunday", chipCls: "due", action: "Plan next week", sub: "1 hour, before your work week starts.", btn: "Run Now", filled: true,
+      stat: "18-week streak", big: "18", bigLabel: "weeks in a row", pips: [1,1,1,1,1,1,1,1,1,1], pipsLabel: "Last 10 weeks", bar: [1,1,1,1,1,1,1,1,1,1],
+      faces: ["13","26","05","11"], more: "+3", proof: "7 team members have planned next week." };
+    const D = { icon: ICON.chk, name: "Daily Review Meeting", chip: "In progress", chipCls: "", action: "Finish today's review", sub: "Step 3 of 3, about 5 minutes left.", btn: "Resume", filled: false,
+      stat: "4 of 5 workdays this week", big: "4 of 5", bigLabel: "workdays this week", pips: [1,1,1,1,0], pipsLabel: "This week", bar: [1,1,0],
+      faces: ["26","19","22","23"], more: "+15", proof: "You and 19 team members ran it Friday." };
+
+    const chip = m => `<span class="chip ${m.chipCls}">${m.chip}</span>`;
+    const btn = m => `<a class="btn sm${m.filled ? "" : " ghost"}" href="#">${m.btn}</a>`;
+    const pips = m => `<span class="pips">${m.pips.map(p => `<i${p ? "" : ' class="off"'}></i>`).join("")}</span>`;
+    const bar = m => `<span class="bar">${m.bar.map(p => `<i${p ? "" : ' class="off"'}></i>`).join("")}</span>`;
+    const faces = (m, n = 4) => `<span class="faces">${m.faces.slice(0, n).map(f => `<img src="assets/avatars/${f}.jpg" alt="">`).join("")}<span class="more">${m.more}</span></span>`;
+    const proof = (m, cls = "") => `<div class="proof-line ${cls}">${faces(m)}<span>${m.proof} <a href="#">View All</a></span></div>`;
+    const hd = (m, right = chip(m)) => `<div class="hd">${m.icon}${m.name}${right}</div>`;
+    const streak = m => `<div class="streak">${m.stat} ${pips(m)}</div>`;
+
+    const V = [
+      { t: "A1. The Original", tag: "For comparison", note: "Meeting name and status on top, then the action as the headline, the button, the streak with dots, and the team line in the footer.",
+        card: m => `${hd(m)}<h3>${m.action}</h3><p class="sub">${m.sub}</p><div>${btn(m)}</div>${streak(m)}${proof(m, "foot")}` },
+      { t: "A2. Meeting Name as the Headline", tag: "Clearer labels", note: "The meeting name becomes the big title and the action drops to the line under it. Easier to scan if people think in meeting names, not tasks.",
+        card: m => `<div class="hd" style="justify-content:space-between">${m.icon}${chip(m)}</div><h3>${m.name}</h3><p class="sub">${m.action}. ${m.sub}</p><div>${btn(m)}</div>${streak(m)}${proof(m, "foot")}` },
+      { t: "A3. Button in the Footer", tag: "Tighter top", note: "The button moves to the bottom right, next to the streak. The top of the card is only what to do and why, and every card ends on the action.",
+        card: m => `${hd(m)}<h3>${m.action}</h3><p class="sub">${m.sub}</p>${proof(m)}<div class="foot foot-row">${streak(m)}${btn(m)}</div>` },
+      { t: "A4. Progress First", tag: "Most motivating", note: "Leads with the big number (18 weeks, 4 of 5 days), then the action and the button. Puts the streak back in front without the navy card.",
+        card: m => `${hd(m)}<div class="big"><b>${m.big}</b><span>${m.bigLabel}</span></div>${pips(m)}<p class="sub" style="margin:0"><b style="color:var(--heading)">${m.action}.</b> ${m.sub}</p><div>${btn(m)}</div>${proof(m, "foot")}` },
+      { t: "A5. Button in the Header", tag: "Most compact", note: "The button sits on the top line where the status chip was. Status folds into the sentence under the headline. The card loses a full row of height.",
+        card: m => `${hd(m, btn(m))}<h3>${m.action}</h3><p class="sub">${m.chip}. ${m.sub}</p>${streak(m)}${proof(m, "foot")}` },
+      { t: "A6. Minimal", tag: "Least to read", note: "Headline, one line of streak, one button. No status chip, no sub line, no team line. The team activity would live on the Community page instead.",
+        card: m => `${hd(m, "")}<h3>${m.action}</h3>${streak(m)}<div class="grow">${btn(m)}</div>` },
+      { t: "A7. Team Line Up Top", tag: "Most social", note: "The team activity moves right under the headline, so you see who has already done it before the button. The streak drops to the footer.",
+        card: m => `${hd(m)}<h3>${m.action}</h3>${proof(m)}<div>${btn(m)}</div><div class="foot">${streak(m)}</div>` },
+      { t: "A8. Full-Width Rows", tag: "Stacked layout", note: "The two cards stack one per row instead of side by side. Each row reads left to right: what to do, progress, button. On a phone the row stacks and the button moves to the bottom.",
+        layout: "stack",
+        card: m => `<div class="row-card"><div class="txt">${hd(m)}<h3>${m.action}</h3><p class="sub">${m.sub}</p></div><div class="mid">${streak(m)}${proof(m)}</div>${btn(m)}</div>` },
+      { t: "A9. Tinted Header Band", tag: "More structure", note: "Same order as A1, with the meeting name and status in a light teal band across the top. Gives each card a clear label without going back to navy.",
+        card: m => `<div class="band">${hd(m)}</div><h3>${m.action}</h3><p class="sub">${m.sub}</p><div>${btn(m)}</div>${streak(m)}${proof(m, "foot")}` },
+      { t: "A10. Progress Bar", tag: "Visual progress", note: "The dots become a segmented bar under the headline: 10 weeks for planning, 3 steps for today's review. The count sits in small text beside the button.",
+        card: m => `${hd(m)}<h3>${m.action}</h3>${bar(m)}<p class="sub" style="margin:0">${m.sub}</p><div class="foot-row" style="justify-content:flex-start">${btn(m)}<span class="meta">${m.stat}</span></div>${proof(m, "foot")}` }
+    ];
+
+    document.getElementById("comps").innerHTML = V.map(v => `
+      <section class="comp">
+        <div class="comp-label"><b>${v.t}</b><span>${v.tag}</span></div>
+        <p class="comp-note">${v.note}</p>
+        <div class="${v.layout || "pair"}">
+          <div class="card a">${v.card(W)}</div>
+          <div class="card a">${v.card(D)}</div>
+        </div>
+      </section>`).join("");
+  </script>
+</body>
+</html>
