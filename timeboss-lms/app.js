@@ -772,22 +772,49 @@
     }
     return `<div class="chain ${light ? "light" : ""}" aria-hidden="true">${out.map((p, i) => `<span class="pip ${p.on ? "on" : p.now ? "now" : ""} ${fresh && i === out.length - 1 && p.on ? "new" : ""}"></span>`).join("")}</div>`;
   }
-  function habitHalf(tool) {
-    const t = TOOLS[tool], id = me().id, draft = S.drafts[id + "|" + tool];
-    const n = tool === "weekly" ? wpmStreak(id) : drmStreak(id);
-    const doneNow = tool === "daily" ? drmDays(id).has(dateKey()) : wpmWeeks(id).has(plannedWeek(Date.now()));
-    const unit = tool === "weekly" ? (n === 1 ? "week in a row" : "weeks in a row") : (n === 1 ? "workday in a row" : "workdays in a row");
-    return `<div class="habits-half">
-      ${cardHead(tool, t.title, `#/tools/${tool}`)}
-      ${tool === "daily" && !DAILY_STREAKS ? "" : `<div class="habits-count"><b>${n}</b><span>${unit}</span></div>
-      ${chain(tool, id, 10)}${chainLabel(tool)}`}
-      <div class="habits-foot">
-        ${draft ? `<a class="btn sm" href="#/tools/${tool}">Resume</a><small>In progress, step ${draft.step + 1} of ${t.steps.length}</small>`
-          : doneNow ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Done ${tool === "daily" ? "today" : "for this week"}</small>`
-          : tool === "daily" && !isWorkday(new Date()) ? `<a class="btn ghost sm" href="#/tools/${tool}">View</a><small>Next one Monday, end of day</small>`
-          : `<a class="btn sm" href="#/tools/${tool}">Run Now</a><small>${t.sub}</small>`}
-      </div>
-      <div class="habits-proof">${socialProof(tool, { compact: true })}</div></div>`;
+  // Option A habit card: status chip, what to do now, the button, progress, then who else ran it
+  const weekdayName = (d) => d.toLocaleDateString("en-US", { weekday: "long" });
+  function habitCard(tool) {
+    const t = TOOLS[tool], id = me().id, draft = S.drafts[id + "|" + tool], now = new Date(), href = `#/tools/${tool}`;
+    const ran = runsOf(id, tool), btn = (label, filled = true) => `<div><a class="btn sm${filled ? "" : " ghost"}" href="${href}">${label}</a></div>`;
+    let chip, h, sub, action, progress;
+    if (tool === "weekly") {
+      const target = plannedWeek(Date.now()), isNext = target !== dateKey(mondayOf(Date.now())), which = isNext ? "next week" : "this week";
+      const n = wpmStreak(id), doneNow = wpmWeeks(id).has(target), sunday = now.getDay() === 0;
+      if (draft) { chip = ["In progress", ""]; h = `Finish planning ${which}`; sub = `Step ${draft.step + 1} of ${t.steps.length}.`; action = btn("Resume"); }
+      else if (doneNow) { const last = ran.filter((r) => plannedWeek(r.ts) === target).sort((a, b) => b.ts - a.ts)[0];
+        chip = ["Done", "done"]; h = `${which[0].toUpperCase() + which.slice(1)} is planned`; sub = `Completed ${dateKey(new Date(last.ts)) === dateKey() ? "today" : weekdayName(new Date(last.ts))}. The next one opens Friday.`; action = btn("View Your Plan", false); }
+      else {
+        chip = !isNext ? ["Not planned yet", "late"] : sunday ? ["Due today", "late"] : ["Due Sunday", "due"];
+        h = ran.length ? `Plan ${which}` : "Run your first Weekly Planning Meeting";
+        sub = !ran.length ? "About 1 hour. Each step is explained as you go."
+          : !n ? "Your streak ended. Run this one to start a new streak."
+          : !isNext ? "About 1 hour. It still counts for this week." : sunday ? "About 1 hour. Run it today to keep your streak." : t.sub;
+        action = btn("Run Now");
+      }
+      progress = `${n ? `${n}-week streak` : ran.length ? "No active streak" : "No streak yet"} ${chain("weekly", id, 10, { light: true })}`;
+    } else {
+      const days = drmDays(id), weekend = !isWorkday(now), doneNow = days.has(dateKey()), prev = prevWorkday(startOfDay(Date.now()));
+      if (weekend) { chip = ["Next: Monday", ""]; h = "No review today"; sub = "Your next Daily Review Meeting is Monday."; action = ""; }
+      else if (draft) { chip = ["In progress", ""]; h = "Finish today's review"; sub = `Step ${draft.step + 1} of ${t.steps.length}.`; action = btn("Resume"); }
+      else if (doneNow) { chip = ["Done", "done"]; h = "Today's review is done"; sub = `Your next one is ${now.getDay() === 5 ? "Monday" : "tomorrow"}.`; action = btn("View Today's Review", false); }
+      else {
+        chip = ["Today", ""]; h = ran.length ? "Run today's review" : "Run your first Daily Review Meeting";
+        sub = !ran.length ? "At the end of your workday. Each step is explained as you go."
+          : !days.has(dateKey(prev)) && prev >= mondayOf(Date.now()) ? `You missed ${weekdayName(prev)}. Today's review still counts.` : "At the end of your workday.";
+        action = btn("Run Now");
+      }
+      // Monday to Friday of this week (last week on weekends): done, open today, or not done
+      const mon = mondayOf(Date.now()); if (weekend) mon.setDate(mon.getDate() - 7);
+      const pips = [0, 1, 2, 3, 4].map((i) => { const d = new Date(mon); d.setDate(d.getDate() + i); return days.has(dateKey(d)) ? "on" : dateKey(d) === dateKey() ? "now" : ""; });
+      progress = `${pips.filter((x) => x === "on").length} of 5 workdays ${weekend ? "last week" : "this week"} <div class="chain light" aria-hidden="true">${pips.map((c) => `<span class="pip ${c}"></span>`).join("")}</div>`;
+    }
+    const proof = socialProof(tool, { compact: true }) || `<p class="hab-none">No one on your team has ${tool === "weekly" ? "planned yet" : "run it today yet"}.</p>`;
+    return `<div class="card hab">
+      <div class="hab-hd"><a href="${href}">${icon(tool, "ic")}<span>${t.title}</span></a><span class="hab-chip ${chip[1]}">${chip[0]}</span></div>
+      <h3>${h}</h3><p class="hab-sub">${sub}</p>${action}
+      <div class="hab-progress">${progress}</div>
+      <div class="hab-foot">${proof}</div></div>`;
   }
 
 
@@ -814,7 +841,7 @@
       ${homeFaces(u)}
 
       ${phaseCard()}
-      ${phaseOf(u) === 1 ? officeCard() : `<section class="habits" aria-label="Your habits">${habitHalf("weekly")}${habitHalf("daily")}</section>
+      ${phaseOf(u) === 1 ? officeCard() : `<section class="habits" aria-label="Your habits">${habitCard("weekly")}${habitCard("daily")}</section>
       <div class="grid two home-live">${officeCard()}${eventsCard()}</div>
         <div class="card prompt-card light">
           ${cardHead("community", "Community", "#/community")}

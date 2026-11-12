@@ -326,9 +326,9 @@ summary { cursor: pointer; font-weight: 700; color: var(--heading); }
 .chain-label { display: block; margin-top: -4px; font-size: 13px; color: rgba(255, 255, 255, .6); }
 .habits-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 4px; } /* button, then its note underneath, the same in both halves */
 .habits-foot small { color: rgba(255, 255, 255, .55); }
-.habits .btn { background: #fff; color: var(--navy); }
-.habits .btn:hover { background: var(--teal-2); }
-.habits .btn.ghost { background: transparent; color: rgba(255, 255, 255, .8); border-color: rgba(255, 255, 255, .25); }
+.habits-half .btn { background: #fff; color: var(--navy); }
+.habits-half .btn:hover { background: var(--teal-2); }
+.habits-half .btn.ghost { background: transparent; color: rgba(255, 255, 255, .8); border-color: rgba(255, 255, 255, .25); }
 .chain { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .pip { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .22); flex: none; position: relative; }
 .pip.on { background: var(--teal-2); border-color: var(--teal-2); }
@@ -1125,3 +1125,25 @@ a.pp-badge:hover .badge-m:not(.got) { border-color: var(--teal-2); }
   .pace-table tr { grid-template-columns: 1fr 1fr; }
   .pace-table td.t-name, .pace-table td.t-peace { grid-column: 1 / -1; }
 }
+
+/* Home habit cards, Option A: light cards that lead with what to do now */
+.hab { display: flex; flex-direction: column; gap: 14px; margin-bottom: 0; }
+.hab-hd { display: flex; align-items: center; gap: 10px; }
+.hab-hd a { display: flex; align-items: center; gap: 10px; color: var(--heading); font-weight: 600; text-decoration: none; min-width: 0; }
+.hab-hd .ic { width: 20px; height: 20px; color: var(--teal); flex: none; }
+.hab-chip { margin-left: auto; padding: 3px 10px; border-radius: 100px; font-size: 12.5px; font-weight: 600; background: var(--teal-soft); color: var(--teal); white-space: nowrap; }
+.hab-chip.due { background: #f6ebe0; color: #8a4b1f; }
+.hab-chip.late { background: #f8e2de; color: #9b2c1f; }
+.hab-chip.done { background: #e4f1e8; color: #2f6b43; }
+.hab h3 { margin: 0; font-size: 22px; color: var(--heading); }
+.hab-sub { margin: -8px 0 0; color: var(--muted); font-size: 14px; }
+.hab-progress { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; font-size: 14px; font-weight: 600; color: var(--heading); }
+.hab-progress .pip { width: 12px; height: 12px; }
+.hab-progress .pip.on + .pip.on::before { width: 6px; }
+.hab-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); }
+.hab-foot .proof.compact { flex-direction: row; align-items: center; flex-wrap: nowrap; gap: 10px; margin: 0; font-size: 13.5px; color: var(--muted); }
+.hab-foot .proof.compact .av-stack { flex: none; }
+.hab-foot .proof.compact .av-stack .avatar { --gap: var(--card); }
+.hab-foot .proof.compact .stack-more { background: var(--paper); color: var(--heading); border-color: var(--card); }
+.hab-foot .proof.compact .proof-all { color: var(--teal); }
+.hab-none { margin: 0; font-size: 13.5px; color: var(--muted); }
